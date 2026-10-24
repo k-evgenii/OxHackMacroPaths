@@ -18,8 +18,10 @@ asserts every number quoted in the doc. The last printed line is the summary
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
+import struct
 import sys
 from pathlib import Path
 
@@ -126,6 +128,46 @@ def claim(a: int, side: int, b: dict) -> int:
     """Eq. (10): floor(a*R_j/S_j) + floor(a*P_j/S_j)."""
     sj = b["S"][side]
     return floor_div(a * b["R"][side], sj) + floor_div(a * b["P"][side], sj)
+
+
+def _period_id(date: str) -> int:
+    """year*100 + month as u32. 2021-01-01 -> 202101."""
+    return int(date[:4]) * 100 + int(date[5:7])
+
+
+def chain(snapshot: dict, rows: list[dict]) -> dict:
+    """Commitment chain of spec §1.6.
+
+    `rows` is the traded series in order, each with `date` and integer `x`.
+    Returns dataset_id, period_ids and commitments[C_0 .. C_n] as lowercase hex.
+    SHA-256 over the raw concatenation; `<I` is u32 little-endian, `<q` is i64 little-endian.
+    """
+    preimage = (
+        snapshot["source_url"].encode("utf-8")
+        + b"\n"
+        + snapshot["retrieved_at"].encode("utf-8")
+        + b"\n"
+        + snapshot["sha256_of_raw"].encode("utf-8")
+    )
+    dataset = hashlib.sha256(preimage).digest()
+    n = len(rows)
+    period_ids = [_period_id(r["date"]) for r in rows]
+    commitments = [b""] * (n + 1)
+    commitments[n] = hashlib.sha256(b"PATH-END-v1" + dataset + struct.pack("<I", n)).digest()
+    for i in range(n - 1, -1, -1):
+        commitments[i] = hashlib.sha256(
+            b"PATH-OBS-v1"
+            + dataset
+            + struct.pack("<I", i)
+            + struct.pack("<I", period_ids[i])
+            + struct.pack("<q", rows[i]["x"])
+            + commitments[i + 1]
+        ).digest()
+    return {
+        "dataset_id": dataset.hex(),
+        "period_ids": period_ids,
+        "commitments": [c.hex() for c in commitments],
+    }
 
 
 # ---------- vector sections ----------
@@ -243,6 +285,11 @@ def build(snapshot_path: Path) -> dict:
     worked_total = worked["cooling"]["buyer_claim"] + worked["excess"]["buyer_claim"]
     assert worked_total == 33_827_340
 
+    rows_out = [{"t": t, "date": dates[t], "x": xs[t]} for t in range(N_OBS)]
+    chain_block = chain(snap, rows_out)
+    assert len(chain_block["commitments"]) == N_OBS + 1
+    assert len(chain_block["period_ids"]) == N_OBS
+
     return {
         "version": VERSION,
         "maths_doc": "docs/macropaths-maths.pdf version 2",
@@ -264,7 +311,7 @@ def build(snapshot_path: Path) -> dict:
         "transform": "x_t = floor(10^6 * (P_t - P_{t-12}) / P_{t-12}), mathematical floor (div_euclid)",
         "levels": [{"t": i - 12, "date": r["date"], "level": r["value_str"]}
                    for i, r in enumerate(level_rows)],
-        "rows": [{"t": t, "date": dates[t], "x": xs[t]} for t in range(N_OBS)],
+        "rows": rows_out,
         "running": [{"t": t, "M": st["M"], "D": st["D"], "A": st["A"]}
                     for t, st in enumerate(main["steps"])],
         "final": {"M": main["M"], "D": d47, "A": a47, "s1": s1, "s2": s2, "s2_cap40": s2_40},
@@ -320,6 +367,7 @@ def build(snapshot_path: Path) -> dict:
             "excess": worked["excess"],
             "buyer_total": worked_total,
         },
+        "chain": chain_block,
     }
 
 

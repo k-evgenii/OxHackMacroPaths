@@ -2,6 +2,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
+import * as fs from "node:fs";
+import * as path from "node:path";
+import { fileURLToPath } from "node:url";
+
 import {
   floorDiv,
   parseDecimal,
@@ -12,7 +16,15 @@ import {
   windowDates,
   checkAgainstVectors,
   prepare,
+  findRepoRoot,
+  periodId,
+  buildChain,
+  checkChain,
+  obsHash,
+  endHash,
+  datasetId,
   type Snapshot,
+  type Row,
 } from "./prepare.js";
 
 test("floorDiv: mathematical floor (div_euclid for b > 0)", () => {
@@ -148,4 +160,33 @@ test("checkAgainstVectors: task-5 shape (levels {t,date,level}, final D/A)", () 
   assert.match(m[0], /level\[0\].*t 0 != -12/);
   assert.match(m[1], /level\[1\].*"100.5"/);
   assert.match(m[2], /final\.A/);
+});
+
+test("buildChain matches vectors.json chain, 49 commitments", () => {
+  const root = findRepoRoot(path.dirname(fileURLToPath(import.meta.url)));
+  const vectors = JSON.parse(fs.readFileSync(path.join(root, "tests", "vectors.json"), "utf8"));
+  const rows: Row[] = vectors.rows.map((r: { t: number; date: string; x: number }) => ({
+    t: r.t,
+    date: r.date,
+    x: BigInt(r.x),
+  }));
+  const built = buildChain(rows, vectors.provenance);
+  assert.equal(built.commitments.length, vectors.chain.commitments.length);
+  assert.equal(built.commitments.length, 49);
+  assert.deepEqual(checkChain(built, vectors), []);
+  assert.equal(built.c0, vectors.chain.commitments[0]);
+  assert.equal(built.terminal, vectors.chain.commitments[48]);
+  assert.equal(built.rows[47].next_commitment, built.terminal);
+  assert.equal(periodId(vectors.rows[0].date), vectors.chain.period_ids[0]);
+  assert.equal(periodId(vectors.rows[47].date), vectors.chain.period_ids[47]);
+  const id = datasetId(
+    vectors.provenance.source_url,
+    vectors.provenance.retrieved_at,
+    vectors.provenance.sha256_of_raw,
+  );
+  assert.equal(id.toString("hex"), vectors.chain.dataset_id);
+  const terminal = endHash(id, 48);
+  assert.equal(terminal.toString("hex"), vectors.chain.commitments[48]);
+  const c47 = obsHash(id, 47, vectors.chain.period_ids[47], BigInt(vectors.rows[47].x), terminal);
+  assert.equal(c47.toString("hex"), vectors.chain.commitments[47]);
 });
