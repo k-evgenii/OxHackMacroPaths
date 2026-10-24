@@ -35,6 +35,10 @@ pixi run npm --prefix keeper run env:check   # prints set/not set, RPC host, kee
   seeds the four sides from the keeper (`--seed 90,100,90,100` by default, `--seed none` to skip).
 - `src/program.ts`: generic IDL instruction builder (accounts matched by IDL name), account decoding,
   PLAY formatting, `data/session.json` helpers. Tests: `npx tsx --test keeper/src/program.test.ts`.
+- `src/replay.ts`: `npm run replay` posts the 48 observations in order, at least 2 s apart, each only after
+  the previous one confirms. It resumes from `Session.next_index`. A row is never double-posted, even across
+  `kill -9`: the signature is saved to `data/replay-pending.json` before each broadcast, and on restart that
+  transaction must be confirmed or provably expired before the row is rebuilt.
 - `src/ops.ts` and `src/admin.ts`: `npm run admin -- <seed|lock|settle|status>` for the session in
   `data/session.json`. Every command reads the session first and sends nothing if that step is already
   done. These, and seeding, need the flat (`cursor_main`) layout, the only one with real instruction bodies.
@@ -71,10 +75,11 @@ DOTENV_PATH=/tmp/keeper-local/local.env pixi run npm --prefix keeper run program
 DOTENV_PATH=/tmp/keeper-local/local.env pixi run npm --prefix keeper run session:create
 ```
 
-Then lock it, and settle once the replay is done:
+Then lock it, replay the 48 rows (safe to kill and restart at any point), and settle:
 
 ```bash
 DOTENV_PATH=/tmp/keeper-local/local.env pixi run npm --prefix keeper run admin -- lock
+DOTENV_PATH=/tmp/keeper-local/local.env pixi run npm --prefix keeper run replay   # --limit n, --interval-ms
 DOTENV_PATH=/tmp/keeper-local/local.env pixi run npm --prefix keeper run admin -- settle   # after 48 rows
 DOTENV_PATH=/tmp/keeper-local/local.env pixi run npm --prefix keeper run admin -- status
 ```
