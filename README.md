@@ -4,7 +4,10 @@
 
 The local toolchain is managed by [Pixi](https://pixi.sh). The manifest and
 lockfile cover Windows, WSL/Linux, Intel macOS, and Apple Silicon macOS. They
-pin the shared Node.js, Rust, Python, native build, and data-science tools.
+pin the shared Node.js, Python, native build, and data-science tools. Rust is
+not in pixi: it comes from rustup (installed by the Solana installer below) and
+is pinned to 1.89.0 by `rust-toolchain.toml`, because Anchor needs rustup's
+`cargo +toolchain` support.
 
 Install Pixi on Windows:
 
@@ -46,8 +49,8 @@ pixi run forecast
 ### Solana and Anchor (WSL2)
 
 Solana CLI and Anchor are not installed through Pixi. On Windows, install and
-run them inside WSL2; their installer manages the Solana-specific Rust
-toolchain separately from the general Rust version pinned here.
+run them inside WSL2; their installer also installs rustup, which provides
+both the project Rust (1.89.0) and the Solana-specific build toolchain.
 
 In an Ubuntu WSL terminal, review and run Solana's official installer:
 
@@ -72,3 +75,12 @@ surfpool --version
 node --version
 yarn --version
 ```
+
+## Tests
+
+```bash
+pixi run test            # fast toolchain and repo checks
+pixi run test-surfpool   # slow: builds and deploys to a local Surfnet
+```
+
+See [tests/README.md](tests/README.md).

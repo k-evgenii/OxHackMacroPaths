@@ -10,10 +10,13 @@ versions = "node --version && npm --version && rustc --version && cargo --versio
 prepare = "python data/prepare.py"
 vectors = "python tests/make_vectors.py"
 forecast = "python forecast/ar1.py"
+test-env = "pytest tests/env"
+test-surfpool = "pytest tests/integration -m surfpool"
+test = "pytest tests/env"
+test-program = "anchor test"
 
 [dependencies]
 nodejs = "20.*"
-rust = "1.89.*"
 python = "3.12.*"
 pkg-config = ">=0.29.2,<0.30"
 openssl = ">=3.6.5,<4"
@@ -28,6 +31,7 @@ statsmodels = ">=0.15.0,<0.16"
 requests = ">=2.34.2,<3"
 pyarrow = ">=25.0.0,<26"
 matplotlib = ">=3.11.2,<4"
+pytest = ">=9.1.1,<10"
 
 [target.linux-64.dependencies]
 libudev = ">=262.1,<263"

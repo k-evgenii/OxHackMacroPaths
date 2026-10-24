@@ -39,7 +39,8 @@ anchor --version
 | Very slow builds | Repo is on `/mnt/c/...`. Move it to `~/` in WSL |
 | `solana: command not found` | PATH line above (the `solana/install/active_release/bin` part) |
 | `anchor init` prints "No such file or directory" | Seen here, project still got created. Probably the yarn step; ignore if `anchor build` works |
-| `rustc` / `node` versions look wrong | System Rust is 1.99 and Node is 18. Project versions (Rust 1.89, Node 20) only apply inside `pixi run ...` or `pixi shell` |
+| `error: no such command: +1.89.0-sbpf-solana-v1.52` on `anchor build` | A non-rustup `cargo` is first on PATH (`which cargo` should be `~/.cargo/bin/cargo`). The repo's pixi env no longer ships Rust; if you see this, `pixi install --locked` on the latest branch, or remove other Rust installs from PATH |
+| `rustc` / `node` versions look wrong | Rust 1.89 applies inside the repo (`rust-toolchain.toml`), 1.99 elsewhere. Node 20 only applies inside `pixi run ...` or `pixi shell`; system Node is 18 |
 | Airdrop fails with "rate limit" | Normal on devnet. Retry later or use https://faucet.solana.com |
 
 ## 4. First build (about 3 minutes the first time)

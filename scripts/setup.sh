@@ -31,7 +31,7 @@ fi
 step "2/6 pixi + locked project environment"
 command -v pixi >/dev/null || curl -fsSL https://pixi.sh/install.sh | bash
 command -v pixi >/dev/null || die "pixi not on PATH after install"
-(cd "$REPO_DIR" && pixi install --locked && pixi run -q versions) || die "pixi install --locked failed"
+(cd "$REPO_DIR" && pixi install --locked) || die "pixi install --locked failed"
 
 step "3/6 Solana CLI + Anchor + Surfpool"
 if ! command -v solana >/dev/null || ! command -v avm >/dev/null; then
@@ -75,6 +75,12 @@ step "6/6 Versions"
 echo "-- global --"
 solana --version; anchor --version; surfpool --version
 
+step "Client dependencies (npm)"
+(cd "$REPO_DIR" && pixi run -q npm ci) || echo "npm ci failed; tests/integration client tests will not run"
+
+step "Fast checks (pixi run test)"
+(cd "$REPO_DIR" && pixi run test) || echo "Some checks failed; see tests/README.md and ANCHOR.md"
+
 if ((SMOKE)); then
   step "Smoke build (throwaway project in ~/smoke)"
   rm -rf "$HOME/smoke" && mkdir -p "$HOME/smoke" && cd "$HOME/smoke"
@@ -86,6 +92,6 @@ cat <<MSG
 
 Done. Notes:
  - Open a NEW terminal (or: source ~/.bashrc) so PATH changes apply.
- - Run project commands through 'pixi run ...' or 'pixi shell' to get Node 20 / Rust 1.89.
+ - Run project commands through 'pixi run ...' or 'pixi shell' to get Node 20. Rust 1.89 comes from rustup.
  - Add your public key as a row in keys/README.md. Never commit the keypair.
 MSG

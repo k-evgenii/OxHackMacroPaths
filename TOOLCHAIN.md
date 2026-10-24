@@ -18,7 +18,8 @@ It asks for your sudo password once (apt), is safe to re-run, and does everythin
 |---|---|---|
 | apt packages | n/a | `sudo apt update && sudo apt install -y build-essential pkg-config libssl-dev libudev-dev clang cmake` (the only step that needs sudo) |
 | pixi | 0.83.0 | `curl -fsSL https://pixi.sh/install.sh \| bash`, then `pixi install --locked` in the repo |
-| Node / Rust / Python (pixi) | 20.20.2 / 1.89.0 / 3.12.15 | provided by `pixi.toml` + `pixi.lock`; do not edit them |
+| Node / Python (pixi) | 20.20.2 / 3.12.15 | provided by `pixi.toml` + `pixi.lock` |
+| Rust (rustup) | 1.89.0 in the repo | installed by the Solana installer; pinned by `rust-toolchain.toml` |
 | Solana CLI | 3.1.10 | `curl --proto '=https' --tlsv1.2 -sSfL https://solana-install.solana.workers.dev \| bash` |
 | Anchor CLI | **1.0.2** | `avm install 1.0.2 && avm use 1.0.2` |
 | Surfpool | 1.6.1 | installed by the Solana installer above; fallback `curl -sL https://run.surfpool.run/ \| bash` |
@@ -29,7 +30,11 @@ Check with `pixi run versions`, then `solana --version`, `anchor --version`, `su
 ## Gotchas
 
 - **The Solana installer installs Anchor 1.1.2, not 1.0.2.** Always run `avm install 1.0.2 && avm use 1.0.2` afterwards, and confirm `anchor --version` prints `anchor-cli 1.0.2`.
-- **Two Node and two Rust versions exist.** Outside pixi you get system Node 18.19.1 and Rust 1.99.1 (from the Solana installer). The project versions only apply inside `pixi run ...` or `pixi shell`. Use those for project work.
+- **Node: use pixi.** Outside pixi you get system Node 18.19.1; the project's Node 20 only applies inside `pixi run ...` or `pixi shell`.
+- **Rust: rustup only.** Inside the repo `rust-toolchain.toml` selects 1.89.0; elsewhere rustup's default (1.99.1) applies. Pixi must not contain Rust: it would shadow rustup's `cargo`, and `anchor build` then fails with `no such command: +1.89.0-sbpf-solana-...`.
+- **Anchor crates are pinned with `=1.0.2`.** A plain `"1.0.2"` in Cargo means `^1.0.2` and silently resolved to 1.2.1.
+- **`npm audit` reports 6 issues** (2 high), all inside `@anchor-lang/core` / `@solana/web3.js` v1. They are dev-only test deps; the offered fixes are breaking downgrades or web3.js v3. Left as is.
+- **Program ID.** `target/deploy/macropaths-keypair.json` (not in git) must match `declare_id!`. On a fresh clone `anchor build` makes a new keypair: get the shared one from the program owner, or run `anchor keys sync` locally and do not commit it. Open decision for the program owner.
 - **PATH after install.** If a command is not found, add to `~/.bashrc`:
   `export PATH="$HOME/.cargo/bin:$HOME/.avm/bin:$HOME/.local/share/solana/install/active_release/bin:$HOME/.local/bin:$HOME/.pixi/bin:$PATH"`
 - **First `anchor build` is slow** (about 3 minutes here); later builds are much faster.
@@ -48,6 +53,16 @@ solana balance
 ```
 
 Never print, paste or commit the keypair file. Only the public key is safe to share.
+
+## Testing
+
+```bash
+pixi run test            # ~1 s: versions, PATH, repo hygiene
+pixi run test-program    # anchor test: LiteSVM calls initialize
+pixi run test-surfpool   # deploy to a local Surfnet and call initialize via the TS client
+```
+
+Details and layout: tests/README.md.
 
 ## Status
 

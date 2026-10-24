@@ -17,3 +17,15 @@ coverage/
 # Rust and Anchor output
 target/
 .anchor/
+
+# Anchor template extras
+.DS_Store
+**/*.rs.bk
+test-ledger/
+.yarn/
+.surfpool/
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
