@@ -23,8 +23,12 @@ custom-panic = []
 [dependencies]
 anchor-lang = { version = "=1.0.2", features = ["init-if-needed"] }
 anchor-spl = "=1.0.2"
+# SHA-256 for the commitment chain (anchor-lang 1.0 no longer re-exports a hash module).
+# On-chain it uses the sol_sha256 syscall; the sha2 feature below is for native tests only.
+solana-sha256-hasher = "=3.1.0"
 
 [dev-dependencies]
+solana-sha256-hasher = { version = "=3.1.0", features = ["sha2"] }
 litesvm = "0.10.0"
 solana-message = "3.0.1"
 solana-transaction = "3.0.2"

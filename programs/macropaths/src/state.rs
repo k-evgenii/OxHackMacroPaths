@@ -69,7 +69,8 @@ pub struct Session {
     pub series_code: [u8; 16],
     /// First observation month as YYYYMM, e.g. 202101.
     pub start_period: u32,
-    pub expected_count: u8,
+    /// N, hashed as u32 in C_N (chain.rs). At most 48.
+    pub expected_count: u32,
     pub products: [ProductParams; 2],
 
     // Replay.
@@ -77,7 +78,8 @@ pub struct Session {
     pub commitment: [u8; 32],
     /// C_N: must equal `commitment` once the last row is posted.
     pub terminal: [u8; 32],
-    pub next_index: u8,
+    /// i of the next row, hashed as u32 in C_i (chain.rs).
+    pub next_index: u32,
     /// Month the next observation must carry, YYYYMM (December rolls to January).
     pub next_period: u32,
     pub values: [i64; 48],
@@ -123,7 +125,7 @@ pub struct SessionParams {
     pub source_digest: [u8; 32],
     pub series_code: [u8; 16],
     pub start_period: u32,
-    pub expected_count: u8,
+    pub expected_count: u32,
     pub products: [ProductParams; 2],
     /// C_0.
     pub initial_commitment: [u8; 32],

@@ -15,7 +15,7 @@ pub struct Observe<'info> {
 /// TODO:
 /// - require state == Running (WrongState), index == next_index (WrongIndex),
 ///   period_id == next_period (WrongPeriod)
-/// - recompute C_i from (dataset_id, index, period_id, value, next_commitment);
+/// - recompute C_i = chain::chain_link(dataset_id, index, period_id, value, next_commitment);
 ///   require it equals session.commitment (BadCommitment); no state change on any failure
 /// - values[index] = value; update stats for both products with math::update
 /// - commitment = next_commitment; next_index += 1; next_period steps one month
@@ -23,7 +23,7 @@ pub struct Observe<'info> {
 /// - emit!(Observed { .. })
 pub fn handler(
     _ctx: Context<Observe>,
-    _index: u8,
+    _index: u32,
     _period_id: u32,
     _value: i64,
     _next_commitment: [u8; 32],

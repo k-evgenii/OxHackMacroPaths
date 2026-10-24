@@ -495,7 +495,7 @@
       "args": [
         {
           "name": "index",
-          "type": "u8"
+          "type": "u32"
         },
         {
           "name": "period_id",
@@ -826,7 +826,7 @@
           },
           {
             "name": "index",
-            "type": "u8"
+            "type": "u32"
           },
           {
             "name": "period_id",
@@ -1064,7 +1064,10 @@
           },
           {
             "name": "expected_count",
-            "type": "u8"
+            "docs": [
+              "N, hashed as u32 in C_N (chain.rs). At most 48."
+            ],
+            "type": "u32"
           },
           {
             "name": "products",
@@ -1105,7 +1108,10 @@
           },
           {
             "name": "next_index",
-            "type": "u8"
+            "docs": [
+              "i of the next row, hashed as u32 in C_i (chain.rs)."
+            ],
+            "type": "u32"
           },
           {
             "name": "next_period",
@@ -1278,7 +1284,7 @@
           },
           {
             "name": "expected_count",
-            "type": "u8"
+            "type": "u32"
           },
           {
             "name": "products",

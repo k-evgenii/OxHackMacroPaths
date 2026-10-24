@@ -1,3 +1,4 @@
+pub mod chain;
 pub mod constants;
 pub mod error;
 pub mod events;
@@ -37,7 +38,7 @@ pub mod macropaths {
 
     pub fn observe(
         ctx: Context<Observe>,
-        index: u8,
+        index: u32,
         period_id: u32,
         value: i64,
         next_commitment: [u8; 32],
