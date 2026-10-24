@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { Keypair, PublicKey } from "@solana/web3.js";
 import anchor, { type Idl } from "@anchor-lang/core";
 
-import { accountMetas, big, enumName, instruction, parsePlay, play, positionPda, requireFlat, type SessionFile } from "./program.js";
+import { accountMetas, big, enumName, instruction, parsePlay, play, positionPda, requireProgram, type SessionFile } from "./program.js";
 import { parseSides } from "./ops.js";
 
 const { BN, BorshCoder } = anchor;
@@ -80,9 +80,8 @@ test("instruction: deposit encodes amounts with accounts in IDL order", () => {
   assert.throws(() => accountMetas(idl, "nope", {}), /no nope instruction/);
 });
 
-test("requireFlat: program and layout must match", () => {
-  const f = { programId: PROGRAM, layout: "flat" } as SessionFile;
-  requireFlat(idl, f);
-  assert.throws(() => requireFlat(idl, { ...f, layout: "params" }), /only the flat/);
-  assert.throws(() => requireFlat(idl, { ...f, programId: "x" }), /session file is for program x/);
+test("requireProgram: session file must be for the IDL's program", () => {
+  const f = { programId: PROGRAM } as unknown as SessionFile;
+  requireProgram(idl, f);
+  assert.throws(() => requireProgram(idl, { ...f, programId: "x" }), /session file is for program x/);
 });

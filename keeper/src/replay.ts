@@ -65,8 +65,7 @@ function observeIx(ctx: Ctx, row: ReplayRow) {
       value: bn(BigInt(row.value)),
       next_commitment: [...Buffer.from(row.C_next, "hex")],
     },
-    // controller is only used by layouts whose observe has a signer.
-    { session: ctx.session, controller: ctx.keeper.publicKey },
+    { session: ctx.session },
   );
 }
 

@@ -27,9 +27,9 @@ pixi run npm --prefix keeper run env:check   # prints set/not set, RPC host, kee
   `getSignatureState()` / `isBlockhashExpired()` for resume logic. It only rebuilds a transaction once the
   previous one's blockhash is past the finalized block height and the signature is still unknown,
   so it cannot double-post. See the header comment.
-- `src/session.ts`: `create_session` inputs, instruction and read-back. It picks the layout from the
-  `create_session` args in `packages/client/idl.json` (PR #7's `nonce + params`, or `cursor_main`'s flat
-  args; see `docs/DECISIONS.md`). Tests: `npx tsx --test keeper/src/session.test.ts`.
+- `src/session.ts`: `create_session` inputs, instruction and read-back for the `cursor_main` program.
+  `checkIdl` fails if `packages/client/idl.json` has different `create_session` args (see `docs/DECISIONS.md`).
+  Tests: `npx tsx --test keeper/src/session.test.ts`.
 - `src/run.ts`: part 1 creates the PLAY mint (6 decimals), calls `create_session` with everything from
   `data/cpi-yoy-replay.json`, writes `data/session.json`, and checks every Session field it set. Part 2
   seeds the four sides from the keeper (`--seed 90,100,90,100` by default, `--seed none` to skip).
@@ -41,7 +41,7 @@ pixi run npm --prefix keeper run env:check   # prints set/not set, RPC host, kee
   transaction must be confirmed or provably expired before the row is rebuilt.
 - `src/ops.ts` and `src/admin.ts`: `npm run admin -- <seed|lock|settle|status>` for the session in
   `data/session.json`. Every command reads the session first and sends nothing if that step is already
-  done. These, and seeding, need the flat (`cursor_main`) layout, the only one with real instruction bodies.
+  done.
 
 ## Local smoke test (no devnet)
 
@@ -84,6 +84,6 @@ DOTENV_PATH=/tmp/keeper-local/local.env pixi run npm --prefix keeper run admin -
 DOTENV_PATH=/tmp/keeper-local/local.env pixi run npm --prefix keeper run admin -- status
 ```
 
-Options: `--session-id`, `--mint`, `--controller`, `--deposit-window`, `--replay-window`, `--idl`, `--replay`,
+Options: `--session-id`, `--mint`, `--deposit-window`, `--replay-window`, `--idl`, `--replay`,
 `--out`, `--seed`. If you re-run with an existing `--session-id`, nothing is sent: it re-checks the session against
 `data/session.json`. It exits 1 if any read-back field differs.

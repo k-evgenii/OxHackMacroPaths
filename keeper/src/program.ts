@@ -1,9 +1,6 @@
 /**
  * Generic program access from the IDL: instructions with accounts matched by IDL name, account
  * decoding, and data/session.json (written by run.ts, read by admin.ts and replay.ts).
- *
- * admin.ts, the seeding in run.ts and replay.ts need the "flat" layout (cursor_main), the only one
- * with real deposit / lock_and_start / observe / settle bodies; `requireFlat` enforces that.
  */
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { PublicKey, TransactionInstruction, type Connection } from "@solana/web3.js";
@@ -101,14 +98,12 @@ export function parsePlay(s: string): bigint {
 
 /** data/session.json: what run.ts created, so the other scripts can find it. */
 export interface SessionFile {
-  layout: string;
   programId: string;
   session: string;
   vaults: [string, string];
   mint: string;
   sessionId: string;
   creator: string;
-  controller: string;
   depositDeadline: string;
   replayDeadline: string;
   createSignature: string | null;
@@ -123,10 +118,7 @@ export function writeSessionFile(file: string, f: SessionFile): void {
   writeFileSync(file, JSON.stringify(f, null, 2) + "\n");
 }
 
-/** The session file must match the IDL's program and use the flat layout. */
-export function requireFlat(idl: Idl, f: SessionFile): void {
+/** The session file must be for the IDL's program. */
+export function requireProgram(idl: Idl, f: SessionFile): void {
   if (f.programId !== idl.address) throw new Error(`session file is for program ${f.programId}, IDL is ${idl.address}`);
-  if (f.layout !== "flat") {
-    throw new Error(`session layout is "${f.layout}"; only the flat (cursor_main) layout has real instruction bodies`);
-  }
 }
