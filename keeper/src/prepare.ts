@@ -324,14 +324,19 @@ export function checkAgainstVectors(prep: Prepared, vectors: any): string[] {
       const v = vlevels[k];
       let vstr: unknown;
       let vdate: unknown;
+      let vt: unknown;
       if (v !== null && typeof v === "object") {
-        vstr = v.value_str ?? v.value ?? v.level ?? v.P;
+        vstr = v.level ?? v.value_str ?? v.value ?? v.P;
         vdate = v.date;
+        vt = v.t;
       } else {
         vstr = v;
       }
       if (vdate !== undefined && vdate !== L.date) {
         out.push(`level[${k}] (${L.date}): date ${JSON.stringify(vdate)}`);
+      }
+      if (vt !== undefined && vt !== L.i) {
+        out.push(`level[${k}] (${L.date}): t ${JSON.stringify(vt)} != ${L.i}`);
       }
       const s = typeof vstr === "number" ? String(vstr) : vstr;
       if (typeof s !== "string") {
@@ -349,6 +354,18 @@ export function checkAgainstVectors(prep: Prepared, vectors: any): string[] {
       } else if (s !== L.value_str) {
         out.push(`level[${k}] (${L.date}): same value, different string ${JSON.stringify(s)} vs ${JSON.stringify(L.value_str)}`);
       }
+    }
+  }
+
+  // Optional final path statistics: compare D and A if present.
+  const vfinal = vectors?.final;
+  if (vfinal !== null && typeof vfinal === "object") {
+    const stats = pathStats(prep.rows);
+    for (const key of ["D", "A"] as const) {
+      if (vfinal[key] === undefined) continue;
+      const v = toBigIntStrict(vfinal[key]);
+      if (v === null) out.push(`final.${key}: ${JSON.stringify(vfinal[key])} is not an integer`);
+      else if (v !== stats[key]) out.push(`final.${key}: vectors=${v} computed=${stats[key]}`);
     }
   }
   return out;
@@ -435,7 +452,9 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     const vecPath = path.resolve(args.check);
     const vectors = JSON.parse(fs.readFileSync(vecPath, "utf8"));
     const mismatches = checkAgainstVectors(prep, vectors);
-    const levelsNote = Array.isArray(vectors?.levels) ? `${vectors.levels.length} levels` : "no levels";
+    const levelsNote =
+      (Array.isArray(vectors?.levels) ? `${vectors.levels.length} levels` : "no levels") +
+      (vectors?.final && typeof vectors.final === "object" ? ", final D/A" : "");
     if (mismatches.length) {
       console.error(`check FAILED against ${vecPath} (${levelsNote}): ${mismatches.length} mismatch(es)`);
       for (const m of mismatches) console.error(`  ${m}`);

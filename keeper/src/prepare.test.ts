@@ -129,3 +129,23 @@ test("checkAgainstVectors: catches an altered row and levels", () => {
   assert.match(m[0], /row\[7\].*x vectors=32501 computed=32500/);
   assert.match(m[1], /level\[3\]/);
 });
+
+test("checkAgainstVectors: task-5 shape (levels {t,date,level}, final D/A)", () => {
+  const snap = synthSnapshot((k) => (k < 12 ? "100" : "103.250"));
+  const prep = prepare(snap);
+  const { D, A } = pathStats(prep.rows);
+  const vec: any = {
+    rows: rowsToJson(prep.rows),
+    levels: prep.levels.map((l) => ({ t: l.i, date: l.date, level: l.value_str })),
+    final: { D: Number(D), A: Number(A) },
+  };
+  assert.deepEqual(checkAgainstVectors(prep, vec), []);
+  vec.levels[0].t = 0;
+  vec.levels[1].level = "100.5";
+  vec.final.A += 1;
+  const m = checkAgainstVectors(prep, vec);
+  assert.equal(m.length, 3);
+  assert.match(m[0], /level\[0\].*t 0 != -12/);
+  assert.match(m[1], /level\[1\].*"100.5"/);
+  assert.match(m[2], /final\.A/);
+});
