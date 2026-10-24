@@ -59,11 +59,10 @@ One PR per agent. Force-push allowed on your own branch only.
 2. `anchor build --ignore-keys` (plain `anchor build` once the shared keypair is in `target/deploy/`)
 3. `cargo test -p macropaths`
 4. `pixi run vectors` prints `D=66191 A=691184 827387 863980`
-5. `git checkout tests/vectors.json` — the run rewrites provenance.retrieved_at from the local snapshot; never commit that change
-6. `git diff cursor_main --stat` touches only the brief's files (plus union additions to shared files)
-7. `git merge --no-ff agent/NN-name`
-8. Append a line to `docs/merge-log.md`: `NN-name | <sha> | build <s> | <tests> passing | reviewed by <name>`
-9. Post `cursor_main moved: NN-name`
+5. `git diff cursor_main --stat` touches only the brief's files (plus union additions to shared files)
+6. `git merge --no-ff agent/NN-name`
+7. Append a line to `docs/merge-log.md`: `NN-name | <sha> | build <s> | <tests> passing | reviewed by <name>`
+8. Post `cursor_main moved: NN-name`
 
 ## Conflict rules
 

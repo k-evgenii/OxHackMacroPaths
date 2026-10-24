@@ -22,7 +22,6 @@ git checkout agent/NN-name && git rebase cursor_main
 anchor build --ignore-keys
 cargo test -p macropaths
 pixi run vectors            # D=66191 A=691184 827387 863980
-git checkout tests/vectors.json    # the run rewrites provenance.retrieved_at from the local snapshot; never commit that change
 git diff cursor_main --stat        # only the brief's files
 git checkout cursor_main && git merge --no-ff agent/NN-name
 echo "| NN-name | $(git rev-parse --short HEAD) | ... |" >> docs/merge-log.md
