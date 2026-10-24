@@ -1,6 +1,7 @@
 use anchor_lang::prelude::*;
 
-use crate::state::Session;
+use crate::error::MacroError;
+use crate::state::{Session, SessionState};
 
 #[derive(Accounts)]
 pub struct LockAndStart<'info> {
@@ -9,7 +10,14 @@ pub struct LockAndStart<'info> {
     pub session: Box<Account<'info, Session>>,
 }
 
-#[allow(unused_variables)]
 pub fn handler(ctx: Context<LockAndStart>) -> Result<()> {
+    let session = &mut ctx.accounts.session;
+    require!(session.state == SessionState::Open, MacroError::WrongState);
+    for total in session.side_totals {
+        require!(total > 0, MacroError::EmptySide);
+    }
+    session.matched[0] = session.side_totals[0].min(session.side_totals[1]);
+    session.matched[1] = session.side_totals[2].min(session.side_totals[3]);
+    session.state = SessionState::Running;
     Ok(())
 }
