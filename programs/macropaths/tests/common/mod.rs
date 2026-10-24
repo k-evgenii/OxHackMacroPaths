@@ -5,9 +5,12 @@
 use std::result::Result;
 
 use anchor_lang::prelude::{AccountDeserialize, Clock, Pubkey};
-use anchor_lang::{InstructionData, ToAccountMetas};
+use anchor_lang::solana_program::program_option::COption;
+use anchor_lang::solana_program::program_pack::Pack;
+use anchor_lang::{AccountSerialize, InstructionData, ToAccountMetas};
 use litesvm::types::{FailedTransactionMetadata, TransactionMetadata};
 use litesvm::LiteSVM;
+use litesvm_token::spl_token::state::{Account as SplAccount, AccountState};
 use litesvm_token::{CreateAssociatedTokenAccount, CreateMint, MintTo};
 use solana_keypair::Keypair;
 use solana_message::{Instruction, Message};
@@ -191,21 +194,7 @@ pub fn create_session_default(env: &mut Env, id: u64) -> Pubkey {
     let (session, _) = session_pda(&authority_pk, id);
     let (vault_0, _) = vault_pda(&session, 0);
     let (vault_1, _) = vault_pda(&session, 1);
-    let v = vectors();
-    let commitment = &v["commitment"];
-    assert!(
-        commitment.is_object(),
-        "vectors.json commitment block is missing (dataset_id, C_0, C_N)"
-    );
-    let dataset_id = hex32(
-        "commitment.dataset_id",
-        commitment["dataset_id"].as_str().expect("dataset_id"),
-    );
-    let c0 = hex32("commitment.C_0", commitment["C_0"].as_str().expect("C_0"));
-    let terminal = hex32("commitment.C_N", commitment["C_N"].as_str().expect("C_N"));
-    let k = json_i64(&v["parameters"], "K");
-    let d_cap = json_i64(&v["parameters"], "Dcap");
-    let a_cap = json_i64(&v["parameters"], "Acap");
+    let head = chain_head();
     let now = env.svm.get_sysvar::<Clock>().unix_timestamp;
     let deposit_deadline = now.checked_add(3_600).expect("deposit deadline");
     let replay_deadline = now.checked_add(7_200).expect("replay deadline");
@@ -223,14 +212,14 @@ pub fn create_session_default(env: &mut Env, id: u64) -> Pubkey {
         },
         macropaths::instruction::CreateSession {
             session_id: id,
-            k,
-            d_cap,
-            a_cap,
+            k: head.k,
+            d_cap: head.d_cap,
+            a_cap: head.a_cap,
             deposit_deadline,
             replay_deadline,
-            dataset_id,
-            c0,
-            terminal,
+            dataset_id: head.dataset_id,
+            c0: head.c0,
+            terminal: head.terminal,
         },
     );
     send(env, ix, &[&authority]).unwrap_or_else(|err| panic!("{}", err.meta.pretty_logs()));
@@ -283,12 +272,160 @@ pub fn observe_all(env: &mut Env, session: &Pubkey, rows: &[(u8, u32, i64, [u8; 
     }
 }
 
+/// Writes a Session at `session_pda(authority, id)`.
+///
+/// Defaults match `create_session_default`. `apply` runs after those defaults
+/// and may replace any field.
+pub fn put_session(env: &mut Env, id: u64, apply: impl FnOnce(&mut macropaths::Session)) -> Pubkey {
+    let authority = env.authority.pubkey();
+    let (session, bump) = session_pda(&authority, id);
+    let (vault_0, vault_bump_0) = vault_pda(&session, 0);
+    let (vault_1, vault_bump_1) = vault_pda(&session, 1);
+    let head = chain_head();
+    let now = env.svm.get_sysvar::<Clock>().unix_timestamp;
+    let mut account = macropaths::Session {
+        authority,
+        session_id: id,
+        play_mint: env.mint,
+        vaults: [vault_0, vault_1],
+        dataset_id: head.dataset_id,
+        commitment: head.c0,
+        terminal: head.terminal,
+        n_obs: macropaths::N_OBS,
+        next_index: 0,
+        last_period_id: 0,
+        state: macropaths::SessionState::Open,
+        k: head.k,
+        d_cap: head.d_cap,
+        a_cap: head.a_cap,
+        deposit_deadline: now.checked_add(3_600).expect("deposit deadline"),
+        replay_deadline: now.checked_add(7_200).expect("replay deadline"),
+        side_totals: [0; 4],
+        matched: [0; 2],
+        peak: i64::MIN,
+        max_decline: 0,
+        excess_acc: 0,
+        values: [0; 48],
+        scores: [0; 2],
+        p_budget: [0; 4],
+        r_budget: [0; 4],
+        position_count: 0,
+        claimed_count: 0,
+        cover_count: 0,
+        cover_claimed_count: 0,
+        seller_products_open: 0,
+        bump,
+        vault_bumps: [vault_bump_0, vault_bump_1],
+    };
+    apply(&mut account);
+    install_program_account(env, &session, &account);
+    session
+}
+
+/// Writes the two vault token accounts for `session` and mints `amounts` into them.
+pub fn put_vaults(env: &mut Env, session: &Pubkey, amounts: [u64; 2]) {
+    for (index, amount) in amounts.into_iter().enumerate() {
+        let (vault, _) = vault_pda(session, u8::try_from(index).expect("vault index"));
+        let token = SplAccount {
+            mint: env.mint,
+            owner: *session,
+            amount: 0,
+            delegate: COption::None,
+            state: AccountState::Initialized,
+            is_native: COption::None,
+            delegated_amount: 0,
+            close_authority: COption::None,
+        };
+        let mut data = vec![0u8; SplAccount::LEN];
+        SplAccount::pack(token, &mut data).expect("pack vault");
+        install_account(env, &vault, data, anchor_spl::token::ID);
+        if amount > 0 {
+            MintTo::new(&mut env.svm, &env.payer, &env.mint, &vault, amount)
+                .send()
+                .unwrap_or_else(|err| panic!("mint vault {index}: {}", err.meta.pretty_logs()));
+        }
+    }
+}
+
+/// Writes a Position at `position_pda(session, owner)`.
+pub fn put_position(
+    env: &mut Env,
+    session: &Pubkey,
+    owner: &Pubkey,
+    deposited: [u64; 4],
+    claimed: bool,
+) -> Pubkey {
+    let (position, bump) = position_pda(session, owner);
+    let account = macropaths::Position {
+        session: *session,
+        owner: *owner,
+        deposited,
+        claimed,
+        bump,
+    };
+    install_program_account(env, &position, &account);
+    position
+}
+
 fn instruction<A: ToAccountMetas, D: InstructionData>(accounts: A, data: D) -> Instruction {
     Instruction {
         program_id: macropaths::ID,
         accounts: accounts.to_account_metas(None),
         data: data.data(),
     }
+}
+
+struct ChainHead {
+    dataset_id: [u8; 32],
+    c0: [u8; 32],
+    terminal: [u8; 32],
+    k: i64,
+    d_cap: i64,
+    a_cap: i64,
+}
+
+fn chain_head() -> ChainHead {
+    let v = vectors();
+    let commitment = &v["commitment"];
+    assert!(
+        commitment.is_object(),
+        "vectors.json commitment block is missing (dataset_id, C_0, C_N)"
+    );
+    ChainHead {
+        dataset_id: hex32(
+            "commitment.dataset_id",
+            commitment["dataset_id"].as_str().expect("dataset_id"),
+        ),
+        c0: hex32("commitment.C_0", commitment["C_0"].as_str().expect("C_0")),
+        terminal: hex32("commitment.C_N", commitment["C_N"].as_str().expect("C_N")),
+        k: json_i64(&v["parameters"], "K"),
+        d_cap: json_i64(&v["parameters"], "Dcap"),
+        a_cap: json_i64(&v["parameters"], "Acap"),
+    }
+}
+
+fn install_program_account<T: AccountSerialize>(env: &mut Env, key: &Pubkey, account: &T) {
+    let mut data = Vec::new();
+    account
+        .try_serialize(&mut data)
+        .expect("serialize program account");
+    install_account(env, key, data, macropaths::ID);
+}
+
+fn install_account(env: &mut Env, key: &Pubkey, data: Vec<u8>, owner: Pubkey) {
+    let lamports = env.svm.minimum_balance_for_rent_exemption(data.len());
+    let mut stored = env
+        .svm
+        .get_account(&env.payer.pubkey())
+        .expect("payer account");
+    stored.lamports = lamports;
+    stored.data = data;
+    stored.owner = owner;
+    stored.executable = false;
+    stored.rent_epoch = 0;
+    env.svm
+        .set_account(*key, stored)
+        .unwrap_or_else(|err| panic!("set account {key}: {err}"));
 }
 
 fn json_i64(obj: &serde_json::Value, key: &str) -> i64 {
