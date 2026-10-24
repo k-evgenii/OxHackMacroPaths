@@ -21,10 +21,10 @@
 3. **Invariants after every stage, both tests** (§1.9): before any claim, `vault_0 + vault_1 == Σ side_totals`; after each claim, vault balances fell by exactly that claim; after all claims, `Σ paid ≤ Σ deposited` and each vault holds only dust `≥ 0`; after sweep both vaults are 0 and the treasury holds the dust; `claimed_count == position_count`.
 4. **Compute units.** From each `observe`'s `TransactionMetadata.compute_units_consumed` record the max and the mean; also the CU of `settle` and of one `claim`. Print them and write them to `docs/compute-budget.md` with the date and the commit SHA.
 5. **Keeper end-to-end on Surfnet (the demo path), `tests/integration/test_keeper_lifecycle.py`**, marked `@pytest.mark.surfpool`, reusing the `surfnet`, `built`, `payer` fixtures from `test_surfpool_smoke.py` (import them or copy the three fixtures; do not change that file). Steps the test runs as subprocesses, each with `DOTENV_PATH` pointing at a temp `.env` whose `RPC_URL` is the Surfnet and `KEEPER_KEYPAIR` is the payer:
-   - generate the replay file if missing: `pixi run fetch` (needs network; if `data/snapshots/CPIAUCNS.json` already exists skip) then `pixi run npm --prefix keeper run tsx src/prepare.ts` so that `data/cpi-yoy-replay.json` exists;
+   - generate the replay file from the repo root: `pixi run npx tsx keeper/src/prepare.ts` (it writes `data/cpi-yoy-replay.json`). If `data/snapshots/CPIAUCNS.json` is missing, run `pixi run fetch` first;
    - `npm --prefix keeper run program:load -- target/deploy/macropaths.so <declared id>`;
    - `npm --prefix keeper run session:create -- --deposit-window 600 --replay-window 3600 --seed 90,100,90,100`;
-   - `npm --prefix keeper run admin -- lock`;
+   - `npm --prefix keeper run admin -- lock` immediately after `session:create`, well inside `--deposit-window 600`. `lock_and_start` fails with `PastDeadline` once `deposit_deadline` has passed. Do not sleep between them;
    - `npm --prefix keeper run replay -- --interval-ms 2000`, timed; then a second run of the same session must print that nothing is left to post;
    - `npm --prefix keeper run admin -- settle`, then `admin -- status`, and assert the status output contains `827387` and `863980`.
    Record the wall-clock of the replay at `--interval-ms 2000` in `docs/compute-budget.md`. The keeper enforces a 2000 ms minimum, so there is no 0 ms measurement; note that instead.
