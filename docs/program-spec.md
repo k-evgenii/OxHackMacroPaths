@@ -252,3 +252,7 @@ pub fn observe_all(env, session, rows: &[(u8,u32,i64,[u8;32])])
 ```
 
 Instructions are built as in the existing `test_initialize.rs`: `macropaths::accounts::X { .. }.to_account_metas(None)` and `macropaths::instruction::X { .. }.data()`.
+
+### 1.11 Deferred, adopted from Dev's PR #7
+
+Generic per-product parameters (kind, direction, threshold, cap) and an on-chain term-sheet hash are roadmap items. The `_reserved` bytes exist so they can be added without migrating sessions.
