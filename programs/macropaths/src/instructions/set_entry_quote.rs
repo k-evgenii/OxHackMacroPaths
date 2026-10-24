@@ -1,7 +1,8 @@
 use anchor_lang::prelude::*;
 
-use crate::constants::SEED_QUOTE;
-use crate::state::{EntryQuote, Session};
+use crate::constants::{QUOTE_MAX, QUOTE_MIN, SEED_QUOTE};
+use crate::error::MacroError;
+use crate::state::{EntryQuote, Session, SessionState};
 
 #[derive(Accounts)]
 pub struct SetEntryQuote<'info> {
@@ -20,7 +21,24 @@ pub struct SetEntryQuote<'info> {
     pub system_program: Program<'info, System>,
 }
 
-#[allow(unused_variables)]
 pub fn handler(ctx: Context<SetEntryQuote>, p: [u64; 2]) -> Result<()> {
+    require!(
+        ctx.accounts.session.state == SessionState::Open,
+        MacroError::WrongState
+    );
+    for price in p {
+        require!(
+            (QUOTE_MIN..=QUOTE_MAX).contains(&price),
+            MacroError::QuoteOutOfRange
+        );
+    }
+    require!(!ctx.accounts.quote.frozen, MacroError::QuoteFrozen);
+
+    let session_key = ctx.accounts.session.key();
+    ctx.accounts.quote.p = p;
+    ctx.accounts.quote.is_set = true;
+    ctx.accounts.quote.session = session_key;
+    // buy_cover re-derives this PDA with the stored canonical bump.
+    ctx.accounts.quote.bump = ctx.bumps.quote;
     Ok(())
 }
