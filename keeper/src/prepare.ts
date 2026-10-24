@@ -22,6 +22,13 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 
+/** Indexed read that fails loudly instead of yielding undefined (noUncheckedIndexedAccess). */
+export function at<T>(arr: readonly T[], i: number): T {
+  const v = arr[i];
+  if (v === undefined) throw new Error(`index ${i} out of range (length ${arr.length})`);
+  return v;
+}
+
 // ---------------------------------------------------------------------------
 // Types
 
@@ -153,8 +160,8 @@ export function selectLevels(snapshot: Snapshot): { levels: Level[]; scale: numb
     throw new Error("snapshot has no rows array");
   }
   const dates = windowDates();
-  const first = dates[0];
-  const last = dates[dates.length - 1];
+  const first = at(dates, 0);
+  const last = at(dates, dates.length - 1);
 
   const inWindow = snapshot.rows.filter(
     (r) => typeof r?.date === "string" && r.date >= first && r.date <= last,
@@ -175,8 +182,8 @@ export function selectLevels(snapshot: Snapshot): { levels: Level[]; scale: numb
     const list = byDate.get(d);
     if (!list) problems.push(`missing month: ${d}`);
     else if (list.length > 1) problems.push(`duplicate month: ${d} (${list.length} rows)`);
-    else if (isMissing(list[0].value_str)) {
-      problems.push(`empty value for ${d}: ${JSON.stringify(list[0].value_str)}`);
+    else if (isMissing(at(list, 0).value_str)) {
+      problems.push(`empty value for ${d}: ${JSON.stringify(at(list, 0).value_str)}`);
     }
   }
   if (inWindow.length !== WINDOW_MONTHS) {
@@ -187,7 +194,7 @@ export function selectLevels(snapshot: Snapshot): { levels: Level[]; scale: numb
   }
 
   const parsed = dates.map((d) => {
-    const value_str = byDate.get(d)![0].value_str;
+    const value_str = at(byDate.get(d)!, 0).value_str;
     let p;
     try {
       p = parseDecimal(value_str);
@@ -214,8 +221,8 @@ export function prepare(snapshot: Snapshot): Prepared {
   const { levels, scale } = selectLevels(snapshot);
   const rows: Row[] = [];
   for (let t = 0; t < N_ROWS; t++) {
-    const now = levels[t + LAG]; // P_t
-    const lag = levels[t]; // P_{t-12}
+    const now = at(levels, t + LAG); // P_t
+    const lag = at(levels, t); // P_{t-12}
     rows.push({ t, date: now.date, x: yoy(now.scaled, lag.scaled) });
   }
   return { levels, scale, rows };
@@ -320,7 +327,7 @@ export function checkAgainstVectors(prep: Prepared, vectors: any): string[] {
       out.push(`level count: snapshot ${prep.levels.length}, vectors ${vlevels.length}`);
     }
     for (let k = 0; k < Math.min(vlevels.length, prep.levels.length); k++) {
-      const L = prep.levels[k];
+      const L = at(prep.levels, k);
       const v = vlevels[k];
       let vstr: unknown;
       let vdate: unknown;
@@ -427,10 +434,10 @@ export function main(argv: string[] = process.argv.slice(2)): number {
   if (snapshot.id || snapshot.retrieved_at || snapshot.sha256_of_raw) {
     console.log(`  id=${snapshot.id} retrieved_at=${snapshot.retrieved_at} sha256_of_raw=${snapshot.sha256_of_raw}`);
   }
-  console.log(`levels: ${prep.levels.length} (${prep.levels[0].date} .. ${prep.levels[prep.levels.length - 1].date}), common scale 10^-${prep.scale}`);
+  console.log(`levels: ${prep.levels.length} (${at(prep.levels, 0).date} .. ${at(prep.levels, prep.levels.length - 1).date}), common scale 10^-${prep.scale}`);
   console.log(`rows: ${rows.length}`);
-  console.log(`  first: ${fmtRow(rows[0])}`);
-  console.log(`  last:  ${fmtRow(rows[rows.length - 1])}`);
+  console.log(`  first: ${fmtRow(at(rows, 0))}`);
+  console.log(`  last:  ${fmtRow(at(rows, rows.length - 1))}`);
 
   let status = 0;
 
