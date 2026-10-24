@@ -1,74 +1,62 @@
-# Commitment chain
+# Commitment chain encoding (v1, agreed)
 
-Byte-exact definition shared by `programs/macropaths/src/chain.rs`, `tests/make_vectors.py` and `keeper/src/prepare.ts`. A worked byte dump of `C_48` and `C_47` for the frozen CPIAUCNS series is below.
+Agreed by Dev and Phill on 2026-10-24. The off-chain keeper (`keeper/src/prepare.ts`), the reference vectors (`tests/make_vectors.py` → `tests/vectors.json`) and the on-chain `observe` must all produce these bytes exactly.
 
-Byte encoding, identical in Rust, Python and TypeScript:
+## Primitives
 
-```
-dataset_id = SHA256( utf8(source_url) ‖ 0x0A ‖ utf8(retrieved_at) ‖ 0x0A ‖ utf8(sha256_of_raw hex, lowercase) )
-             (the three fields of data/snapshots/CPIAUCNS.json)
-period_id  = year*100 + month   as u32           (202101 for Jan 2021)
-C_48       = SHA256( "PATH-END-v1" ‖ dataset_id[32] ‖ u32_le(48) )
-C_i        = SHA256( "PATH-OBS-v1" ‖ dataset_id[32] ‖ u32_le(i) ‖ u32_le(period_id_i) ‖ i64_le(x_i) ‖ C_{i+1}[32] )   for i = 47 down to 0
-```
+All integers are little-endian.
 
-Session stores `commitment = C_0` at creation and `terminal = C_48`. `observe(i, period, x, next)` recomputes `C_i` from its arguments and `next`, requires it equals the stored commitment, then stores `next`. After 48 accepted observations the stored commitment equals `terminal`; `settle` requires that. Rust: `anchor_lang::solana_program::hash::hashv(&[b"PATH-OBS-v1", &dataset_id, &i.to_le_bytes(), &period.to_le_bytes(), &x.to_le_bytes(), &next]).to_bytes()` with `i: u32`.
+| Notation | Bytes |
+|---|---|
+| `u32(x)` | 4 bytes, unsigned |
+| `i64(x)` | 8 bytes, two's complement |
+| `u64(x)` | 8 bytes, unsigned |
+| `str(s)` | `u32(len)` followed by the `len` UTF-8 bytes of `s` |
+| `"TAG"` | raw ASCII bytes, with no length prefix and no NUL |
+| `‖` | concatenation |
+| `SHA256` | SHA-256, giving 32 bytes |
 
-## Worked byte dump, CPIAUCNS
+## Fields
 
-The three identity strings are the frozen snapshot fields in `tests/vectors.json` `provenance`. `x_47 = 28880` is `rows[47].x` (Dec 2024). Integers are little-endian. Each digest is SHA-256 of the raw concatenation, with no length prefix.
+| Field | Type | Value for the CPI demo |
+|---|---|---|
+| `i` | u32 | row index, 0..47 |
+| `N` | u32 | 48, stored in `Session` |
+| `period_id` | u32 | YYYYMM of row `i` (row 0 = `202101`, row 47 = `202412`) |
+| `value` | i64 | `x_i` (eq. 1 of the maths doc) |
+| `dataset_id` | [u8; 32] | defined below |
+| `K` | i64 | 40000 |
+| `D_cap` | u64 | 80000 |
+| `A_cap` | u64 | 800000 |
 
-### dataset_id
+## dataset_id
 
-```
-utf8("https://fred.stlouisfed.org/graph/fredgraph.csv?id=CPIAUCNS")
-‖ 0a
-‖ utf8("2026-10-24T15:14:23Z")
-‖ 0a
-‖ utf8("cfab9b9be4a5d4f06253c4dcc3f7e0b28b1d58837e710dd7cb1fd54a49e7ad7c")
-```
-
-Preimage, 145 bytes:
-
-```
-68747470733a2f2f667265642e73746c6f7569736665642e6f72672f67726170682f6672656467726170682e6373763f69643d4350494155434e530a323032362d31302d32345431353a31343a32335a0a63666162396239626534613564346630363235336334646363336637653062323862316435383833376537313064643763623166643534613439653761643763
-```
-
-`dataset_id = 486e92b7d925dde8fd458fb8465e0aae5185d45a6b6d6fb9489b1c528adb686d`
-
-### C_48
-
-| field | hex |
-| --- | --- |
-| `PATH-END-v1` | `504154482d454e442d7631` |
-| `dataset_id` | `486e92b7d925dde8fd458fb8465e0aae5185d45a6b6d6fb9489b1c528adb686d` |
-| `u32_le(48)` | `30000000` |
-
-Preimage, 47 bytes:
+`dataset_id` binds the source data and the term-sheet parameters. It is SHA-256 over the following bytes, in this order:
 
 ```
-504154482d454e442d7631486e92b7d925dde8fd458fb8465e0aae5185d45a6b6d6fb9489b1c528adb686d30000000
+str("PATH-DATASET-v1")
+str(series_id)            "CPIAUCNS"
+str(source_url)           "https://fred.stlouisfed.org/graph/fredgraph.csv?id=CPIAUCNS"
+str(window_start)         "2020-01-01"
+str(window_end)           "2024-12-01"
+str(transform_id)         "yoy-1e6-floor-v1"
+u32(L)                    L = 60, the number of levels
+str(level_k)  × L         the 60 level strings exactly as published by FRED, in date order
+                          (P_-12 .. P_47, e.g. "257.971"), with no reformatting
+u32(N)                    48
+u32(first_period_id)      202101
+i64(K)                    40000
+u64(D_cap)                80000
+u64(A_cap)                800000
 ```
 
-`C_48 = 568aedd9fa2594aab98f9520c5c27c5e2d2ff978eec9194fd547dbbe3bd3bcbf`
+The raw-file SHA-256 ("source digest") is recorded in the JSON outputs but is **not** part of `dataset_id`. FRED's full-history file changes every month even when the 60 window values do not.
 
-### C_47
-
-`period_id_47 = 202412`, `x_47 = 28880`.
-
-| field | hex |
-| --- | --- |
-| `PATH-OBS-v1` | `504154482d4f42532d7631` |
-| `dataset_id` | `486e92b7d925dde8fd458fb8465e0aae5185d45a6b6d6fb9489b1c528adb686d` |
-| `u32_le(47)` | `2f000000` |
-| `u32_le(202412)` | `ac160300` |
-| `i64_le(28880)` | `d070000000000000` |
-| `C_48` | `568aedd9fa2594aab98f9520c5c27c5e2d2ff978eec9194fd547dbbe3bd3bcbf` |
-
-Preimage, 91 bytes:
+## Chain
 
 ```
-504154482d4f42532d7631486e92b7d925dde8fd458fb8465e0aae5185d45a6b6d6fb9489b1c528adb686d2f000000ac160300d070000000000000568aedd9fa2594aab98f9520c5c27c5e2d2ff978eec9194fd547dbbe3bd3bcbf
+C_N = SHA256( "PATH-END-v1" ‖ dataset_id ‖ u32(N) )                                    47-byte preimage
+C_i = SHA256( "PATH-OBS-v1" ‖ dataset_id ‖ u32(i) ‖ u32(period_id_i) ‖ i64(value_i) ‖ C_{i+1} )   91-byte preimage
 ```
 
-`C_47 = aa72917a464710461b02b5aad116268ff966c83bd8fdc904be2a760896d8245d`
+These are computed for i = N−1 down to 0. `create_session` stores `dataset_id`, `N`, `C_0` (the current commitment) and `C_N` (the terminal one). `observe(i, period_id, value)` recomputes `C_i` from the stored `C_{i+1}`, which is the commitment it carries forward. Concretely, the keeper supplies `C_{i+1}`, the program checks `SHA256(...) == current`, and then sets `current = C_{i+1}`. After 48 observations, `current == C_N`. On chain the hash is one `hashv(&[b"PATH-OBS-v1", &dataset_id, &i.to_le_bytes(), &period_id.to_le_bytes(), &value.to_le_bytes(), &next])`.
