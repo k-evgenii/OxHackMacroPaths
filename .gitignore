@@ -22,9 +22,16 @@ target/
 data/*
 !data/fetch.py
 !data/series.toml
+!data/.gitkeep
 
+# Anchor template extras
 .DS_Store
 **/*.rs.bk
-test-ledger
-.yarn
-.surfpool
+test-ledger/
+.yarn/
+.surfpool/
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/

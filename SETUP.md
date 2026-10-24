@@ -38,7 +38,9 @@ pixi init
 Runtimes and build dependencies:
 
 ```bash
-pixi add "rust>=1.85" "nodejs=20.*" "python=3.12.*"
+pixi add "nodejs=20.*" "python=3.12.*"
+# Rust is NOT added here: it comes from rustup (Solana installer, section 3) and is pinned
+# by rust-toolchain.toml. A pixi Rust shadows rustup and breaks `anchor build`.
 pixi add pkg-config openssl clang cmake make git
 pixi add libudev            # Linux / WSL only — skip on macOS
 ```
@@ -62,7 +64,7 @@ forecast = "python forecast/ar1.py"
 From here on, run everything through the environment:
 
 ```bash
-pixi shell          # opens a shell with rust/node/python on PATH
+pixi shell          # opens a shell with node/python on PATH (rust comes from rustup)
 ```
 
 ## 3. Solana CLI, Anchor 1.0.2, Surfpool
