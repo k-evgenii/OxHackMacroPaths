@@ -11,3 +11,4 @@
 | 07-observe | 2cf0166 | build 33s | 48 passing | orchestrator |
 | 08-settle | f319ac7 | build 34s | 53 passing | orchestrator |
 | 09-claim-sweep | e70ac16 | build 33s | 64 passing | orchestrator |
+| 01b-upgrade-room | 20667a9 | build 5s | 64 passing | orchestrator |
