@@ -1,13 +1,15 @@
 # Agent protocol
 
+**Integration branch is `cursor_main`.** Agents branch from it and PRs target it. `main` is the team's shared branch; the orchestrator merges `cursor_main` into `main` at the gates, never the other way round mid-wave.
+
 Fifteen agents, one orchestrator. Each agent has a brief `agents/NN-name.md`, a branch `agent/NN-name`, and a WSL worktree `~/wt/NN-name`. The specification every brief points at is `docs/program-spec.md`. The orchestrator's own checklist is `agents/00-orchestrator.md`.
 
 ## Setup (orchestrator, once)
 
 ```bash
-cd ~/OxHackMacroPaths && git checkout main && git pull
+cd ~/OxHackMacroPaths && git checkout cursor_main && git pull
 for b in 01-skeleton 02-math 03-chain 04-create-session 05-deposit 06-lock-expire 07-observe 08-settle 09-claim-sweep 10-lifecycle 11-security 12-seller-accounts 13-cover 14-keeper-bridge 15-deploy; do
-  git worktree add ~/wt/$b -b agent/$b main
+  git worktree add ~/wt/$b -b agent/$b cursor_main
 done
 ```
 
@@ -25,7 +27,7 @@ First build takes about three minutes per worktree; `target/` is per worktree an
 
 ## Waves
 
-An agent starts when the branches listed under "May assume merged" in its brief are in `main`. After each merge the orchestrator posts `main moved: <branches>`; every agent still working then runs `git rebase main`.
+An agent starts when the branches listed under "May assume merged" in its brief are in `cursor_main`. After each merge the orchestrator posts `cursor_main moved: <branches>`; every agent still working then runs `git rebase cursor_main`.
 
 | Wave | Agents | Start condition |
 | --- | --- | --- |
@@ -53,19 +55,19 @@ One PR per agent. Force-push allowed on your own branch only.
 
 ## Merge checklist (orchestrator)
 
-1. `git rebase main` on the agent branch; agent resolves conflicts if any.
+1. `git rebase cursor_main` on the agent branch; agent resolves conflicts if any.
 2. `anchor build`
 3. `cargo test -p macropaths`
 4. `pixi run vectors` prints `D=66191 A=691184 827387 863980`
-5. `git diff main --stat` touches only the brief's files (plus union additions to shared files)
+5. `git diff cursor_main --stat` touches only the brief's files (plus union additions to shared files)
 6. `git merge --no-ff agent/NN-name`
 7. Append a line to `docs/merge-log.md`: `NN-name | <sha> | build <s> | <tests> passing | reviewed by <name>`
-8. Post `main moved: NN-name`
+8. Post `cursor_main moved: NN-name`
 
 ## Conflict rules
 
 - `lib.rs`, `instructions.rs`, `error.rs`, `events.rs`: many agents add to them. Resolve by union; never drop or reorder a line that is not yours.
-- `state.rs`: agents 01 and 12 only. `constants.rs`: agent 01 only. Need a field, constant or error variant? Post in chat; the orchestrator adds it to `main` and announces it.
+- `state.rs`: agents 01 and 12 only. `constants.rs`: agent 01 only. Need a field, constant or error variant? Post in chat; the orchestrator adds it to `cursor_main` and announces it.
 - `Cargo.lock`: regenerate with `anchor build` after a rebase, commit the result.
 
 ## Tooling

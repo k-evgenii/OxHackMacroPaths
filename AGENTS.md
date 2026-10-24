@@ -32,7 +32,7 @@ Before any transfer: PDA seeds and bump checked, account owner checked, mint che
 
 ## Branch protocol
 
-- Branch `agent/NN-name` from `main`, one PR per agent. Rebase on `main` when the orchestrator posts `main moved`.
+- Branch `agent/NN-name` from `cursor_main`, one PR per agent. Rebase on `cursor_main` when the orchestrator posts `cursor_main moved`.
 - Edit only the files listed under "Files you own" in your brief. `lib.rs`, `instructions.rs`, `error.rs`, `events.rs` are shared: add lines, never remove or reorder others' lines. `state.rs` and `constants.rs` are owned by agents 01 and 12 only; if you need a field, constant or error variant, ask in chat.
 - Commit messages: what and why, one logical change per commit.
 - Done means the Acceptance commands in your brief pass and you posted the Hand-off line in chat with the commit SHA.
