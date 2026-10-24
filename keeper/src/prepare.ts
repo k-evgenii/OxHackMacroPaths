@@ -14,10 +14,17 @@
  * parsed from their decimal strings, never through Number/parseFloat.
  * Node built-ins only, no dependencies.
  *
+ * It also builds the commitment chain of docs/commitment-chain.md (v1):
+ * dataset_id, C_i for i = N-1..0, C_0 and C_N, with little-endian integers,
+ * u32-length-prefixed UTF-8 strings, raw ASCII tags and SHA-256. The result
+ * is written to data/cpi-yoy-replay.json (override with --out) for the
+ * keeper's create_session and replay steps.
+ *
  * CLI:
  *   npx tsx keeper/src/prepare.ts [--snapshot p] [--out p] [--check tests/vectors.json]
  */
 
+import { createHash } from "node:crypto";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -72,6 +79,49 @@ export interface Prepared {
   scale: number;
   /** 48 rows, t = 0..47. */
   rows: Row[];
+  /** Commitment chain v1 over the levels and rows. */
+  commitment: Commitment;
+}
+
+/** Inputs to dataset_id, in the order docs/commitment-chain.md hashes them. */
+export interface DatasetParams {
+  seriesId: string;
+  sourceUrl: string;
+  windowStart: string;
+  windowEnd: string;
+  transformId: string;
+  /** Level strings exactly as published, in date order. */
+  levels: readonly string[];
+  N: bigint | number;
+  firstPeriodId: bigint | number;
+  K: bigint | number;
+  D_cap: bigint | number;
+  A_cap: bigint | number;
+}
+
+/** One chain input: observation i with its period id and value. */
+export interface ChainObs {
+  i: bigint | number;
+  periodId: bigint | number;
+  value: bigint;
+}
+
+export interface ChainResult {
+  /** C[i] for i = 0..N; C[N] is C_N, C[0] is C_0. */
+  C: Buffer[];
+  /** 91-byte preimage of C_i, i = 0..N-1. */
+  preimages: Buffer[];
+  /** 47-byte preimage of C_N. */
+  endPreimage: Buffer;
+}
+
+export interface Commitment {
+  params: DatasetParams;
+  datasetPreimage: Buffer;
+  datasetId: Buffer;
+  /** Chain inputs, one per row. */
+  obs: { i: number; periodId: number; value: bigint }[];
+  chain: ChainResult;
 }
 
 // ---------------------------------------------------------------------------
@@ -85,6 +135,20 @@ export const SCALE_X = 1_000_000n; // 10^6
 export const K_EXCESS = 40_000n; // 4% in 1e-4 pp (eq. 4)
 
 const MAX_SAFE = 2n ** 53n;
+
+// Commitment chain v1 (docs/commitment-chain.md)
+export const CHAIN_SPEC = "docs/commitment-chain.md";
+export const CHAIN_VERSION = "v1";
+export const SERIES_ID = "CPIAUCNS";
+export const SOURCE_URL = "https://fred.stlouisfed.org/graph/fredgraph.csv?id=CPIAUCNS";
+export const TRANSFORM_ID = "yoy-1e6-floor-v1";
+export const D_CAP = 80_000n; // 8 pp
+export const A_CAP = 800_000n; // 80 pp-months
+export const TAG_DATASET = "PATH-DATASET-v1";
+export const TAG_OBS = "PATH-OBS-v1";
+export const TAG_END = "PATH-END-v1";
+export const OBS_PREIMAGE_LEN = 91;
+export const END_PREIMAGE_LEN = 47;
 
 // ---------------------------------------------------------------------------
 // Exact integer helpers
@@ -214,6 +278,271 @@ export function selectLevels(snapshot: Snapshot): { levels: Level[]; scale: numb
 }
 
 // ---------------------------------------------------------------------------
+// Commitment chain v1 (docs/commitment-chain.md)
+
+export const U32_MAX = 2n ** 32n - 1n;
+export const I64_MIN = -(2n ** 63n);
+export const I64_MAX = 2n ** 63n - 1n;
+export const U64_MAX = 2n ** 64n - 1n;
+
+function toBig(x: bigint | number, name: string): bigint {
+  if (typeof x === "bigint") return x;
+  if (typeof x === "number" && Number.isSafeInteger(x)) return BigInt(x);
+  throw new TypeError(`${name}: not an integer: ${String(x)}`);
+}
+
+/** n-byte little-endian of 0 <= x < 256^n, written byte by byte. */
+function le(x: bigint, n: number): Buffer {
+  const out = Buffer.alloc(n);
+  let v = x;
+  for (let k = 0; k < n; k++) {
+    out[k] = Number(v & 0xffn);
+    v >>= 8n;
+  }
+  if (v !== 0n) throw new RangeError(`le: ${x} does not fit in ${n} bytes`);
+  return out;
+}
+
+function ranged(x: bigint | number, name: string, lo: bigint, hi: bigint): bigint {
+  const v = toBig(x, name);
+  if (v < lo || v > hi) throw new RangeError(`${name}: ${v} outside ${lo}..${hi}`);
+  return v;
+}
+
+/** u32(x): 4 bytes little-endian, 0..2^32-1. */
+export function u32(x: bigint | number): Buffer {
+  return le(ranged(x, "u32", 0n, U32_MAX), 4);
+}
+
+/** i64(x): 8 bytes little-endian two's complement, -2^63..2^63-1. */
+export function i64(x: bigint | number): Buffer {
+  const v = ranged(x, "i64", I64_MIN, I64_MAX);
+  return le(v < 0n ? v + 2n ** 64n : v, 8);
+}
+
+/** u64(x): 8 bytes little-endian, 0..2^64-1. */
+export function u64(x: bigint | number): Buffer {
+  return le(ranged(x, "u64", 0n, U64_MAX), 8);
+}
+
+/** str(s): u32(byte length) followed by the UTF-8 bytes of s. */
+export function str(s: string): Buffer {
+  if (typeof s !== "string") throw new TypeError(`str: not a string: ${String(s)}`);
+  const b = Buffer.from(s, "utf8");
+  return Buffer.concat([u32(b.length), b]);
+}
+
+/** Raw ASCII tag, no length prefix, no NUL. */
+function tag(s: string): Buffer {
+  if (!/^[\x20-\x7e]+$/.test(s)) throw new Error(`tag is not printable ASCII: ${JSON.stringify(s)}`);
+  return Buffer.from(s, "ascii");
+}
+
+export function sha256(...parts: Buffer[]): Buffer {
+  const h = createHash("sha256");
+  for (const p of parts) h.update(p);
+  return h.digest();
+}
+
+/** "2021-01-01" -> 202101. */
+export function periodId(date: string): number {
+  const m = /^(\d{4})-(\d{2})-01$/.exec(date);
+  if (!m) throw new Error(`periodId: bad date ${JSON.stringify(date)}`);
+  return Number(m[1]) * 100 + Number(m[2]);
+}
+
+/** The dataset_id preimage bytes, in spec order. */
+export function datasetPreimage(p: DatasetParams): Buffer {
+  return Buffer.concat([
+    str(TAG_DATASET),
+    str(p.seriesId),
+    str(p.sourceUrl),
+    str(p.windowStart),
+    str(p.windowEnd),
+    str(p.transformId),
+    u32(p.levels.length),
+    ...p.levels.map((l) => str(l)),
+    u32(p.N),
+    u32(p.firstPeriodId),
+    i64(p.K),
+    u64(p.D_cap),
+    u64(p.A_cap),
+  ]);
+}
+
+/** dataset_id = SHA256(dataset preimage). */
+export function datasetId(p: DatasetParams): { id: Buffer; preimage: Buffer } {
+  const preimage = datasetPreimage(p);
+  return { id: sha256(preimage), preimage };
+}
+
+/** "PATH-END-v1" || dataset_id || u32(N), 47 bytes. */
+export function endPreimage(dsId: Buffer, N: bigint | number): Buffer {
+  if (dsId.length !== 32) throw new Error(`dataset_id must be 32 bytes, got ${dsId.length}`);
+  const pre = Buffer.concat([tag(TAG_END), dsId, u32(N)]);
+  if (pre.length !== END_PREIMAGE_LEN) throw new Error(`C_N preimage is ${pre.length} bytes`);
+  return pre;
+}
+
+/** "PATH-OBS-v1" || dataset_id || u32(i) || u32(period_id) || i64(value) || C_{i+1}, 91 bytes. */
+export function obsPreimage(dsId: Buffer, o: ChainObs, next: Buffer): Buffer {
+  if (dsId.length !== 32) throw new Error(`dataset_id must be 32 bytes, got ${dsId.length}`);
+  if (next.length !== 32) throw new Error(`C_{i+1} must be 32 bytes, got ${next.length}`);
+  const pre = Buffer.concat([tag(TAG_OBS), dsId, u32(o.i), u32(o.periodId), i64(o.value), next]);
+  if (pre.length !== OBS_PREIMAGE_LEN) throw new Error(`C_i preimage is ${pre.length} bytes`);
+  return pre;
+}
+
+/**
+ * The chain C_N, C_{N-1}, ..., C_0, computed from i = N-1 down to 0.
+ * obs[k].i must equal k; N = obs.length.
+ */
+export function chain(dsId: Buffer, obs: readonly ChainObs[]): ChainResult {
+  const N = obs.length;
+  const endPre = endPreimage(dsId, N);
+  const C: Buffer[] = new Array<Buffer>(N + 1);
+  const preimages: Buffer[] = new Array<Buffer>(N);
+  C[N] = sha256(endPre);
+  for (let k = N - 1; k >= 0; k--) {
+    const o = at(obs, k);
+    if (toBig(o.i, "i") !== BigInt(k)) throw new Error(`chain: obs[${k}].i = ${o.i}`);
+    const pre = obsPreimage(dsId, o, at(C, k + 1));
+    preimages[k] = pre;
+    C[k] = sha256(pre);
+  }
+  return { C, preimages, endPreimage: endPre };
+}
+
+/**
+ * Walk the chain forward the way `observe` does: current = C_0; for each i
+ * the keeper supplies C_{i+1}, the hash must equal current, then
+ * current = C_{i+1}. Returns -1 if every step passes and the walk ends at
+ * C_N, otherwise the index of the first failing step (N if only the end fails).
+ */
+export function walkForward(dsId: Buffer, obs: readonly ChainObs[], C: readonly Buffer[]): number {
+  let current = at(C, 0);
+  for (let k = 0; k < obs.length; k++) {
+    const next = at(C, k + 1);
+    if (!sha256(obsPreimage(dsId, at(obs, k), next)).equals(current)) return k;
+    current = next;
+  }
+  return current.equals(sha256(endPreimage(dsId, obs.length))) ? -1 : obs.length;
+}
+
+/** Commitment for the prepared window, with the CPI demo term sheet. */
+export function buildCommitment(
+  snapshot: Snapshot,
+  levels: readonly Level[],
+  rows: readonly Row[],
+): Commitment {
+  const seriesId = snapshot.id ?? SERIES_ID;
+  const sourceUrl = snapshot.source_url ?? SOURCE_URL;
+  if (seriesId !== SERIES_ID) throw new Error(`snapshot id ${seriesId} != ${SERIES_ID}`);
+  if (sourceUrl !== SOURCE_URL) throw new Error(`snapshot source_url ${sourceUrl} != ${SOURCE_URL}`);
+  const obs = rows.map((r) => ({ i: r.t, periodId: periodId(r.date), value: r.x }));
+  const params: DatasetParams = {
+    seriesId,
+    sourceUrl,
+    windowStart: at(levels, 0).date,
+    windowEnd: at(levels, levels.length - 1).date,
+    transformId: TRANSFORM_ID,
+    levels: levels.map((l) => l.value_str),
+    N: rows.length,
+    firstPeriodId: at(obs, 0).periodId,
+    K: K_EXCESS,
+    D_cap: D_CAP,
+    A_cap: A_CAP,
+  };
+  const { id, preimage } = datasetId(params);
+  return { params, datasetPreimage: preimage, datasetId: id, obs, chain: chain(id, obs) };
+}
+
+/** JSON integer policy: a JSON number when |v| < 2^53, otherwise a decimal string. */
+export function jsonInt(v: bigint | number): number | string {
+  const b = toBig(v, "jsonInt");
+  return b < MAX_SAFE && b > -MAX_SAFE ? Number(b) : b.toString();
+}
+
+/** The `commitment` and `chain` sections in the tests/vectors.json shape. */
+export function commitmentToVectors(c: Commitment): { commitment: any; chain: any[] } {
+  const N = c.obs.length;
+  return {
+    commitment: {
+      spec: CHAIN_SPEC,
+      version: CHAIN_VERSION,
+      dataset_id: c.datasetId.toString("hex"),
+      dataset_preimage_hex: c.datasetPreimage.toString("hex"),
+      dataset_preimage_len: c.datasetPreimage.length,
+      N,
+      first_period_id: jsonInt(c.params.firstPeriodId),
+      K: jsonInt(c.params.K),
+      D_cap: jsonInt(c.params.D_cap),
+      A_cap: jsonInt(c.params.A_cap),
+      transform_id: c.params.transformId,
+      series_id: c.params.seriesId,
+      source_url: c.params.sourceUrl,
+      window: [c.params.windowStart, c.params.windowEnd],
+      C_N: at(c.chain.C, N).toString("hex"),
+      C_0: at(c.chain.C, 0).toString("hex"),
+    },
+    chain: c.obs.map((o, k) => ({
+      i: o.i,
+      period_id: o.periodId,
+      value: jsonInt(o.value),
+      C_i: at(c.chain.C, k).toString("hex"),
+      preimage_hex: at(c.chain.preimages, k).toString("hex"),
+    })),
+  };
+}
+
+export const REPLAY_FORMAT = "macropaths-replay-v1";
+
+/** The replay file consumed by create_session and replay. */
+export function replayJson(prep: Prepared, snapshot: Snapshot): any {
+  const c = prep.commitment;
+  const N = c.obs.length;
+  return {
+    format: REPLAY_FORMAT,
+    spec: CHAIN_SPEC,
+    chain_version: CHAIN_VERSION,
+    integers:
+      "Integers are JSON numbers when |v| < 2^53 and decimal strings otherwise. Every " +
+      "integer in this file (i, period_id, value, N, first_period_id, K, D_cap, A_cap, " +
+      "dataset_preimage_len) is currently below 2^53, so all are JSON numbers. Hashes are " +
+      "32-byte lowercase hex without 0x.",
+    usage:
+      "create_session stores dataset_id, N, C_0 (current) and C_N (terminal) with K, D_cap, A_cap; " +
+      "then for each row in order observe(i, period_id, value) with C_next = C_{i+1} " +
+      "(the last row's C_next is C_N).",
+    dataset_id: c.datasetId.toString("hex"),
+    dataset_preimage_hex: c.datasetPreimage.toString("hex"),
+    dataset_preimage_len: c.datasetPreimage.length,
+    N,
+    first_period_id: jsonInt(c.params.firstPeriodId),
+    K: jsonInt(c.params.K),
+    D_cap: jsonInt(c.params.D_cap),
+    A_cap: jsonInt(c.params.A_cap),
+    transform_id: c.params.transformId,
+    window: [c.params.windowStart, c.params.windowEnd],
+    source: {
+      series_id: c.params.seriesId,
+      source_url: c.params.sourceUrl,
+      retrieved_at: snapshot.retrieved_at ?? null,
+      sha256_of_raw: snapshot.sha256_of_raw ?? null,
+    },
+    C_0: at(c.chain.C, 0).toString("hex"),
+    C_N: at(c.chain.C, N).toString("hex"),
+    rows: c.obs.map((o, k) => ({
+      i: o.i,
+      period_id: o.periodId,
+      value: jsonInt(o.value),
+      C_i: at(c.chain.C, k).toString("hex"),
+      C_next: at(c.chain.C, k + 1).toString("hex"),
+    })),
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Rows
 
 /** Full preparation: window selection, exact parsing, eq. (1). */
@@ -225,7 +554,7 @@ export function prepare(snapshot: Snapshot): Prepared {
     const lag = at(levels, t); // P_{t-12}
     rows.push({ t, date: now.date, x: yoy(now.scaled, lag.scaled) });
   }
-  return { levels, scale, rows };
+  return { levels, scale, rows, commitment: buildCommitment(snapshot, levels, rows) };
 }
 
 /** The 48 traded rows x_0..x_47 (bigint x). */
@@ -286,10 +615,16 @@ function toBigIntStrict(v: unknown): bigint | null {
 }
 
 /**
- * Compare computed rows (and, if the vectors file carries them, the 60 levels)
- * with a vectors file. Returns a list of human-readable mismatches.
+ * Compare computed rows (and, if the vectors file carries them, the 60 levels
+ * and final D/A) with a vectors file. The commitment chain is compared when
+ * the file has `commitment` / `chain`, and always with requireCommitment (the
+ * CLI sets it). Returns a list of human-readable mismatches.
  */
-export function checkAgainstVectors(prep: Prepared, vectors: any): string[] {
+export function checkAgainstVectors(
+  prep: Prepared,
+  vectors: any,
+  opts: { requireCommitment?: boolean } = {},
+): string[] {
   const out: string[] = [];
   const vrows: any[] | undefined = vectors?.rows;
   if (!Array.isArray(vrows)) {
@@ -375,6 +710,72 @@ export function checkAgainstVectors(prep: Prepared, vectors: any): string[] {
       else if (v !== stats[key]) out.push(`final.${key}: vectors=${v} computed=${stats[key]}`);
     }
   }
+
+  if (opts.requireCommitment || vectors?.commitment !== undefined || vectors?.chain !== undefined) {
+    out.push(...checkCommitment(prep, vectors));
+  }
+  return out;
+}
+
+/** Exact string equality for lowercase hex (no case folding, no 0x stripping). */
+function hexEq(v: unknown, c: string): boolean {
+  return typeof v === "string" && v === c;
+}
+
+/**
+ * Compare the commitment chain with `commitment` and `chain` of a vectors
+ * file: dataset_id, the dataset preimage bytes, every C_i (and its preimage),
+ * C_0 and C_N, as exact lowercase hex strings, plus the scalar parameters.
+ */
+export function checkCommitment(prep: Prepared, vectors: any): string[] {
+  const out: string[] = [];
+  const want = commitmentToVectors(prep.commitment);
+  const vc = vectors?.commitment;
+  if (vc === null || typeof vc !== "object") {
+    out.push("vectors file has no `commitment` section");
+  } else {
+    for (const key of ["dataset_id", "dataset_preimage_hex", "C_0", "C_N"] as const) {
+      if (!hexEq(vc[key], want.commitment[key])) {
+        out.push(`commitment.${key}: vectors ${JSON.stringify(vc[key])} != computed ${want.commitment[key]}`);
+      }
+    }
+    for (const key of ["spec", "version", "transform_id", "series_id", "source_url"] as const) {
+      if (vc[key] !== want.commitment[key]) {
+        out.push(`commitment.${key}: vectors ${JSON.stringify(vc[key])} != computed ${JSON.stringify(want.commitment[key])}`);
+      }
+    }
+    for (const key of ["dataset_preimage_len", "N", "first_period_id", "K", "D_cap", "A_cap"] as const) {
+      const v = toBigIntStrict(vc[key]);
+      const c = toBigIntStrict(want.commitment[key]);
+      if (v === null || v !== c) {
+        out.push(`commitment.${key}: vectors ${JSON.stringify(vc[key])} != computed ${String(c)}`);
+      }
+    }
+    if (JSON.stringify(vc.window) !== JSON.stringify(want.commitment.window)) {
+      out.push(`commitment.window: vectors ${JSON.stringify(vc.window)} != computed ${JSON.stringify(want.commitment.window)}`);
+    }
+  }
+
+  const vchain: any[] | undefined = vectors?.chain;
+  if (!Array.isArray(vchain)) {
+    out.push("vectors file has no `chain` array");
+    return out;
+  }
+  if (vchain.length !== want.chain.length) {
+    out.push(`chain length: computed ${want.chain.length}, vectors ${vchain.length}`);
+  }
+  for (let k = 0; k < Math.min(vchain.length, want.chain.length); k++) {
+    const v = vchain[k];
+    const c = at(want.chain, k);
+    const diffs: string[] = [];
+    if (v?.i !== c.i) diffs.push(`i ${JSON.stringify(v?.i)} != ${c.i}`);
+    if (v?.period_id !== c.period_id) diffs.push(`period_id ${JSON.stringify(v?.period_id)} != ${c.period_id}`);
+    const vv = toBigIntStrict(v?.value);
+    if (vv === null || vv !== toBigIntStrict(c.value)) diffs.push(`value ${JSON.stringify(v?.value)} != ${c.value}`);
+    if (!hexEq(v?.C_i, c.C_i)) diffs.push(`C_i vectors ${JSON.stringify(v?.C_i)} != computed ${c.C_i}`);
+    if (!hexEq(v?.preimage_hex, c.preimage_hex)) diffs.push(`preimage_hex differs (computed ${c.preimage_hex})`);
+    if (diffs.length) out.push(`chain[${k}]: ${diffs.join("; ")}`);
+  }
   return out;
 }
 
@@ -447,21 +848,28 @@ export function main(argv: string[] = process.argv.slice(2)): number {
   console.log(`sanity: D=${D} (expect ${EXPECTED_D}) ${dOk ? "ok" : "MISMATCH"}; A=${A} (expect ${EXPECTED_A}) ${aOk ? "ok" : "MISMATCH"}`);
   if (!dOk || !aOk) status = 1;
 
-  const json = JSON.stringify(rowsToJson(rows), null, 2) + "\n";
-  if (args.out) {
-    const outPath = path.resolve(args.out);
-    fs.mkdirSync(path.dirname(outPath), { recursive: true });
-    fs.writeFileSync(outPath, json);
-    console.log(`wrote ${rows.length} rows to ${outPath}`);
-  }
+  const c = prep.commitment;
+  const walk = walkForward(c.datasetId, c.obs, c.chain.C);
+  console.log(`commitment ${CHAIN_VERSION}: dataset_id=${c.datasetId.toString("hex")} (preimage ${c.datasetPreimage.length} bytes)`);
+  console.log(`  C_0=${at(c.chain.C, 0).toString("hex")}`);
+  console.log(`  C_N=${at(c.chain.C, rows.length).toString("hex")}`);
+  console.log(`  forward walk (as observe): ${walk === -1 ? "ok, ends at C_N" : `FAILED at step ${walk}`}`);
+  if (walk !== -1) status = 1;
+
+  const outPath = path.resolve(args.out ?? path.join(root, "data", "cpi-yoy-replay.json"));
+  const json = JSON.stringify(replayJson(prep, snapshot), null, 2) + "\n";
+  fs.mkdirSync(path.dirname(outPath), { recursive: true });
+  fs.writeFileSync(outPath, json);
+  console.log(`wrote replay (${rows.length} rows, C_0, C_N) to ${outPath}`);
 
   if (args.check) {
     const vecPath = path.resolve(args.check);
     const vectors = JSON.parse(fs.readFileSync(vecPath, "utf8"));
-    const mismatches = checkAgainstVectors(prep, vectors);
+    const mismatches = checkAgainstVectors(prep, vectors, { requireCommitment: true });
     const levelsNote =
       (Array.isArray(vectors?.levels) ? `${vectors.levels.length} levels` : "no levels") +
-      (vectors?.final && typeof vectors.final === "object" ? ", final D/A" : "");
+      (vectors?.final && typeof vectors.final === "object" ? ", final D/A" : "") +
+      (Array.isArray(vectors?.chain) ? `, dataset_id, C_0, C_N, ${vectors.chain.length} C_i` : "");
     if (mismatches.length) {
       console.error(`check FAILED against ${vecPath} (${levelsNote}): ${mismatches.length} mismatch(es)`);
       for (const m of mismatches) console.error(`  ${m}`);
