@@ -504,10 +504,23 @@ def build(snapshot_path: Path) -> dict:
 def main() -> int:
     snapshot_path = Path(sys.argv[1]) if len(sys.argv) > 1 else DEFAULT_SNAPSHOT
     vec = build(snapshot_path)
-    text = json.dumps(vec, indent=2, ensure_ascii=True) + "\n"
-    OUT.write_text(text, encoding="utf-8", newline="\n")
     print(f"snapshot {snapshot_path}  sha256_of_raw={vec['provenance']['sha256_of_raw']}")
-    print(f"wrote {OUT.relative_to(ROOT)}: {len(vec['rows'])} rows")
+    # Same dataset_id means the same 60 levels, so keep the committed retrieved_at and
+    # sha256_of_raw. Otherwise every re-fetch would show vectors.json as changed in git.
+    try:
+        old = json.loads(OUT.read_text(encoding="utf-8"))
+        same_data = old["commitment"]["dataset_id"] == vec["commitment"]["dataset_id"]
+    except (OSError, ValueError, KeyError, TypeError):
+        old, same_data = None, False
+    if same_data:
+        for key in ("retrieved_at", "sha256_of_raw"):
+            vec["provenance"][key] = old["provenance"][key]
+    text = json.dumps(vec, indent=2, ensure_ascii=True) + "\n"
+    if same_data and OUT.read_text(encoding="utf-8") == text:
+        print(f"vectors.json unchanged (dataset_id matches): {len(vec['rows'])} rows")
+    else:
+        OUT.write_text(text, encoding="utf-8", newline="\n")
+        print(f"wrote {OUT.relative_to(ROOT)}: {len(vec['rows'])} rows")
     for y in vec["annual_slices"]["years"]:
         print(f"  {y['year']}: D={y['D']} A={y['A']} s1={y['s1']} s2={y['s2']}")
     c = vec["commitment"]
