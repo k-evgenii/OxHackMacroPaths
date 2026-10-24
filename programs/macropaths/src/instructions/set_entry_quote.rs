@@ -26,6 +26,11 @@ pub fn handler(ctx: Context<SetEntryQuote>, p: [u64; 2]) -> Result<()> {
         ctx.accounts.session.state == SessionState::Open,
         MacroError::WrongState
     );
+    let now = Clock::get()?.unix_timestamp;
+    require!(
+        now <= ctx.accounts.session.deposit_deadline,
+        MacroError::PastDeadline
+    );
     for price in p {
         require!(
             (QUOTE_MIN..=QUOTE_MAX).contains(&price),
