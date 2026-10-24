@@ -17,3 +17,8 @@ coverage/
 # Rust and Anchor output
 target/
 .anchor/
+.DS_Store
+**/*.rs.bk
+test-ledger
+.yarn
+.surfpool
