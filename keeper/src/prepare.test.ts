@@ -3,6 +3,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  at,
   floorDiv,
   parseDecimal,
   yoy,
@@ -52,7 +53,7 @@ test("parseDecimal: exact, plain non-negative decimals only", () => {
   assert.deepEqual(parseDecimal("100"), { digits: 100n, scale: 0 });
   assert.deepEqual(parseDecimal("0.000001"), { digits: 1n, scale: 6 });
   for (const bad of ["", ".", "-1.0", "+1", "1e3", " 1.0", "1.0 ", ".5", "5.", "1,000", "NaN", "0x10"]) {
-    assert.throws(() => parseDecimal(bad), undefined, JSON.stringify(bad));
+    assert.throws(() => parseDecimal(bad), Error, JSON.stringify(bad));
   }
 });
 
@@ -70,10 +71,10 @@ test("computeRows: mixed decimal scales are aligned exactly", () => {
   const snap = synthSnapshot((k) => (k < 12 ? "100" : "103.250"));
   const rows = computeRows(snap);
   assert.equal(rows.length, 48);
-  assert.equal(rows[0].date, "2021-01-01");
-  assert.equal(rows[47].date, "2024-12-01");
-  assert.equal(rows[0].x, 32_500n);
-  assert.equal(rows[12].x, 0n);
+  assert.equal(at(rows, 0).date, "2021-01-01");
+  assert.equal(at(rows, 47).date, "2024-12-01");
+  assert.equal(at(rows, 0).x, 32_500n);
+  assert.equal(at(rows, 12).x, 0n);
   assert.deepEqual(rowsToJson(rows.slice(0, 1)), [{ t: 0, date: "2021-01-01", x: 32500 }]);
 });
 
@@ -81,8 +82,8 @@ test("computeRows: negative inflation floors toward -infinity", () => {
   // P_{t-12} = 3, P_t = 2 for the first 12 rows
   const snap = synthSnapshot((k) => (k < 12 ? "3" : k < 24 ? "2" : "2.0"));
   const rows = computeRows(snap);
-  assert.equal(rows[0].x, -333_334n);
-  assert.equal(rows[12].x, 0n);
+  assert.equal(at(rows, 0).x, -333_334n);
+  assert.equal(at(rows, 12).x, 0n);
 });
 
 test("window check fails loudly on missing / empty / duplicate months", () => {
@@ -122,12 +123,12 @@ test("checkAgainstVectors: catches an altered row and levels", () => {
     levels: prep.levels.map((l) => ({ date: l.date, value_str: l.value_str })),
   };
   assert.deepEqual(checkAgainstVectors(prep, vec), []);
-  vec.rows[7] = { ...vec.rows[7], x: vec.rows[7].x + 1 };
-  vec.levels[3] = { ...vec.levels[3], value_str: "100.001" };
+  vec.rows[7] = { ...at(vec.rows, 7), x: at(vec.rows, 7).x + 1 };
+  vec.levels[3] = { ...at(vec.levels, 3), value_str: "100.001" };
   const m = checkAgainstVectors(prep, vec);
   assert.equal(m.length, 2);
-  assert.match(m[0], /row\[7\].*x vectors=32501 computed=32500/);
-  assert.match(m[1], /level\[3\]/);
+  assert.match(at(m, 0), /row\[7\].*x vectors=32501 computed=32500/);
+  assert.match(at(m, 1), /level\[3\]/);
 });
 
 test("checkAgainstVectors: task-5 shape (levels {t,date,level}, final D/A)", () => {
@@ -145,7 +146,7 @@ test("checkAgainstVectors: task-5 shape (levels {t,date,level}, final D/A)", () 
   vec.final.A += 1;
   const m = checkAgainstVectors(prep, vec);
   assert.equal(m.length, 3);
-  assert.match(m[0], /level\[0\].*t 0 != -12/);
-  assert.match(m[1], /level\[1\].*"100.5"/);
-  assert.match(m[2], /final\.A/);
+  assert.match(at(m, 0), /level\[0\].*t 0 != -12/);
+  assert.match(at(m, 1), /level\[1\].*"100.5"/);
+  assert.match(at(m, 2), /final\.A/);
 });
