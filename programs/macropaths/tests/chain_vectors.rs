@@ -1,7 +1,7 @@
-//! The commitment chain in `chain.rs` matches `tests/vectors.json` `chain`.
-//! Expected digests come from that file (written by `tests/make_vectors.py`).
+//! Rust chain matches `tests/vectors.json` from main: `commitment` and `chain` rows.
+//! Expected digests are read from that file, not typed here.
 
-use macropaths::chain::{dataset_id, end_hash, obs_hash};
+use macropaths::chain::{dataset_id, dataset_preimage, end_hash, obs_hash};
 
 const VECTORS: &str = include_str!(concat!(
     env!("CARGO_MANIFEST_DIR"),
@@ -11,50 +11,93 @@ const VECTORS: &str = include_str!(concat!(
 #[test]
 fn chain_matches_vectors() {
     let root = parse_json(VECTORS);
-    let provenance = get(&root, "provenance");
-    let id = dataset_id(
-        as_str(get(provenance, "source_url")),
-        as_str(get(provenance, "retrieved_at")),
-        as_str(get(provenance, "sha256_of_raw")),
-    );
+    let commitment = get(&root, "commitment");
+    let n = as_u32(get(commitment, "N"));
+    let window = as_arr(get(commitment, "window"));
+    assert_eq!(window.len(), 2);
 
-    let chain = get(&root, "chain");
+    let levels: Vec<String> = as_arr(get(&root, "levels"))
+        .iter()
+        .map(|row| as_str(get(row, "level")).to_string())
+        .collect();
+    let level_refs: Vec<&str> = levels.iter().map(String::as_str).collect();
+
+    let series_id = as_str(get(commitment, "series_id"));
+    let source_url = as_str(get(commitment, "source_url"));
+    let window_start = as_str(&window[0]);
+    let window_end = as_str(&window[1]);
+    let transform_id = as_str(get(commitment, "transform_id"));
+    let first_period_id = as_u32(get(commitment, "first_period_id"));
+    let k = as_num(get(commitment, "K"));
+    let d_cap = as_u64(get(commitment, "D_cap"));
+    let a_cap = as_u64(get(commitment, "A_cap"));
+
+    let pre = dataset_preimage(
+        series_id,
+        source_url,
+        window_start,
+        window_end,
+        transform_id,
+        &level_refs,
+        n,
+        first_period_id,
+        k,
+        d_cap,
+        a_cap,
+    );
     assert_eq!(
-        hex_encode(&id),
-        as_str(get(chain, "dataset_id")),
-        "dataset_id"
+        pre.len(),
+        as_u64(get(commitment, "dataset_preimage_len")) as usize
+    );
+    assert_eq!(
+        hex_encode(&pre),
+        as_str(get(commitment, "dataset_preimage_hex")),
+        "dataset preimage"
     );
 
-    let commitments = as_arr(get(chain, "commitments"))
-        .iter()
-        .map(|v| decode_hex_32(as_str(v)))
-        .collect::<Vec<_>>();
-    assert_eq!(commitments.len(), 49, "C_0 .. C_48");
+    let id = dataset_id(
+        series_id,
+        source_url,
+        window_start,
+        window_end,
+        transform_id,
+        &level_refs,
+        n,
+        first_period_id,
+        k,
+        d_cap,
+        a_cap,
+    );
+    assert_eq!(hex_encode(&id), as_str(get(commitment, "dataset_id")));
 
-    let period_ids = as_arr(get(chain, "period_ids"))
-        .iter()
-        .map(|v| as_u32(v))
-        .collect::<Vec<_>>();
-    assert_eq!(period_ids.len(), 48);
+    let c_n = decode_hex_32(as_str(get(commitment, "C_N")));
+    let c_0 = decode_hex_32(as_str(get(commitment, "C_0")));
+    assert_eq!(end_hash(&id, n), c_n, "end_hash == C_N");
 
-    let rows = as_arr(get(&root, "rows"));
-    assert_eq!(rows.len(), 48);
-    let mut xs = Vec::with_capacity(48);
-    for (i, row) in rows.iter().enumerate() {
-        assert_eq!(as_num(get(row, "t")), i as i64, "row t");
-        let date = as_str(get(row, "date"));
-        let year: u32 = date[..4].parse().expect("year");
-        let month: u32 = date[5..7].parse().expect("month");
-        assert_eq!(year * 100 + month, period_ids[i], "period_id[{i}]");
-        xs.push(as_num(get(row, "x")));
+    let rows = as_arr(get(&root, "chain"));
+    assert_eq!(rows.len(), n as usize);
+    let mut parsed = Vec::with_capacity(rows.len());
+    for (idx, row) in rows.iter().enumerate() {
+        let i = as_u32(get(row, "i"));
+        assert_eq!(i, idx as u32, "chain row order");
+        parsed.push((
+            i,
+            as_u32(get(row, "period_id")),
+            as_num(get(row, "value")),
+            decode_hex_32(as_str(get(row, "C_i"))),
+        ));
     }
+    assert_eq!(parsed[0].3, c_0, "chain[0].C_i == C_0");
 
-    let terminal = end_hash(&id, 48);
-    assert_eq!(terminal, commitments[48], "end_hash == C_48");
-
-    for i in (0..48).rev() {
-        let got = obs_hash(&id, i as u32, period_ids[i], xs[i], &commitments[i + 1]);
-        assert_eq!(got, commitments[i], "obs_hash({i}) == C_{i}");
+    for i in 0..parsed.len() {
+        let next = if i + 1 < parsed.len() {
+            parsed[i + 1].3
+        } else {
+            c_n
+        };
+        let (index, period_id, value, c_i) = parsed[i];
+        let got = obs_hash(&id, index, period_id, value, &next);
+        assert_eq!(got, c_i, "obs_hash({index}) == C_i");
     }
 }
 
@@ -111,8 +154,11 @@ fn as_num(v: &J) -> i64 {
 }
 
 fn as_u32(v: &J) -> u32 {
-    let n = as_num(v);
-    u32::try_from(n).expect("u32")
+    u32::try_from(as_num(v)).expect("u32")
+}
+
+fn as_u64(v: &J) -> u64 {
+    u64::try_from(as_num(v)).expect("u64")
 }
 
 fn as_arr(v: &J) -> &[J] {
@@ -175,7 +221,7 @@ impl<'a> P<'a> {
         }
         loop {
             let key = self.string();
-            assert_eq!(self.bump(), b':', "expected ':'");
+            assert_eq!(self.bump(), b':');
             pairs.push((key, self.value()));
             match self.bump() {
                 b',' => continue,
