@@ -43,6 +43,11 @@ if ! command -v avm >/dev/null; then
 fi
 command -v avm >/dev/null || die "avm not found after install"
 
+# The Solana installer only edits ~/.profile (login shells); VS Code/WSL terminals read ~/.bashrc.
+if ! grep -qs 'solana/install/active_release/bin' "$HOME/.bashrc"; then
+  printf '\n# Solana CLI (added by MacroPaths setup.sh)\nexport PATH="$HOME/.local/share/solana/install/active_release/bin:$HOME/.avm/bin:$PATH"\n' >> "$HOME/.bashrc"
+fi
+
 step "4/6 Pin Anchor $ANCHOR_VERSION (the installer ships a newer one)"
 if [[ "$(anchor --version 2>/dev/null)" != "anchor-cli $ANCHOR_VERSION" ]]; then
   avm install "$ANCHOR_VERSION" && avm use "$ANCHOR_VERSION"
