@@ -2,6 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, Token, TokenAccount};
 
 use crate::constants::{SEED_SELLER, SEED_SELLER_TA};
+use crate::error::MacroError;
 use crate::state::{Seller, Session};
 
 #[derive(Accounts)]
@@ -28,6 +29,9 @@ pub struct SellerFund<'info> {
     pub seller_ta: Account<'info, TokenAccount>,
     #[account(mut)]
     pub seller_wallet_ta: Account<'info, TokenAccount>,
+    #[account(
+        constraint = play_mint.key() == session.play_mint @ MacroError::WrongMint
+    )]
     pub play_mint: Account<'info, Mint>,
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
