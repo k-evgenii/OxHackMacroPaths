@@ -18,6 +18,7 @@
  *   npx tsx keeper/src/prepare.ts [--snapshot p] [--out p] [--check tests/vectors.json]
  */
 
+import { createHash } from "node:crypto";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -261,6 +262,192 @@ export const EXPECTED_D = 66_191n;
 export const EXPECTED_A = 691_184n;
 
 // ---------------------------------------------------------------------------
+// Commitment chain (docs/commitment-chain.md, spec §1.6)
+// SHA-256 over the raw concatenation. No length prefixes.
+// u32 and i64 fields are little-endian.
+
+/** The three snapshot strings that go into `dataset_id`. */
+export interface SnapshotIdentity {
+  source_url: string;
+  retrieved_at: string;
+  sha256_of_raw: string;
+}
+
+export interface ChainRow {
+  t: number;
+  period_id: number;
+  x: number;
+  next_commitment: string;
+}
+
+export interface BuiltChain {
+  dataset_id: string;
+  period_ids: number[];
+  /** C_0 .. C_n, lowercase hex. `n` is `rows.length` (48 for CPIAUCNS). */
+  commitments: string[];
+  c0: string;
+  terminal: string;
+  rows: ChainRow[];
+}
+
+/** `year * 100 + month` from `YYYY-MM-DD`. 2021-01-01 -> 202101. */
+export function periodId(date: string): number {
+  const y = Number(date.slice(0, 4));
+  const m = Number(date.slice(5, 7));
+  if (!Number.isInteger(y) || !Number.isInteger(m) || date.length < 7 || m < 1 || m > 12) {
+    throw new Error(`bad date for period_id: ${JSON.stringify(date)}`);
+  }
+  return y * 100 + m;
+}
+
+function u32le(n: number): Buffer {
+  if (!Number.isInteger(n) || n < 0 || n > 0xffff_ffff) {
+    throw new RangeError(`not a u32: ${n}`);
+  }
+  const b = Buffer.alloc(4);
+  b.writeUInt32LE(n, 0);
+  return b;
+}
+
+function i64le(n: bigint): Buffer {
+  const b = Buffer.alloc(8);
+  b.writeBigInt64LE(n, 0);
+  return b;
+}
+
+/** SHA256( utf8(source_url) ‖ 0x0A ‖ utf8(retrieved_at) ‖ 0x0A ‖ utf8(sha_hex) ). */
+export function datasetId(sourceUrl: string, retrievedAt: string, shaHex: string): Buffer {
+  return createHash("sha256")
+    .update(sourceUrl, "utf8")
+    .update("\n", "utf8")
+    .update(retrievedAt, "utf8")
+    .update("\n", "utf8")
+    .update(shaHex, "utf8")
+    .digest();
+}
+
+/** C_n = SHA256( "PATH-END-v1" ‖ dataset_id ‖ u32_le(n) ). */
+export function endHash(id: Buffer, n: number): Buffer {
+  if (id.length !== 32) throw new Error("endHash: dataset_id must be 32 bytes");
+  return createHash("sha256").update("PATH-END-v1").update(id).update(u32le(n)).digest();
+}
+
+/** C_i = SHA256( "PATH-OBS-v1" ‖ dataset_id ‖ u32_le(i) ‖ u32_le(period) ‖ i64_le(x) ‖ next ). */
+export function obsHash(
+  id: Buffer,
+  i: number,
+  period: number,
+  value: bigint,
+  next: Buffer,
+): Buffer {
+  if (id.length !== 32 || next.length !== 32) {
+    throw new Error("obsHash: dataset_id and next must be 32 bytes");
+  }
+  return createHash("sha256")
+    .update("PATH-OBS-v1")
+    .update(id)
+    .update(u32le(i))
+    .update(u32le(period))
+    .update(i64le(value))
+    .update(next)
+    .digest();
+}
+
+/**
+ * Build C_0 .. C_n for `rows` (t = 0 .. n-1). `n` is `rows.length`.
+ * `identity` is the three snapshot strings.
+ */
+export function buildChain(rows: Row[], identity: SnapshotIdentity): BuiltChain {
+  if (!identity.source_url || !identity.retrieved_at || !identity.sha256_of_raw) {
+    throw new Error("buildChain: snapshot is missing source_url, retrieved_at or sha256_of_raw");
+  }
+  const ordered = [...rows].sort((a, b) => a.t - b.t);
+  const n = ordered.length;
+  for (let i = 0; i < n; i++) {
+    if (ordered[i].t !== i) throw new Error(`buildChain: expected t=${i}, got ${ordered[i].t}`);
+  }
+  const id = datasetId(identity.source_url, identity.retrieved_at, identity.sha256_of_raw);
+  const periodIds = ordered.map((r) => periodId(r.date));
+  const digests: Buffer[] = new Array(n + 1);
+  digests[n] = endHash(id, n);
+  for (let i = n - 1; i >= 0; i--) {
+    digests[i] = obsHash(id, i, periodIds[i], ordered[i].x, digests[i + 1]);
+  }
+  const commitments = digests.map((d) => d.toString("hex"));
+  return {
+    dataset_id: id.toString("hex"),
+    period_ids: periodIds,
+    commitments,
+    c0: commitments[0],
+    terminal: commitments[n],
+    rows: ordered.map((r, i) => ({
+      t: r.t,
+      period_id: periodIds[i],
+      x: toSafeNumber(r.x),
+      next_commitment: commitments[i + 1],
+    })),
+  };
+}
+
+/** Replay file written to `data/cpi-yoy-replay.json`. */
+export function chainReplay(chain: BuiltChain): {
+  dataset_id: string;
+  rows: ChainRow[];
+  c0: string;
+  terminal: string;
+} {
+  return {
+    dataset_id: chain.dataset_id,
+    rows: chain.rows,
+    c0: chain.c0,
+    terminal: chain.terminal,
+  };
+}
+
+/**
+ * Compare a built chain with `vectors.chain`. Empty list means all commitments match.
+ */
+export function checkChain(built: BuiltChain, vectors: any): string[] {
+  const out: string[] = [];
+  const block = vectors?.chain;
+  const commitments: unknown = block?.commitments;
+  if (!block || !Array.isArray(commitments)) {
+    return ["vectors file has no chain.commitments"];
+  }
+  if (block.dataset_id !== built.dataset_id) {
+    out.push(`dataset_id vectors=${block.dataset_id} computed=${built.dataset_id}`);
+  }
+  if (commitments.length !== built.commitments.length) {
+    out.push(`commitment count: computed ${built.commitments.length}, vectors ${commitments.length}`);
+  }
+  let bad = 0;
+  const n = Math.max(commitments.length, built.commitments.length);
+  for (let i = 0; i < n; i++) {
+    if (commitments[i] !== built.commitments[i]) {
+      bad++;
+      if (bad <= 3) {
+        out.push(`C_${i}: vectors=${String(commitments[i])} computed=${built.commitments[i] ?? "missing"}`);
+      }
+    }
+  }
+  if (bad > 3) out.push(`... ${bad} commitment mismatches`);
+  const pids: unknown = block.period_ids;
+  if (!Array.isArray(pids)) {
+    out.push("vectors file has no chain.period_ids");
+  } else if (pids.length !== built.period_ids.length) {
+    out.push(`period_id count: computed ${built.period_ids.length}, vectors ${pids.length}`);
+  } else {
+    for (let i = 0; i < pids.length; i++) {
+      if (pids[i] !== built.period_ids[i]) {
+        out.push(`period_id[${i}]: vectors=${pids[i]} computed=${built.period_ids[i]}`);
+        break;
+      }
+    }
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------------------
 // --check against a vectors file
 
 /** Exact decimal equality of two decimal strings ("9.80" == "9.8"). */
@@ -448,6 +635,16 @@ export function main(argv: string[] = process.argv.slice(2)): number {
     console.log(`wrote ${rows.length} rows to ${outPath}`);
   }
 
+  const chain = buildChain(rows, {
+    source_url: snapshot.source_url ?? "",
+    retrieved_at: snapshot.retrieved_at ?? "",
+    sha256_of_raw: snapshot.sha256_of_raw ?? "",
+  });
+  const replayPath = path.join(root, "data", "cpi-yoy-replay.json");
+  fs.mkdirSync(path.dirname(replayPath), { recursive: true });
+  fs.writeFileSync(replayPath, JSON.stringify(chainReplay(chain), null, 2) + "\n");
+  console.log(`wrote chain c0=${chain.c0} terminal=${chain.terminal} to ${replayPath}`);
+
   if (args.check) {
     const vecPath = path.resolve(args.check);
     const vectors = JSON.parse(fs.readFileSync(vecPath, "utf8"));
@@ -461,6 +658,14 @@ export function main(argv: string[] = process.argv.slice(2)): number {
       status = 1;
     } else {
       console.log(`check ok against ${vecPath}: ${rows.length} rows identical (${levelsNote})`);
+    }
+    const chainMismatches = checkChain(chain, vectors);
+    if (chainMismatches.length) {
+      console.error(`chain FAILED against ${vecPath}: ${chainMismatches.length} mismatch(es)`);
+      for (const m of chainMismatches) console.error(`  ${m}`);
+      status = 1;
+    } else {
+      console.log(`chain ok ${chain.commitments.length}/${vectors.chain.commitments.length}`);
     }
   }
   return status;
