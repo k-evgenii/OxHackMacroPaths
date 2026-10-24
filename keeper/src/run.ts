@@ -1,15 +1,14 @@
 /**
  * run.ts: part 1 (task 10) creates the PLAY mint, calls create_session with the parameters from
  * data/cpi-yoy-replay.json and reads every field of the new Session back; part 2 (task 16) seeds
- * the four sides from the keeper (flat layout only).
+ * the four sides from the keeper.
  *
  *   pixi run npm --prefix keeper run session:create -- [options]
  *
  *   --replay <file>          replay file from prepare.ts (default data/cpi-yoy-replay.json)
- *   --idl <file>             program IDL (default packages/client/idl.json); picks the layout
+ *   --idl <file>             program IDL (default packages/client/idl.json)
  *   --session-id <u64>       nonce / session_id seed (default: the cluster's unix time)
  *   --mint <pubkey>          reuse an existing 6-decimal mint instead of creating one
- *   --controller <pubkey>    observe signer, params layout only (default: the keeper)
  *   --deposit-window <secs>  deposit_deadline = cluster time + this (default 600)
  *   --replay-window <secs>   replay_deadline = deposit_deadline + this (default 3600)
  *   --out <file>             where to write the session addresses (default data/session.json)
@@ -42,7 +41,7 @@ import {
   compareSession,
   createSessionIx,
   decodeSession,
-  detectLayout,
+  checkIdl,
   expectedSession,
   loadIdl,
   loadReplay,
@@ -81,7 +80,6 @@ function toInputs(f: SessionFile): SessionInputs {
     id: BigInt(f.sessionId),
     creator: new PublicKey(f.creator),
     mint: new PublicKey(f.mint),
-    controller: new PublicKey(f.controller),
     depositDeadline: BigInt(f.depositDeadline),
     replayDeadline: BigInt(f.replayDeadline),
   };
@@ -93,7 +91,6 @@ const { values: args } = parseArgs({
     idl: { type: "string" },
     "session-id": { type: "string" },
     mint: { type: "string" },
-    controller: { type: "string" },
     "deposit-window": { type: "string", default: "600" },
     "replay-window": { type: "string", default: "3600" },
     out: { type: "string" },
@@ -109,13 +106,13 @@ async function main(): Promise<number> {
 
   const replay = loadReplay(replayFile);
   const idl = loadIdl(fromRoot(args.idl, "packages/client/idl.json"));
-  const layout = detectLayout(idl);
+  checkIdl(idl);
   const programId = new PublicKey(idl.address);
   const connection = getConnection("confirmed");
   const keeper = loadKeypair();
 
   console.log(`rpc host ${cfg.rpcHost}, keeper ${keeper.publicKey.toBase58()}`);
-  console.log(`program ${programId.toBase58()}, create_session layout "${layout}"`);
+  console.log(`program ${programId.toBase58()}`);
   console.log(`replay ${path.relative(cfg.repoRoot, replayFile)}: dataset_id ${replay.datasetId.toString("hex")}`);
 
   const program = await connection.getAccountInfo(programId);
@@ -153,7 +150,6 @@ async function main(): Promise<number> {
       id,
       creator: keeper.publicKey,
       mint,
-      controller: args.controller ? new PublicKey(args.controller) : keeper.publicKey,
       depositDeadline,
       replayDeadline: depositDeadline + BigInt(args["replay-window"]),
     };
@@ -168,14 +164,12 @@ async function main(): Promise<number> {
   }
 
   const file: SessionFile = {
-    layout,
     programId: programId.toBase58(),
     session: session.toBase58(),
     vaults: [vaultPda(programId, session, 0)[0].toBase58(), vaultPda(programId, session, 1)[0].toBase58()],
     mint: inputs.mint.toBase58(),
     sessionId: inputs.id.toString(),
     creator: inputs.creator.toBase58(),
-    controller: inputs.controller.toBase58(),
     depositDeadline: inputs.depositDeadline.toString(),
     replayDeadline: inputs.replayDeadline.toString(),
     createSignature,
@@ -202,10 +196,6 @@ async function main(): Promise<number> {
 
   // Part 2: seed the four sides from the keeper.
   if (args.seed === "none") return 0;
-  if (layout !== "flat") {
-    console.log(`seed: skipped, the ${layout} layout has no deposit body`);
-    return 0;
-  }
   const ctx = loadCtx({ idl: args.idl, sessionFile: outFile });
   await seedSides(ctx, parseSides(args.seed, parsePlay));
   for (const line of describeSession(await fetchSession(ctx))) console.log(line);

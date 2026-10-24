@@ -1,5 +1,5 @@
 /**
- * Session operations on the flat (cursor_main) layout: seed the four sides, lock, settle, status.
+ * Session operations: seed the four sides, lock, settle, status.
  * Each one reads the on-chain state first and only sends what is still missing, so re-running
  * after a crash or a second invocation is safe.
  */
@@ -24,7 +24,7 @@ import {
   play,
   positionPda,
   readSessionFile,
-  requireFlat,
+  requireProgram,
   type SessionFile,
 } from "./program.js";
 
@@ -47,7 +47,7 @@ export function loadCtx(opts: { idl?: string; sessionFile?: string }): Ctx {
   const cfg = getConfig();
   const idl = loadIdl(path.resolve(cfg.repoRoot, opts.idl ?? "packages/client/idl.json"));
   const file = readSessionFile(path.resolve(cfg.repoRoot, opts.sessionFile ?? "data/session.json"));
-  requireFlat(idl, file);
+  requireProgram(idl, file);
   return {
     connection: getConnection("confirmed"),
     idl,
