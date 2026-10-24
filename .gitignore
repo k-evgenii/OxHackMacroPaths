@@ -22,3 +22,9 @@ target/
 data/*
 !data/fetch.py
 !data/series.toml
+
+.DS_Store
+**/*.rs.bk
+test-ledger
+.yarn
+.surfpool
