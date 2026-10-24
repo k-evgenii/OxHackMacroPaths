@@ -14,3 +14,4 @@
 | 01b-upgrade-room | 20667a9 | build 5s | 64 passing | orchestrator |
 | 11-security | 9c602a0 | build 68s | 80 passing | orchestrator |
 | 01c-seller-fixtures | f872a5a | build 4s | 82 passing | orchestrator |
+| 10-lifecycle | dac2531 | build 6s | 84 passing | orchestrator |
