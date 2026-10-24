@@ -13,7 +13,7 @@ use macropaths::error::MacroError;
 use macropaths::state::SessionState;
 
 struct Row {
-    index: u8,
+    index: u32,
     period_id: u32,
     value: i64,
     next: [u8; 32],
@@ -42,8 +42,8 @@ fn series() -> Series {
     for i in 0..chain.len() {
         let t = running[i]["t"].as_u64().expect("running.t");
         assert_eq!(t, i as u64, "running row order");
-        let index = u8::try_from(chain[i]["i"].as_u64().expect("chain.i")).expect("index");
-        assert_eq!(usize::from(index), i, "chain row order");
+        let index = u32::try_from(chain[i]["i"].as_u64().expect("chain.i")).expect("index");
+        assert_eq!(index as usize, i, "chain row order");
         let next = if i + 1 < chain.len() {
             hex32("chain.C_i", chain[i + 1]["C_i"].as_str().expect("C_i"))
         } else {
@@ -76,7 +76,7 @@ fn running_session(env: &mut common::Env, id: u64) -> Pubkey {
 
 fn observe_ix(
     session: Pubkey,
-    index: u8,
+    index: u32,
     period_id: u32,
     value: i64,
     next_commitment: [u8; 32],
@@ -120,8 +120,7 @@ fn assert_row(env: &common::Env, session: &Pubkey, rows: &[Row], through: usize)
         row.index
     );
     assert_eq!(
-        got.values[usize::from(row.index)],
-        row.value,
+        got.values[row.index as usize], row.value,
         "value at {}",
         row.index
     );
@@ -135,8 +134,7 @@ fn assert_row(env: &common::Env, session: &Pubkey, rows: &[Row], through: usize)
     assert_eq!(got.last_period_id, row.period_id, "period at {}", row.index);
     for earlier in &rows[..=through] {
         assert_eq!(
-            got.values[usize::from(earlier.index)],
-            earlier.value,
+            got.values[earlier.index as usize], earlier.value,
             "stored value {}",
             earlier.index
         );

@@ -24,8 +24,8 @@ pub struct Session {
     pub dataset_id: [u8; 32],
     pub commitment: [u8; 32], // current C_i; starts at C_0; after 48 observes equals terminal
     pub terminal: [u8; 32],   // C_48
-    pub n_obs: u8,            // always N_OBS; stored for the explorer
-    pub next_index: u8,       // 0..=48
+    pub n_obs: u32,           // always N_OBS; stored for the explorer
+    pub next_index: u32,      // 0..=48
     pub last_period_id: u32,  // YYYYMM of the last accepted observation, 0 before any
     pub state: SessionState,
     pub k: i64,
@@ -49,6 +49,7 @@ pub struct Session {
     pub seller_products_open: u8, // products with n_sold>0 not yet seller_settled; 0 in base
     pub bump: u8,
     pub vault_bumps: [u8; 2],
+    pub _reserved: [u8; 64],
 }
 
 #[account]

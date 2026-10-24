@@ -16,7 +16,7 @@ fn fixtures_roundtrip() {
     let d_cap = v["parameters"]["Dcap"].as_i64().expect("Dcap");
     let a_cap = v["parameters"]["Acap"].as_i64().expect("Acap");
     let one = v["parameters"]["one"].as_u64().expect("one");
-    let n = u8::try_from(v["commitment"]["N"].as_u64().expect("N")).expect("N fits u8");
+    let n = u32::try_from(v["commitment"]["N"].as_u64().expect("N")).expect("N fits u32");
     let first_period = u32::try_from(
         v["commitment"]["first_period_id"]
             .as_u64()

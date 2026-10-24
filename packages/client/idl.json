@@ -577,7 +577,7 @@
       "args": [
         {
           "name": "index",
-          "type": "u8"
+          "type": "u32"
         },
         {
           "name": "period_id",
@@ -1371,7 +1371,7 @@
           },
           {
             "name": "index",
-            "type": "u8"
+            "type": "u32"
           },
           {
             "name": "period_id",
@@ -1557,11 +1557,11 @@
           },
           {
             "name": "n_obs",
-            "type": "u8"
+            "type": "u32"
           },
           {
             "name": "next_index",
-            "type": "u8"
+            "type": "u32"
           },
           {
             "name": "last_period_id",
@@ -1691,6 +1691,15 @@
               "array": [
                 "u8",
                 2
+              ]
+            }
+          },
+          {
+            "name": "_reserved",
+            "type": {
+              "array": [
+                "u8",
+                64
               ]
             }
           }
