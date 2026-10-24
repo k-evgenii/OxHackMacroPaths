@@ -17,3 +17,8 @@ coverage/
 # Rust and Anchor output
 target/
 .anchor/
+
+# Fetched data (regenerate with: pixi run fetch --all)
+data/*
+!data/fetch.py
+!data/series.toml
