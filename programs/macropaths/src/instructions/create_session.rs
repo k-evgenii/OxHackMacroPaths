@@ -102,5 +102,6 @@ pub fn handler(
     session.seller_products_open = 0;
     session.bump = bump;
     session.vault_bumps = vault_bumps;
+    session._reserved = [0; 64];
     Ok(())
 }

@@ -46,11 +46,11 @@ fn expire(
     common::send(env, ix, &[])
 }
 
-fn chain_len() -> u8 {
+fn chain_len() -> u32 {
     let n = common::vectors()["commitment"]["N"]
         .as_u64()
         .expect("commitment.N");
-    u8::try_from(n).expect("N fits u8")
+    u32::try_from(n).expect("N fits u32")
 }
 
 #[test]

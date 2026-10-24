@@ -12,7 +12,7 @@ pub struct Observe<'info> {
 
 pub fn handler(
     ctx: Context<Observe>,
-    index: u8,
+    index: u32,
     period_id: u32,
     value: i64,
     next_commitment: [u8; 32],
@@ -29,7 +29,7 @@ pub fn handler(
     require!(
         index == session.next_index
             && index < session.n_obs
-            && usize::from(index) < session.values.len(),
+            && (index as usize) < session.values.len(),
         MacroError::WrongIndex
     );
     require!(
@@ -39,7 +39,7 @@ pub fn handler(
 
     let digest = crate::chain::obs_hash(
         &session.dataset_id,
-        u32::from(index),
+        index,
         period_id,
         value,
         &next_commitment,
@@ -57,7 +57,7 @@ pub fn handler(
     session.peak = peak;
     session.max_decline = max_decline;
     session.excess_acc = excess_acc;
-    session.values[usize::from(index)] = value;
+    session.values[index as usize] = value;
     session.commitment = next_commitment;
     session.last_period_id = period_id;
     session.next_index = next_index;

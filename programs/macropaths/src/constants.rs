@@ -1,4 +1,4 @@
-pub const N_OBS: u8 = 48; // observations per session
+pub const N_OBS: u32 = 48; // observations per session
 pub const PRODUCTS: usize = 2; // 0 = Inflation Cooling, 1 = Excess Inflation
 pub const SIDES: usize = 4; // index j = product*2 + side; side 0 = "more", side 1 = "less"
 pub const ONE: u64 = 1_000_000; // millionths: scores, prices

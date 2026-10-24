@@ -16,7 +16,7 @@ use macropaths::state::SessionState;
 /// minus `buyer_deposit`; side 1 is `S[1]`. Both products use that pair.
 /// `matched` is `min` of each pair, which lock stores.
 struct Replay {
-    n_obs: u8,
+    n_obs: u32,
     max_decline: i64,
     excess_acc: i64,
     scores: [u64; 2],
@@ -28,7 +28,7 @@ fn replay() -> Replay {
     let v = common::vectors();
     let n = v["commitment"]["N"].as_u64().expect("commitment.N");
     assert_eq!(n, u64::from(macropaths::N_OBS));
-    let n_obs = u8::try_from(n).expect("N fits u8");
+    let n_obs = u32::try_from(n).expect("N fits u32");
 
     let cooling = &v["worked_example"]["cooling"];
     let excess = &v["worked_example"]["excess"];

@@ -257,7 +257,7 @@ pub fn seed_sides(env: &mut Env, session: &Pubkey, amounts: [u64; 4]) -> Keypair
     seeder
 }
 
-pub fn observe_all(env: &mut Env, session: &Pubkey, rows: &[(u8, u32, i64, [u8; 32])]) {
+pub fn observe_all(env: &mut Env, session: &Pubkey, rows: &[(u32, u32, i64, [u8; 32])]) {
     for (index, period_id, value, next_commitment) in rows {
         let ix = instruction(
             macropaths::accounts::Observe { session: *session },
@@ -316,6 +316,7 @@ pub fn put_session(env: &mut Env, id: u64, apply: impl FnOnce(&mut macropaths::S
         seller_products_open: 0,
         bump,
         vault_bumps: [vault_bump_0, vault_bump_1],
+        _reserved: [0; 64],
     };
     apply(&mut account);
     install_program_account(env, &session, &account);

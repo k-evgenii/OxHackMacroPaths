@@ -3,7 +3,7 @@ use anchor_lang::prelude::*;
 #[event]
 pub struct Observed {
     pub session: Pubkey,
-    pub index: u8,
+    pub index: u32,
     pub period_id: u32,
     pub value: i64,
     pub peak: i64,
