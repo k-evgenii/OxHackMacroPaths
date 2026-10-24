@@ -13,6 +13,8 @@ pub struct LockAndStart<'info> {
 pub fn handler(ctx: Context<LockAndStart>) -> Result<()> {
     let session = &mut ctx.accounts.session;
     require!(session.state == SessionState::Open, MacroError::WrongState);
+    let now = Clock::get()?.unix_timestamp;
+    require!(now <= session.deposit_deadline, MacroError::PastDeadline);
     for total in session.side_totals {
         require!(total > 0, MacroError::EmptySide);
     }

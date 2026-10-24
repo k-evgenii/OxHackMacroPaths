@@ -139,6 +139,28 @@ fn lock_expire_twice() {
 }
 
 #[test]
+fn lock_expire_lock_after_deadline_fails() {
+    let mut env = common::env();
+    let authority = env.authority.insecure_clone();
+    let session = common::put_session(&mut env, 1, |s| {
+        s.side_totals = SIDE_TOTALS;
+    });
+    let stored = common::read::<macropaths::Session>(&env, &session);
+    let past = stored
+        .deposit_deadline
+        .checked_add(1)
+        .expect("deposit deadline");
+    common::set_time(&mut env, past);
+    common::assert_err(
+        lock(&mut env, &session, &authority),
+        macropaths::MacroError::PastDeadline,
+    );
+    let got = common::read::<macropaths::Session>(&env, &session);
+    assert!(got.state == macropaths::SessionState::Open);
+    assert_eq!(got.matched, [0, 0]);
+}
+
+#[test]
 fn lock_expire_open_after_deposit_deadline() {
     let mut env = common::env();
     let session = common::put_session(&mut env, 1, |_| {});
