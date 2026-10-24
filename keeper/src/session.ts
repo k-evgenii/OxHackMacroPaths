@@ -15,6 +15,7 @@ import { readFileSync } from "node:fs";
 import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY, TransactionInstruction } from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import anchor, { type Idl } from "@anchor-lang/core";
+import { accountMetas, instruction } from "./program.js";
 
 const { BN, BorshCoder } = anchor;
 type BNType = InstanceType<typeof BN>;
@@ -181,11 +182,10 @@ export function createSessionArgs(layout: Layout, r: Replay, s: SessionInputs): 
   };
 }
 
-/** Account metas in IDL order; each IDL account name must map to a known key. */
-export function createSessionKeys(idl: Idl, s: SessionInputs) {
+function createSessionAccounts(idl: Idl, s: SessionInputs): Record<string, PublicKey> {
   const programId = new PublicKey(idl.address);
   const [session] = sessionPda(programId, s.creator, s.id);
-  const known: Record<string, PublicKey> = {
+  return {
     creator: s.creator,
     authority: s.creator,
     session,
@@ -197,21 +197,15 @@ export function createSessionKeys(idl: Idl, s: SessionInputs) {
     system_program: SystemProgram.programId,
     rent: SYSVAR_RENT_PUBKEY,
   };
-  return createSessionIdl(idl).accounts.map((a) => {
-    if (!("name" in a) || "accounts" in a) throw new Error("create_session: nested account groups are not supported");
-    const pubkey = known[a.name];
-    if (!pubkey) throw new Error(`create_session: unknown account ${a.name}`);
-    return { pubkey, isSigner: !!a.signer, isWritable: !!a.writable };
-  });
+}
+
+/** Account metas in IDL order; each IDL account name must map to a known key. */
+export function createSessionKeys(idl: Idl, s: SessionInputs) {
+  return accountMetas(idl, "create_session", createSessionAccounts(idl, s));
 }
 
 export function createSessionIx(idl: Idl, r: Replay, s: SessionInputs): TransactionInstruction {
-  const data = new BorshCoder(idl).instruction.encode("create_session", createSessionArgs(detectLayout(idl), r, s));
-  return new TransactionInstruction({
-    programId: new PublicKey(idl.address),
-    keys: createSessionKeys(idl, s),
-    data,
-  });
+  return instruction(idl, "create_session", createSessionArgs(detectLayout(idl), r, s), createSessionAccounts(idl, s));
 }
 
 /**

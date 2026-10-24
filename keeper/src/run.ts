@@ -1,6 +1,7 @@
 /**
- * run.ts part 1 (task 10): create the PLAY mint, call create_session with the parameters from
- * data/cpi-yoy-replay.json, and read every field of the new Session back.
+ * run.ts: part 1 (task 10) creates the PLAY mint, calls create_session with the parameters from
+ * data/cpi-yoy-replay.json and reads every field of the new Session back; part 2 (task 16) seeds
+ * the four sides from the keeper (flat layout only).
  *
  *   pixi run npm --prefix keeper run session:create -- [options]
  *
@@ -12,18 +13,19 @@
  *   --deposit-window <secs>  deposit_deadline = cluster time + this (default 600)
  *   --replay-window <secs>   replay_deadline = deposit_deadline + this (default 3600)
  *   --out <file>             where to write the session addresses (default data/session.json)
+ *   --seed <a,b,c,d|none>    PLAY per side to seed from the keeper (default 90,100,90,100)
  *
  * Re-running with the same --session-id after the session exists does not send anything: it
- * reads the inputs back from --out and repeats the field check. Exits 1 if any field differs.
+ * reads the inputs back from --out and repeats the field check, and seeding only tops the keeper's
+ * position up to the targets. Exits 1 if any field differs (and then does not seed).
  */
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync } from "node:fs";
 import path from "node:path";
 import { parseArgs } from "node:util";
 import {
   Keypair,
   PublicKey,
   SystemProgram,
-  SYSVAR_CLOCK_PUBKEY,
   Transaction,
   type Connection,
 } from "@solana/web3.js";
@@ -49,13 +51,8 @@ import {
   vaultPda,
   type SessionInputs,
 } from "./session.js";
-
-/** Cluster unix time from the Clock sysvar (unix_timestamp is the i64 at offset 32). */
-async function clusterTime(connection: Connection): Promise<bigint> {
-  const info = await connection.getAccountInfo(SYSVAR_CLOCK_PUBKEY);
-  if (!info || info.data.length < 40) throw new Error("cannot read the Clock sysvar");
-  return info.data.readBigInt64LE(32);
-}
+import { parsePlay, readSessionFile, writeSessionFile, type SessionFile } from "./program.js";
+import { clusterTime, DEFAULT_SEED, describeSession, fetchSession, loadCtx, parseSides, seedSides } from "./ops.js";
 
 async function createMint(connection: Connection, payer: Keypair): Promise<PublicKey> {
   const mint = Keypair.generate();
@@ -79,20 +76,6 @@ async function createMint(connection: Connection, payer: Keypair): Promise<Publi
   return mint.publicKey;
 }
 
-interface SessionFile {
-  layout: string;
-  programId: string;
-  session: string;
-  vaults: [string, string];
-  mint: string;
-  sessionId: string;
-  creator: string;
-  controller: string;
-  depositDeadline: string;
-  replayDeadline: string;
-  createSignature: string | null;
-}
-
 function toInputs(f: SessionFile): SessionInputs {
   return {
     id: BigInt(f.sessionId),
@@ -114,6 +97,7 @@ const { values: args } = parseArgs({
     "deposit-window": { type: "string", default: "600" },
     "replay-window": { type: "string", default: "3600" },
     out: { type: "string" },
+    seed: { type: "string", default: DEFAULT_SEED },
   },
 });
 
@@ -146,7 +130,7 @@ async function main(): Promise<number> {
 
   if (await connection.getAccountInfo(session)) {
     // Already created: never resend. Take the inputs it was created with from the session file.
-    const prev = existsSync(outFile) ? (JSON.parse(readFileSync(outFile, "utf8")) as SessionFile) : undefined;
+    const prev = existsSync(outFile) ? readSessionFile(outFile) : undefined;
     if (prev?.session !== session.toBase58()) {
       throw new Error(`session ${session.toBase58()} already exists and ${outFile} does not describe it; use a new --session-id`);
     }
@@ -197,7 +181,7 @@ async function main(): Promise<number> {
     createSignature,
   };
   mkdirSync(path.dirname(outFile), { recursive: true });
-  writeFileSync(outFile, JSON.stringify(file, null, 2) + "\n");
+  writeSessionFile(outFile, file);
 
   console.log(`session ${file.session}`);
   console.log(`vaults  ${file.vaults[0]} ${file.vaults[1]}`);
@@ -214,7 +198,18 @@ async function main(): Promise<number> {
   }
   const bad = checks.filter((c) => !c.ok).length;
   console.log(bad === 0 ? `read-back: all ${checks.length} fields match` : `read-back: ${bad} of ${checks.length} fields differ`);
-  return bad === 0 ? 0 : 1;
+  if (bad > 0) return 1;
+
+  // Part 2: seed the four sides from the keeper.
+  if (args.seed === "none") return 0;
+  if (layout !== "flat") {
+    console.log(`seed: skipped, the ${layout} layout has no deposit body`);
+    return 0;
+  }
+  const ctx = loadCtx({ idl: args.idl, sessionFile: outFile });
+  await seedSides(ctx, parseSides(args.seed, parsePlay));
+  for (const line of describeSession(await fetchSession(ctx))) console.log(line);
+  return 0;
 }
 
 main().then(
