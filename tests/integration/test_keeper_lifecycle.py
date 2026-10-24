@@ -1,7 +1,7 @@
 """Keeper demo path on a local Surfnet.
 
-Drives Phill's keeper CLI (create, lock, replay, settle) and a resume drill.
-Does not edit anything under keeper/. Opt-in: ``pixi run test-surfpool``.
+Drives the keeper CLI (create, lock, replay, settle, claim, sweep) and a resume drill.
+Opt-in: ``pixi run test-surfpool``.
 """
 import os
 import re
@@ -86,6 +86,7 @@ def test_keeper_lifecycle(built, surfnet, payer, tmp_path):
     _write_dotenv(dotenv, surfnet, payer)
     program_id = built
 
+    demo_started = time.perf_counter()
     loaded = _keeper(
         ["program:load", "--", str(SO), program_id],
         dotenv,
@@ -167,6 +168,37 @@ def test_keeper_lifecycle(built, surfnet, payer, tmp_path):
     assert "827387" in status_out
     assert "863980" in status_out
 
+    # The seeder is the keeper wallet that session:create deposited from.
+    claimed = _keeper(
+        ["admin", "--", "claim", "--keypair", str(payer), "--session-file", str(session_a)],
+        dotenv,
+        timeout=120,
+    )
+    claim_out = _check(claimed, "admin claim")
+    assert re.search(r"(?m)^claim: PLAY before 0$", claim_out), claim_out
+    assert re.search(r"(?m)^claim: PLAY after 380$", claim_out), claim_out
+
+    swept = _keeper(
+        ["admin", "--", "sweep", "--treasury", program_id, "--session-file", str(session_a)],
+        dotenv,
+        timeout=120,
+    )
+    sweep_out = _check(swept, "admin sweep")
+    assert "sweep: vaults are already empty" in sweep_out, sweep_out
+    demo_ms = int((time.perf_counter() - demo_started) * 1000)
+    print(f"KEEPER_DEMO_WALL_CLOCK_MS={demo_ms}")
+
+    final = _keeper(
+        ["admin", "--", "status", "--session-file", str(session_a)],
+        dotenv,
+        timeout=60,
+    )
+    final_out = _check(final, "admin status after sweep")
+    claims = re.search(r"claimed_count/position_count\s+(\d+)/(\d+)", final_out)
+    assert claims, final_out
+    assert claims.group(1) == claims.group(2)
+    assert "vaults       0, 0 PLAY" in final_out
+
     # Recovery drill on a second session: 20 rows, then resume at row 20.
     session_b = tmp_path / "session-b.json"
     created_b = _keeper(
@@ -188,6 +220,46 @@ def test_keeper_lifecycle(built, surfnet, payer, tmp_path):
         timeout=180,
     )
     _check(created_b, "session:create recovery")
+
+    # Cover is bought while the session is still open, before lock.
+    funded = _keeper(
+        ["admin", "--", "seller", "fund", "20", "--session-file", str(session_b)],
+        dotenv,
+        timeout=120,
+    )
+    fund_out = _check(funded, "seller fund")
+    assert "fund: 20 PLAY" in fund_out, fund_out
+
+    quoted = _keeper(
+        [
+            "admin", "--", "seller", "quote",
+            "--p0", "500000", "--p1", "500000",
+            "--session-file", str(session_b),
+        ],
+        dotenv,
+        timeout=120,
+    )
+    quote_out = _check(quoted, "seller quote")
+    assert "quote: 500000 500000" in quote_out, quote_out
+
+    buyer = tmp_path / "buyer.json"
+    made = run(["solana-keygen", "new", "--no-bip39-passphrase", "--silent", "-o", str(buyer)])
+    assert made.returncode == 0, made.stderr
+    air = run(["solana", "airdrop", "2", "--url", surfnet, "--keypair", str(buyer)], timeout=60)
+    assert air.returncode == 0, air.stdout + air.stderr
+    bought = _keeper(
+        [
+            "admin", "--", "seller", "buy",
+            "--product", "0", "--units", "10",
+            "--keypair", str(buyer),
+            "--session-file", str(session_b),
+        ],
+        dotenv,
+        timeout=180,
+    )
+    buy_out = _check(bought, "seller buy")
+    assert "buy: product 0 10 PLAY" in buy_out, buy_out
+
     locked_b = _keeper(
         ["admin", "--", "lock", "--session-file", str(session_b)],
         dotenv,
@@ -234,3 +306,24 @@ def test_keeper_lifecycle(built, surfnet, payer, tmp_path):
     assert second_rows == list(range(20, 48)), second_rows
     print(f"KEEPER_RECOVERY_FIRST_ROWS={len(first_rows)}")
     print(f"KEEPER_RECOVERY_SECOND_ROWS={len(second_rows)}")
+
+    settled_b = _keeper(
+        ["admin", "--", "settle", "--session-file", str(session_b)],
+        dotenv,
+        timeout=120,
+    )
+    _check(settled_b, "admin settle seller session")
+    seller_settled = _keeper(
+        ["admin", "--", "seller", "settle", "--product", "0", "--session-file", str(session_b)],
+        dotenv,
+        timeout=120,
+    )
+    seller_out = _check(seller_settled, "seller settle")
+    assert "seller settle: product 0" in seller_out, seller_out
+    withdrawn = _keeper(
+        ["admin", "--", "seller", "withdraw", "1", "--session-file", str(session_b)],
+        dotenv,
+        timeout=120,
+    )
+    withdraw_out = _check(withdrawn, "seller withdraw")
+    assert "withdraw: 1 PLAY" in withdraw_out, withdraw_out
