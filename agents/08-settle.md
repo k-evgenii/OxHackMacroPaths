@@ -16,7 +16,7 @@
 
 **Files you own:** `instructions/settle.rs`, `tests/settle.rs`.
 1. Fill handler per §1.8.
-2. Tests: (a) seed `[90,100,90,100]`, lock, observe all 48 real rows (`observe_all` with `vectors.chain`), settle → `scores == [827387, 863980]`, `p_budget`, `r_budget` equal `side_budgets` of the vectors' `worked_example` numbers scaled to the seeds (compute expected in the test with `math::side_budgets`), state Settled, `Settled` event present in logs; (b) settle at `next_index == 47` → `ChainIncomplete`; (c) settle in Open → `WrongState`; (d) settle twice → `WrongState`.
+2. Tests: (a) seed `[90,100,90,100]`, lock, observe all 48 real rows (`observe_all`, built from `vectors.json.chain` and `vectors.json.commitment`), settle → `scores == [827387, 863980]`, `p_budget`, `r_budget` equal `side_budgets` of the vectors' `worked_example` numbers scaled to the seeds (compute expected in the test with `math::side_budgets`), state Settled, `Settled` event present in logs; (b) settle at `next_index == 47` → `ChainIncomplete`; (c) settle in Open → `WrongState`; (d) settle twice → `WrongState`.
 
 ## Acceptance and hand-off
 

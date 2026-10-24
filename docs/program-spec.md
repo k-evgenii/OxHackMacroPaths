@@ -127,19 +127,17 @@ pub fn cover_claim(s: u64, units: u64) -> Option<u64>                       // f
 
 Properties that the tests pin (all from `tests/vectors.json`, never typed by hand): `final`, `running` (per-row M, D, A), `annual_slices`, `synthetic` (625000 vs 125000, through-zero path), `threshold` (39999→0, 40000→0, 40001→1), `budget_3v2` (claims 0,0,4; dust 1), `worked_example` (buyer_total 33827340). Conservation proptest: for random `S0,S1 ≤ 1e12`, `s ≤ ONE`, random partitions of each side into ≤ 8 deposits: `Σ claims ≤ S0+S1` and each side's claims `≤ R_j+P_j`.
 
-### 1.6 Commitment chain (`chain.rs`, and docs/commitment-chain.md)
+### 1.6 Commitment chain (`chain.rs`; byte layout in `docs/commitment-chain.md`, agreed by Dev and Phill, merged to main in #6)
 
-Byte encoding, identical in Rust, Python and TypeScript:
+`docs/commitment-chain.md` is authoritative for every byte. Do not redefine it here. Summary of what agents need:
 
-```
-dataset_id = SHA256( utf8(source_url) ‖ 0x0A ‖ utf8(retrieved_at) ‖ 0x0A ‖ utf8(sha256_of_raw hex, lowercase) )
-             (the three fields of data/snapshots/CPIAUCNS.json)
-period_id  = year*100 + month   as u32           (202101 for Jan 2021)
-C_48       = SHA256( "PATH-END-v1" ‖ dataset_id[32] ‖ u32_le(48) )
-C_i        = SHA256( "PATH-OBS-v1" ‖ dataset_id[32] ‖ u32_le(i) ‖ u32_le(period_id_i) ‖ i64_le(x_i) ‖ C_{i+1}[32] )   for i = 47 down to 0
-```
-
-Session stores `commitment = C_0` at creation and `terminal = C_48`. `observe(i, period, x, next)` recomputes `C_i` from its arguments and `next`, requires it equals the stored commitment, then stores `next`. After 48 accepted observations the stored commitment equals `terminal`; `settle` requires that. Rust: `anchor_lang::solana_program::hash::hashv(&[b"PATH-OBS-v1", &dataset_id, &i.to_le_bytes(), &period.to_le_bytes(), &x.to_le_bytes(), &next]).to_bytes()` with `i: u32`.
+- `dataset_id` is computed off-chain only (a length-prefixed term sheet that includes the 60 CPI level strings, window, transform id, `N`, `K`, `D_cap`, `A_cap`). It does not include the retrieval time or the raw-file hash. The program never computes it: `create_session` receives it as an argument.
+- `period_id` = `year*100 + month` as `u32` (`202101` for row 0, `202412` for row 47).
+- `C_N = SHA256("PATH-END-v1" ‖ dataset_id ‖ u32_le(N))`, with `N = 48`.
+- `C_i = SHA256("PATH-OBS-v1" ‖ dataset_id ‖ u32_le(i) ‖ u32_le(period_id_i) ‖ i64_le(value_i) ‖ C_{i+1})`, computed for `i = 47` down to `0`.
+- Session stores `commitment = C_0` and `terminal = C_N` (field name `terminal` in this spec). `observe(i, period, x, next)` recomputes `C_i`, requires it equals the stored `commitment`, then stores `next`. After 48 observations `commitment == terminal`; `settle` requires it.
+- Rust API in `programs/macropaths/src/chain.rs` (use it, do not reimplement): `end_hash(&dataset_id, n)` and `obs_hash(&dataset_id, i, period_id, value, &next)`, both on `solana_sha256_hasher::hashv`. `dataset_id(..)` and `dataset_preimage(..)` exist for tests only.
+- Layout of `tests/vectors.json` (main's file; never edit by hand): `commitment` holds `dataset_id`, `C_0`, `C_N`, `N`, `first_period_id`, `K`, `D_cap`, `A_cap`; `chain` is a list of 48 rows `{i, period_id, value, C_i, preimage_hex}`. For row `i`, `next` is `chain[i+1].C_i`, and for `i = 47` it is `commitment.C_N`. All values are lowercase hex strings of 32 bytes.
 
 ### 1.7 State machine
 
@@ -248,7 +246,7 @@ pub fn token_balance(env: &Env, ta: &Pubkey) -> u64
 pub fn set_time(env: &mut Env, unix: i64)              // writes Clock sysvar via svm.set_sysvar
 pub fn assert_err(res, MacroError::X)                   // matches the custom error code in the failure
 pub fn vectors() -> serde_json::Value                   // reads ../../tests/vectors.json
-pub fn create_session_default(env, id) -> Pubkey        // k=40000, d_cap=80000, a_cap=800000, deadlines now+3600/now+7200, dataset_id/c0/terminal from vectors chain block
+pub fn create_session_default(env, id) -> Pubkey        // k=40000, d_cap=80000, a_cap=800000, deadlines now+3600/now+7200, `dataset_id`, `c0 = commitment.C_0`, `terminal = commitment.C_N` from `vectors.json.commitment`
 pub fn seed_sides(env, session, [u64;4]) -> Keypair     // one seeder wallet deposits the given four amounts
 pub fn observe_all(env, session, rows: &[(u8,u32,i64,[u8;32])])
 ```
