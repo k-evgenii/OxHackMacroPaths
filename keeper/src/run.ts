@@ -1,0 +1,226 @@
+/**
+ * run.ts part 1 (task 10): create the PLAY mint, call create_session with the parameters from
+ * data/cpi-yoy-replay.json, and read every field of the new Session back.
+ *
+ *   pixi run npm --prefix keeper run session:create -- [options]
+ *
+ *   --replay <file>          replay file from prepare.ts (default data/cpi-yoy-replay.json)
+ *   --idl <file>             program IDL (default packages/client/idl.json); picks the layout
+ *   --session-id <u64>       nonce / session_id seed (default: the cluster's unix time)
+ *   --mint <pubkey>          reuse an existing 6-decimal mint instead of creating one
+ *   --controller <pubkey>    observe signer, params layout only (default: the keeper)
+ *   --deposit-window <secs>  deposit_deadline = cluster time + this (default 600)
+ *   --replay-window <secs>   replay_deadline = deposit_deadline + this (default 3600)
+ *   --out <file>             where to write the session addresses (default data/session.json)
+ *
+ * Re-running with the same --session-id after the session exists does not send anything: it
+ * reads the inputs back from --out and repeats the field check. Exits 1 if any field differs.
+ */
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import path from "node:path";
+import { parseArgs } from "node:util";
+import {
+  Keypair,
+  PublicKey,
+  SystemProgram,
+  SYSVAR_CLOCK_PUBKEY,
+  Transaction,
+  type Connection,
+} from "@solana/web3.js";
+import {
+  createInitializeMint2Instruction,
+  getMinimumBalanceForRentExemptMint,
+  getMint,
+  MINT_SIZE,
+  TOKEN_PROGRAM_ID,
+} from "@solana/spl-token";
+import { getConfig, getConnection, loadKeypair } from "./env.js";
+import { sendAndConfirmWithRetry } from "./tx.js";
+import {
+  compareSession,
+  createSessionIx,
+  decodeSession,
+  detectLayout,
+  expectedSession,
+  loadIdl,
+  loadReplay,
+  PLAY_DECIMALS,
+  sessionPda,
+  vaultPda,
+  type SessionInputs,
+} from "./session.js";
+
+/** Cluster unix time from the Clock sysvar (unix_timestamp is the i64 at offset 32). */
+async function clusterTime(connection: Connection): Promise<bigint> {
+  const info = await connection.getAccountInfo(SYSVAR_CLOCK_PUBKEY);
+  if (!info || info.data.length < 40) throw new Error("cannot read the Clock sysvar");
+  return info.data.readBigInt64LE(32);
+}
+
+async function createMint(connection: Connection, payer: Keypair): Promise<PublicKey> {
+  const mint = Keypair.generate();
+  const lamports = await getMinimumBalanceForRentExemptMint(connection);
+  await sendAndConfirmWithRetry(
+    connection,
+    (blockhash) =>
+      new Transaction({ feePayer: payer.publicKey, recentBlockhash: blockhash }).add(
+        SystemProgram.createAccount({
+          fromPubkey: payer.publicKey,
+          newAccountPubkey: mint.publicKey,
+          space: MINT_SIZE,
+          lamports,
+          programId: TOKEN_PROGRAM_ID,
+        }),
+        createInitializeMint2Instruction(mint.publicKey, PLAY_DECIMALS, payer.publicKey, null),
+      ),
+    [payer, mint],
+    { label: "mint" },
+  );
+  return mint.publicKey;
+}
+
+interface SessionFile {
+  layout: string;
+  programId: string;
+  session: string;
+  vaults: [string, string];
+  mint: string;
+  sessionId: string;
+  creator: string;
+  controller: string;
+  depositDeadline: string;
+  replayDeadline: string;
+  createSignature: string | null;
+}
+
+function toInputs(f: SessionFile): SessionInputs {
+  return {
+    id: BigInt(f.sessionId),
+    creator: new PublicKey(f.creator),
+    mint: new PublicKey(f.mint),
+    controller: new PublicKey(f.controller),
+    depositDeadline: BigInt(f.depositDeadline),
+    replayDeadline: BigInt(f.replayDeadline),
+  };
+}
+
+const { values: args } = parseArgs({
+  options: {
+    replay: { type: "string" },
+    idl: { type: "string" },
+    "session-id": { type: "string" },
+    mint: { type: "string" },
+    controller: { type: "string" },
+    "deposit-window": { type: "string", default: "600" },
+    "replay-window": { type: "string", default: "3600" },
+    out: { type: "string" },
+  },
+});
+
+async function main(): Promise<number> {
+  const cfg = getConfig();
+  const fromRoot = (p: string | undefined, dflt: string) => path.resolve(cfg.repoRoot, p ?? dflt);
+  const replayFile = fromRoot(args.replay, "data/cpi-yoy-replay.json");
+  const outFile = fromRoot(args.out, "data/session.json");
+
+  const replay = loadReplay(replayFile);
+  const idl = loadIdl(fromRoot(args.idl, "packages/client/idl.json"));
+  const layout = detectLayout(idl);
+  const programId = new PublicKey(idl.address);
+  const connection = getConnection("confirmed");
+  const keeper = loadKeypair();
+
+  console.log(`rpc host ${cfg.rpcHost}, keeper ${keeper.publicKey.toBase58()}`);
+  console.log(`program ${programId.toBase58()}, create_session layout "${layout}"`);
+  console.log(`replay ${path.relative(cfg.repoRoot, replayFile)}: dataset_id ${replay.datasetId.toString("hex")}`);
+
+  const program = await connection.getAccountInfo(programId);
+  if (!program?.executable) throw new Error(`no executable program at ${programId.toBase58()} on ${cfg.rpcHost}`);
+
+  const now = await clusterTime(connection);
+  const id = BigInt(args["session-id"] ?? now.toString());
+  const [session] = sessionPda(programId, keeper.publicKey, id);
+
+  let inputs: SessionInputs;
+  let createSignature: string | null = null;
+
+  if (await connection.getAccountInfo(session)) {
+    // Already created: never resend. Take the inputs it was created with from the session file.
+    const prev = existsSync(outFile) ? (JSON.parse(readFileSync(outFile, "utf8")) as SessionFile) : undefined;
+    if (prev?.session !== session.toBase58()) {
+      throw new Error(`session ${session.toBase58()} already exists and ${outFile} does not describe it; use a new --session-id`);
+    }
+    console.log(`session ${session.toBase58()} already exists; checking it against ${path.relative(cfg.repoRoot, outFile)}`);
+    inputs = toInputs(prev);
+    createSignature = prev.createSignature;
+  } else {
+    let mint: PublicKey;
+    if (args.mint) {
+      mint = new PublicKey(args.mint);
+      const m = await getMint(connection, mint);
+      if (m.decimals !== PLAY_DECIMALS) throw new Error(`mint ${mint.toBase58()} has ${m.decimals} decimals, expected ${PLAY_DECIMALS}`);
+      console.log(`using PLAY mint ${mint.toBase58()}`);
+    } else {
+      mint = await createMint(connection, keeper);
+      console.log(`created PLAY mint ${mint.toBase58()} (${PLAY_DECIMALS} decimals, authority keeper)`);
+    }
+    const depositDeadline = now + BigInt(args["deposit-window"]);
+    inputs = {
+      id,
+      creator: keeper.publicKey,
+      mint,
+      controller: args.controller ? new PublicKey(args.controller) : keeper.publicKey,
+      depositDeadline,
+      replayDeadline: depositDeadline + BigInt(args["replay-window"]),
+    };
+    const ix = createSessionIx(idl, replay, inputs);
+    const res = await sendAndConfirmWithRetry(
+      connection,
+      (blockhash) => new Transaction({ feePayer: keeper.publicKey, recentBlockhash: blockhash }).add(ix),
+      [keeper],
+      { label: "create_session" },
+    );
+    createSignature = res.signature;
+  }
+
+  const file: SessionFile = {
+    layout,
+    programId: programId.toBase58(),
+    session: session.toBase58(),
+    vaults: [vaultPda(programId, session, 0)[0].toBase58(), vaultPda(programId, session, 1)[0].toBase58()],
+    mint: inputs.mint.toBase58(),
+    sessionId: inputs.id.toString(),
+    creator: inputs.creator.toBase58(),
+    controller: inputs.controller.toBase58(),
+    depositDeadline: inputs.depositDeadline.toString(),
+    replayDeadline: inputs.replayDeadline.toString(),
+    createSignature,
+  };
+  mkdirSync(path.dirname(outFile), { recursive: true });
+  writeFileSync(outFile, JSON.stringify(file, null, 2) + "\n");
+
+  console.log(`session ${file.session}`);
+  console.log(`vaults  ${file.vaults[0]} ${file.vaults[1]}`);
+  console.log(`wrote ${path.relative(cfg.repoRoot, outFile)}`);
+
+  const account = await connection.getAccountInfo(session);
+  if (!account) throw new Error(`session ${session.toBase58()} not found after create_session`);
+  if (!account.owner.equals(programId)) throw new Error(`session is owned by ${account.owner.toBase58()}, not the program`);
+  const checks = compareSession(expectedSession(idl, replay, inputs), decodeSession(idl, account.data));
+  const width = Math.max(...checks.map((c) => c.field.length));
+  for (const c of checks) {
+    const shown = c.ok ? c.expected : `${c.actual ?? "<missing>"} != expected ${c.expected}`;
+    console.log(`${c.ok ? "ok  " : "FAIL"} ${c.field.padEnd(width)} ${shown}`);
+  }
+  const bad = checks.filter((c) => !c.ok).length;
+  console.log(bad === 0 ? `read-back: all ${checks.length} fields match` : `read-back: ${bad} of ${checks.length} fields differ`);
+  return bad === 0 ? 0 : 1;
+}
+
+main().then(
+  (code) => process.exit(code),
+  (e: unknown) => {
+    console.error(`error: ${e instanceof Error ? e.message : String(e)}`);
+    process.exit(1);
+  },
+);
