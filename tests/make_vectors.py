@@ -13,13 +13,18 @@ mathematical floor (Rust `div_euclid` for a positive divisor), as the doc requir
 
 Writes tests/vectors.json (fixed key order, indent 2, LF, trailing newline) and
 asserts every number quoted in the doc. The last printed line is the summary
-`D=<D47> A=<A47> <s1> <s2>`.
+`D=<D47> A=<A47> <s1> <s2>`; the line before it is `dataset_id=... C_0=... C_N=...`.
+
+The commitment chain (dataset_id, C_i, C_0, C_N) follows docs/commitment-chain.md (v1)
+exactly: little-endian integers, u32-length-prefixed UTF-8 strings, raw ASCII tags, SHA-256.
 """
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
+import struct
 import sys
 from pathlib import Path
 
@@ -41,6 +46,18 @@ ACAP = 800_000  # 80 pp-months, the demo cap (section 2)
 ACAP_40 = 400_000  # 40 pp-months, the saturated variant in the section 2 table
 PLAY_DECIMALS = 6
 PLAY = 10**PLAY_DECIMALS
+
+# Commitment chain v1 (docs/commitment-chain.md)
+CHAIN_SPEC = "docs/commitment-chain.md"
+CHAIN_VERSION = "v1"
+SOURCE_URL = "https://fred.stlouisfed.org/graph/fredgraph.csv?id=CPIAUCNS"
+TRANSFORM_ID = "yoy-1e6-floor-v1"
+FIRST_PERIOD_ID = 202101
+TAG_DATASET = "PATH-DATASET-v1"
+TAG_OBS = b"PATH-OBS-v1"
+TAG_END = b"PATH-END-v1"
+OBS_PREIMAGE_LEN = 91
+END_PREIMAGE_LEN = 47
 
 LEVEL_RE = re.compile(r"^([0-9]+)(?:\.([0-9]+))?$")
 
@@ -126,6 +143,129 @@ def claim(a: int, side: int, b: dict) -> int:
     """Eq. (10): floor(a*R_j/S_j) + floor(a*P_j/S_j)."""
     sj = b["S"][side]
     return floor_div(a * b["R"][side], sj) + floor_div(a * b["P"][side], sj)
+
+
+# ---------- commitment chain (docs/commitment-chain.md, v1) ----------
+
+U32_MAX = 2**32 - 1
+I64_MIN, I64_MAX = -(2**63), 2**63 - 1
+U64_MAX = 2**64 - 1
+
+
+def _le(x: int, n: int) -> bytes:
+    """n-byte little-endian of a non-negative int < 256**n, written byte by byte."""
+    out = bytearray()
+    for _ in range(n):
+        out.append(x & 0xFF)
+        x >>= 8
+    assert x == 0
+    return bytes(out)
+
+
+def _int(x: int, name: str, lo: int, hi: int) -> int:
+    if type(x) is not int:  # rejects bool and float
+        raise TypeError(f"{name}: not an int: {x!r}")
+    if not lo <= x <= hi:
+        raise ValueError(f"{name}: {x} outside {lo}..{hi}")
+    return x
+
+
+def u32(x: int) -> bytes:
+    return _le(_int(x, "u32", 0, U32_MAX), 4)
+
+
+def u64(x: int) -> bytes:
+    return _le(_int(x, "u64", 0, U64_MAX), 8)
+
+
+def i64(x: int) -> bytes:
+    """8-byte two's complement, little-endian."""
+    x = _int(x, "i64", I64_MIN, I64_MAX)
+    return _le(x + 2**64 if x < 0 else x, 8)
+
+
+def enc_str(s: str) -> bytes:
+    """str(s): u32(len) || UTF-8 bytes."""
+    b = s.encode("utf-8")
+    return u32(len(b)) + b
+
+
+def period_id(date: str) -> int:
+    """'2021-01-01' -> 202101."""
+    assert re.fullmatch(r"[0-9]{4}-[0-9]{2}-01", date), date
+    return int(date[:4]) * 100 + int(date[5:7])
+
+
+def dataset_preimage(series_id: str, source_url: str, window_start: str, window_end: str,
+                     transform_id: str, levels: list[str], n: int, first_period_id: int,
+                     k: int, d_cap: int, a_cap: int) -> bytes:
+    parts = [
+        enc_str(TAG_DATASET),
+        enc_str(series_id),
+        enc_str(source_url),
+        enc_str(window_start),
+        enc_str(window_end),
+        enc_str(transform_id),
+        u32(len(levels)),
+        *(enc_str(lv) for lv in levels),
+        u32(n),
+        u32(first_period_id),
+        i64(k),
+        u64(d_cap),
+        u64(a_cap),
+    ]
+    return b"".join(parts)
+
+
+def obs_preimage(dataset_id: bytes, i: int, pid: int, value: int, c_next: bytes) -> bytes:
+    assert len(dataset_id) == 32 and len(c_next) == 32
+    pre = TAG_OBS + dataset_id + u32(i) + u32(pid) + i64(value) + c_next
+    assert len(pre) == OBS_PREIMAGE_LEN, len(pre)
+    return pre
+
+
+def end_preimage(dataset_id: bytes, n: int) -> bytes:
+    assert len(dataset_id) == 32
+    pre = TAG_END + dataset_id + u32(n)
+    assert len(pre) == END_PREIMAGE_LEN, len(pre)
+    return pre
+
+
+def build_chain(dataset_id: bytes, obs: list[tuple[int, int]]) -> tuple[bytes, list[dict]]:
+    """obs[i] = (period_id_i, value_i). Returns (C_N, entries for i = 0..N-1 with C_i, preimage).
+
+    Computed from i = N-1 down to 0, each C_i hashing C_{i+1}.
+    """
+    n = len(obs)
+    c_n = hashlib.sha256(end_preimage(dataset_id, n)).digest()
+    entries: list[dict] = [{}] * n
+    nxt = c_n
+    for i in range(n - 1, -1, -1):
+        pid, value = obs[i]
+        pre = obs_preimage(dataset_id, i, pid, value, nxt)
+        c_i = hashlib.sha256(pre).digest()
+        entries[i] = {"i": i, "period_id": pid, "value": value, "C_i": c_i, "preimage": pre}
+        nxt = c_i
+    return c_n, entries
+
+
+def replay_like_observe(dataset_id: bytes, c_0: bytes, c_n: bytes, entries: list[dict]) -> None:
+    """Independent forward walk, as `observe` runs it on chain.
+
+    Starts from current = C_0; for each i the keeper supplies next = C_{i+1} (C_N after the
+    last row), the hash is rebuilt with struct.pack (not the writers above) and must equal
+    current, then current = next. Must end at C_N.
+    """
+    current = c_0
+    n = len(entries)
+    for i, e in enumerate(entries):
+        nxt = entries[i + 1]["C_i"] if i + 1 < n else c_n
+        h = hashlib.sha256(TAG_OBS + dataset_id + struct.pack("<IIq", i, e["period_id"], e["value"])
+                           + nxt).digest()
+        assert h == current, f"observe({i}) would fail"
+        current = nxt
+    assert current == c_n
+    assert hashlib.sha256(TAG_END + dataset_id + struct.pack("<I", n)).digest() == c_n
 
 
 # ---------- vector sections ----------
@@ -243,6 +383,24 @@ def build(snapshot_path: Path) -> dict:
     worked_total = worked["cooling"]["buyer_claim"] + worked["excess"]["buyer_claim"]
     assert worked_total == 33_827_340
 
+    # Commitment chain v1 (docs/commitment-chain.md)
+    assert snap["source_url"] == SOURCE_URL, snap["source_url"]
+    pids = [period_id(d) for d in dates]
+    assert pids[0] == FIRST_PERIOD_ID and pids[-1] == 202412, pids
+    ds_pre = dataset_preimage(SERIES_ID, SOURCE_URL, WINDOW_START, WINDOW_END, TRANSFORM_ID,
+                              strs, N_OBS, FIRST_PERIOD_ID, K, DCAP, ACAP)
+    # 6 tagged/metadata strings + u32(L) + 60 length-prefixed levels + u32 u32 i64 u64 u64
+    expect_len = (sum(4 + len(t.encode()) for t in (TAG_DATASET, SERIES_ID, SOURCE_URL,
+                                                       WINDOW_START, WINDOW_END, TRANSFORM_ID))
+                  + 4 + sum(4 + len(lv.encode()) for lv in strs) + 4 + 4 + 8 + 8 + 8)
+    assert len(ds_pre) == expect_len, (len(ds_pre), expect_len)
+    dataset_id = hashlib.sha256(ds_pre).digest()
+    c_n, chain = build_chain(dataset_id, list(zip(pids, xs)))
+    c_0 = chain[0]["C_i"]
+    assert len(chain) == N_OBS and all(len(e["preimage"]) == OBS_PREIMAGE_LEN for e in chain)
+    assert len(end_preimage(dataset_id, N_OBS)) == END_PREIMAGE_LEN
+    replay_like_observe(dataset_id, c_0, c_n, chain)
+
     return {
         "version": VERSION,
         "maths_doc": "docs/macropaths-maths.pdf version 2",
@@ -320,6 +478,26 @@ def build(snapshot_path: Path) -> dict:
             "excess": worked["excess"],
             "buyer_total": worked_total,
         },
+        "commitment": {
+            "spec": CHAIN_SPEC,
+            "version": CHAIN_VERSION,
+            "dataset_id": dataset_id.hex(),
+            "dataset_preimage_hex": ds_pre.hex(),
+            "dataset_preimage_len": len(ds_pre),
+            "N": N_OBS,
+            "first_period_id": FIRST_PERIOD_ID,
+            "K": K,
+            "D_cap": DCAP,
+            "A_cap": ACAP,
+            "transform_id": TRANSFORM_ID,
+            "series_id": SERIES_ID,
+            "source_url": SOURCE_URL,
+            "window": [WINDOW_START, WINDOW_END],
+            "C_N": c_n.hex(),
+            "C_0": c_0.hex(),
+        },
+        "chain": [{"i": e["i"], "period_id": e["period_id"], "value": e["value"],
+                   "C_i": e["C_i"].hex(), "preimage_hex": e["preimage"].hex()} for e in chain],
     }
 
 
@@ -332,6 +510,8 @@ def main() -> int:
     print(f"wrote {OUT.relative_to(ROOT)}: {len(vec['rows'])} rows")
     for y in vec["annual_slices"]["years"]:
         print(f"  {y['year']}: D={y['D']} A={y['A']} s1={y['s1']} s2={y['s2']}")
+    c = vec["commitment"]
+    print(f"dataset_id={c['dataset_id']} C_0={c['C_0']} C_N={c['C_N']}")
     f = vec["final"]
     print(f"D={f['D']} A={f['A']} {f['s1']} {f['s2']}")
     return 0
