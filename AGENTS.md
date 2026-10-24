@@ -12,7 +12,8 @@ It is **not** a prediction market, an AMM, an order book, a liquidity pool, or a
 
 - Work in WSL under `~/wt/NN-name` (a git worktree). Never under `/mnt/d`.
 - Anchor CLI **1.0.2** (`anchor --version`); crates pinned `=1.0.2`; Rust from rustup via `rust-toolchain.toml`; Node via `pixi run ...`. If a command fails, read `TOOLCHAIN.md` and `ANCHOR.md` before trying anything else.
-- Before step 1 of your brief: `pixi install --locked && anchor build && cargo test -p macropaths` must pass in your worktree.
+- Before step 1 of your brief: `pixi install --locked && anchor build --ignore-keys && cargo test -p macropaths` must pass in your worktree.
+- **Program keypair.** A fresh worktree generates its own `target/deploy/macropaths-keypair.json`, which does not match the `declare_id!` in `lib.rs`, so plain `anchor build` refuses. Build with `anchor build --ignore-keys` and leave the declared ID unchanged; LiteSVM tests load the program under the declared ID and do not use the keypair file. Only agents 10, 14 and 15 deploy; the orchestrator gives them the shared keypair out of band to copy into `target/deploy/`. Never commit it.
 - Never commit `target/`, keypairs, `.env`, or `data/` contents other than `fetch.py` and `series.toml`.
 
 ## Integer discipline (non-negotiable)
@@ -46,7 +47,7 @@ Before any transfer: PDA seeds and bump checked, account owner checked, mint che
 ## Commands
 
 ```
-anchor build                      # also regenerates target/idl/macropaths.json
+anchor build --ignore-keys        # also regenerates target/idl/macropaths.json; plain anchor build only with the shared keypair
 cargo test -p macropaths          # LiteSVM tests in programs/macropaths/tests
 cargo test -p macropaths <name>   # one test file
 pixi run vectors                  # must always print: D=66191 A=691184 827387 863980

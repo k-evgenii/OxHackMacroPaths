@@ -19,7 +19,7 @@ You merge; you do not write program code. Everything you need to decide is writt
 
 ```
 git checkout agent/NN-name && git rebase cursor_main
-anchor build
+anchor build --ignore-keys
 cargo test -p macropaths
 pixi run vectors            # D=66191 A=691184 827387 863980
 git diff cursor_main --stat        # only the brief's files

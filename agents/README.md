@@ -20,7 +20,7 @@ Skills and the Solana MCP server are committed in the repo (`.cursor/skills/`, `
 ```bash
 cd ~/wt/NN-name
 pixi install --locked
-anchor build && cargo test -p macropaths     # must be green before you start
+anchor build --ignore-keys && cargo test -p macropaths     # must be green before you start; see AGENTS.md on the keypair
 ```
 
 First build takes about three minutes per worktree; `target/` is per worktree and is never committed.
@@ -56,7 +56,7 @@ One PR per agent. Force-push allowed on your own branch only.
 ## Merge checklist (orchestrator)
 
 1. `git rebase cursor_main` on the agent branch; agent resolves conflicts if any.
-2. `anchor build`
+2. `anchor build --ignore-keys` (plain `anchor build` once the shared keypair is in `target/deploy/`)
 3. `cargo test -p macropaths`
 4. `pixi run vectors` prints `D=66191 A=691184 827387 863980`
 5. `git diff cursor_main --stat` touches only the brief's files (plus union additions to shared files)
