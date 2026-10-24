@@ -35,7 +35,7 @@ def declared_id():
 
 @pytest.fixture(scope="module")
 def built():
-    r = run(["anchor", "build"], cwd=ROOT, timeout=900)
+    r = run(["anchor", "build", "--ignore-keys"], cwd=ROOT, timeout=900)
     assert r.returncode == 0, r.stdout[-2000:] + r.stderr[-2000:]
     keypair_id = run(["solana-keygen", "pubkey", str(PROGRAM_KEYPAIR)]).stdout.strip()
     if keypair_id != declared_id():
