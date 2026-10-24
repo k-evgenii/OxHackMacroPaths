@@ -88,6 +88,25 @@ Searched `programs/macropaths/src/instructions/` for `as u64`, `as i64`, `as u32
 
 `seller_ta` is `init_if_needed` with `token::mint = play_mint` in the account struct. The handler is empty, but Anchor still initializes the account. `play_mint` was any mint. One seller token account exists per session, so the first caller chose its mint forever. `security_seller_fund_wrong_mint` observed `InitializeAccount3` succeeding before the fix. The constraint `play_mint.key() == session.play_mint` rejects that with `WrongMint`, and neither the seller account nor the seller token account is created.
 
+### High — terminal lockup: deposits locked forever if `terminal` is not the chain's real C_N
+
+**Files:** `programs/macropaths/src/instructions/observe.rs`, `expire_incomplete.rs`. Reported by a teammate in review after this report. Fixed on `phill/terminal-lockup`.
+
+`create_session` stores any `terminal`. `observe` checked each row only against the current commitment, so all 48 rows landed and the last `next_commitment` (the chain's real C_48) became `commitment` even when it differed from `terminal`. Then `settle` failed with `ChainIncomplete`, and `expire_incomplete` failed with `NotExpired` because it required `next_index < n_obs`. No instruction could leave Running, so `claim` stayed `WrongState` and every deposit was locked. This was reproduced on Surfpool against `3942c14`: after 48 rows and time travel past `replay_deadline`, `settle` gave 6011, `expire` gave 6013, `claim` gave 6002, and 380 PLAY stayed in the vaults. `security_settle_complete_index_wrong_terminal` covered the `ChainIncomplete` error but not the missing refund path.
+
+**Fix:**
+1. `observe` requires `next_commitment == terminal` on the last row (`BadCommitment`), so the stuck state can't be reached.
+2. `expire_incomplete` refunds any Running session past `replay_deadline` unless `next_index == n_obs && commitment == terminal`. This backstop also frees a session already stuck.
+
+**Tests:** `tests/terminal_lockup.rs`:
+- last row rejected → expire → claim refunds every deposit;
+- stuck state expires after the deadline;
+- an honest session still settles to 827387 / 863980 and can't be expired.
+
+`lock_expire_running_complete_not_expired` now sets `commitment = terminal`, so its fixture is truly complete.
+
+**Not done:** `create_session` could also require `terminal == chain::end_hash(dataset_id, N)`. It isn't needed for funds safety after fix 1, and was left out as a new create rule shortly before the freeze (see `docs/DECISIONS.md`).
+
 ## Deliberately not changed
 
 - `state.rs`, `math.rs`, `chain.rs`, `constants.rs`, `common/mod.rs`, and other agents' tests.

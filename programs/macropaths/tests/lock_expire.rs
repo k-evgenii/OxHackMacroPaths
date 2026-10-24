@@ -215,9 +215,12 @@ fn lock_expire_running_complete_not_expired() {
     let mut env = common::env();
     let n = chain_len();
     assert_eq!(n, macropaths::N_OBS);
+    // Complete means every row in AND the chain closed at terminal; otherwise expire refunds
+    // (terminal_lockup.rs).
     let session = common::put_session(&mut env, 1, |s| {
         s.state = macropaths::SessionState::Running;
         s.next_index = n;
+        s.commitment = s.terminal;
     });
     let stored = common::read::<macropaths::Session>(&env, &session);
     assert_eq!(stored.next_index, stored.n_obs);

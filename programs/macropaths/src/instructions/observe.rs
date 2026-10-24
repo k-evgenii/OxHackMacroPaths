@@ -45,6 +45,14 @@ pub fn handler(
         &next_commitment,
     );
     require!(digest == session.commitment, MacroError::BadCommitment);
+    // The last row must close the chain at the committed terminal. Otherwise all n_obs rows land,
+    // settle fails (ChainIncomplete) and expire_incomplete never fires: deposits locked forever.
+    if index.checked_add(1) == Some(session.n_obs) {
+        require!(
+            next_commitment == session.terminal,
+            MacroError::BadCommitment
+        );
+    }
 
     let (peak, max_decline) = crate::math::step_cooling(session.peak, session.max_decline, value);
     let excess_acc = crate::math::step_excess(session.excess_acc, value, session.k)

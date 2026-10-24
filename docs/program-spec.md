@@ -144,7 +144,7 @@ Properties that the tests pin (all from `tests/vectors.json`, never typed by han
 ```
 Open ──lock_and_start──▶ Running ──settle──▶ Settled
  │                          │
- └─expire_incomplete (now > deposit_deadline)        └─expire_incomplete (now > replay_deadline && next_index < 48)
+ └─expire_incomplete (now > deposit_deadline)        └─expire_incomplete (now > replay_deadline && !(next_index == 48 && commitment == terminal))
                  ▼                                                   ▼
              Refunding                                           Refunding
 ```
@@ -172,7 +172,7 @@ Writes: `matched[i] = min(side_totals[2i], side_totals[2i+1])`; `state = Running
 
 **observe(index: u8, period_id: u32, value: i64, next_commitment: [u8;32])**
 Accounts: `session` mut. No signer requirement beyond the fee payer (permissionless; the chain gates it).
-Checks in this order: `state == Running` (`WrongState`); `now ≤ replay_deadline` (`PastDeadline`); `index == next_index && index < n_obs` (`WrongIndex`); `period_id > last_period_id` (`PeriodNotIncreasing`); `chain::obs_hash(dataset_id, index as u32, period_id, value, next_commitment) == commitment` (`BadCommitment`).
+Checks in this order: `state == Running` (`WrongState`); `now ≤ replay_deadline` (`PastDeadline`); `index == next_index && index < n_obs` (`WrongIndex`); `period_id > last_period_id` (`PeriodNotIncreasing`); `chain::obs_hash(dataset_id, index as u32, period_id, value, next_commitment) == commitment` (`BadCommitment`); on the last row (`index + 1 == n_obs`), also `next_commitment == terminal` (`BadCommitment`), so the chain can only complete at the committed terminal.
 Writes: `(peak, max_decline) = step_cooling(...)`; `excess_acc = step_excess(...)`; `values[index] = value`; `commitment = next_commitment`; `last_period_id = period_id`; `next_index += 1`; emit `Observed`.
 
 **settle()**
@@ -187,7 +187,7 @@ Writes: Settled: for j: `c_j = claim_amount(deposited[j], r_budget[j], p_budget[
 
 **expire_incomplete()**
 Accounts: `session` mut. Permissionless.
-Checks: `(state == Open && now > deposit_deadline) || (state == Running && now > replay_deadline && next_index < n_obs)` else `NotExpired`.
+Checks: `(state == Open && now > deposit_deadline) || (state == Running && now > replay_deadline && !(next_index == n_obs && commitment == terminal))` else `NotExpired`. A Running session that cannot settle always refunds after `replay_deadline`.
 Writes: `state = Refunding`.
 
 **sweep_dust()**
