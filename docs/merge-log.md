@@ -5,3 +5,4 @@
 | 03-chain-v2 | da58987 | build 2s | 12 passing | re-merged as v2 after the main chain commit 6bf12ac; the first 03 merge had the wrong dataset_id, and main's chain (PR #6) is authoritative |
 | 01-skeleton | 09ae224 | build 7s | 12 passing | orchestrator |
 | 01-fixtures | 751efce | build 4s | 13 passing | orchestrator |
+| 04-create-session | d817f24 | build 8s | 19 passing | orchestrator |
