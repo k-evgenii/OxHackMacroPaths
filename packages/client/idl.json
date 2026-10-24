@@ -1,0 +1,1441 @@
+{
+  "address": "FvT786RtMTtbdXWemA9zgA9rfwhvxFsKY1ypiMMNwMbS",
+  "metadata": {
+    "name": "macropaths",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
+  "instructions": [
+    {
+      "name": "claim",
+      "discriminator": [
+        62,
+        198,
+        214,
+        193,
+        213,
+        159,
+        108,
+        210
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "position"
+          ]
+        },
+        {
+          "name": "session",
+          "writable": true,
+          "relations": [
+            "position"
+          ]
+        },
+        {
+          "name": "position",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  115,
+                  105,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "session"
+              },
+              {
+                "kind": "account",
+                "path": "owner"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint",
+          "relations": [
+            "session"
+          ]
+        },
+        {
+          "name": "owner_token",
+          "writable": true
+        },
+        {
+          "name": "vault_0",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "session"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  0
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault_1",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "session"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  1
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_program"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "create_session",
+      "discriminator": [
+        242,
+        193,
+        143,
+        179,
+        150,
+        25,
+        122,
+        227
+      ],
+      "accounts": [
+        {
+          "name": "creator",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "session",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  101,
+                  115,
+                  115,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "creator"
+              },
+              {
+                "kind": "arg",
+                "path": "nonce"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "vault_0",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "session"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  0
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault_1",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "session"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  1
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "nonce",
+          "type": "u64"
+        },
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "SessionParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "deposit",
+      "discriminator": [
+        242,
+        35,
+        198,
+        137,
+        82,
+        225,
+        242,
+        182
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "session",
+          "writable": true
+        },
+        {
+          "name": "position",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  115,
+                  105,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "session"
+              },
+              {
+                "kind": "account",
+                "path": "owner"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint",
+          "relations": [
+            "session"
+          ]
+        },
+        {
+          "name": "owner_token",
+          "writable": true
+        },
+        {
+          "name": "vault_0",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "session"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  0
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault_1",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "session"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  1
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "amounts",
+          "type": {
+            "array": [
+              "u64",
+              4
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "expire_incomplete",
+      "discriminator": [
+        100,
+        225,
+        15,
+        34,
+        76,
+        155,
+        27,
+        245
+      ],
+      "accounts": [
+        {
+          "name": "session",
+          "writable": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "initialize",
+      "docs": [
+        "Template smoke instruction. Remove once the create_session tests replace",
+        "tests/integration/initialize.test.ts and programs/macropaths/tests/test_initialize.rs."
+      ],
+      "discriminator": [
+        175,
+        175,
+        109,
+        31,
+        13,
+        152,
+        155,
+        237
+      ],
+      "accounts": [],
+      "args": []
+    },
+    {
+      "name": "lock_and_start",
+      "discriminator": [
+        189,
+        212,
+        52,
+        196,
+        58,
+        43,
+        11,
+        147
+      ],
+      "accounts": [
+        {
+          "name": "controller",
+          "signer": true,
+          "relations": [
+            "session"
+          ]
+        },
+        {
+          "name": "session",
+          "writable": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "observe",
+      "discriminator": [
+        204,
+        78,
+        178,
+        115,
+        194,
+        147,
+        65,
+        74
+      ],
+      "accounts": [
+        {
+          "name": "controller",
+          "signer": true,
+          "relations": [
+            "session"
+          ]
+        },
+        {
+          "name": "session",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "index",
+          "type": "u8"
+        },
+        {
+          "name": "period_id",
+          "type": "u32"
+        },
+        {
+          "name": "value",
+          "type": "i64"
+        },
+        {
+          "name": "next_commitment",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "settle",
+      "discriminator": [
+        175,
+        42,
+        185,
+        87,
+        144,
+        131,
+        102,
+        212
+      ],
+      "accounts": [
+        {
+          "name": "session",
+          "writable": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "sweep_dust",
+      "discriminator": [
+        9,
+        49,
+        242,
+        88,
+        156,
+        84,
+        109,
+        15
+      ],
+      "accounts": [
+        {
+          "name": "controller",
+          "signer": true,
+          "relations": [
+            "session"
+          ]
+        },
+        {
+          "name": "session",
+          "writable": true
+        },
+        {
+          "name": "mint",
+          "relations": [
+            "session"
+          ]
+        },
+        {
+          "name": "vault_0",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "session"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  0
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault_1",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "session"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  1
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "treasury",
+          "docs": [
+            "Disclosed demo treasury that receives rounding residue."
+          ],
+          "writable": true
+        },
+        {
+          "name": "token_program"
+        }
+      ],
+      "args": []
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Position",
+      "discriminator": [
+        170,
+        188,
+        143,
+        228,
+        122,
+        64,
+        247,
+        208
+      ]
+    },
+    {
+      "name": "Session",
+      "discriminator": [
+        243,
+        81,
+        72,
+        115,
+        214,
+        188,
+        72,
+        144
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "Claimed",
+      "discriminator": [
+        217,
+        192,
+        123,
+        72,
+        108,
+        150,
+        248,
+        33
+      ]
+    },
+    {
+      "name": "Observed",
+      "discriminator": [
+        154,
+        65,
+        198,
+        52,
+        238,
+        11,
+        193,
+        59
+      ]
+    },
+    {
+      "name": "Settled",
+      "discriminator": [
+        232,
+        210,
+        40,
+        17,
+        142,
+        124,
+        145,
+        238
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "ZeroAmount",
+      "msg": "Amount must be greater than zero"
+    },
+    {
+      "code": 6001,
+      "name": "WrongMint",
+      "msg": "Token mint does not match the session mint"
+    },
+    {
+      "code": 6002,
+      "name": "WrongState",
+      "msg": "Session is not in the state this instruction needs"
+    },
+    {
+      "code": 6003,
+      "name": "DepositClosed",
+      "msg": "Deposits are closed for this session"
+    },
+    {
+      "code": 6004,
+      "name": "EmptySide",
+      "msg": "Every side needs a positive total before lock"
+    },
+    {
+      "code": 6005,
+      "name": "WrongIndex",
+      "msg": "Observation index is not the next expected index"
+    },
+    {
+      "code": 6006,
+      "name": "WrongPeriod",
+      "msg": "Observation period is not the next expected month"
+    },
+    {
+      "code": 6007,
+      "name": "BadCommitment",
+      "msg": "Observation does not match the committed chain"
+    },
+    {
+      "code": 6008,
+      "name": "NotComplete",
+      "msg": "Not all observations have been posted"
+    },
+    {
+      "code": 6009,
+      "name": "AlreadyClaimed",
+      "msg": "Position has already claimed"
+    },
+    {
+      "code": 6010,
+      "name": "NotAllClaimed",
+      "msg": "Not every position has claimed yet"
+    },
+    {
+      "code": 6011,
+      "name": "NotController",
+      "msg": "Signer is not the session controller"
+    },
+    {
+      "code": 6012,
+      "name": "BadParams",
+      "msg": "Invalid session parameters"
+    },
+    {
+      "code": 6013,
+      "name": "DeadlineNotPassed",
+      "msg": "The deadline has not passed yet"
+    },
+    {
+      "code": 6014,
+      "name": "Overflow",
+      "msg": "Arithmetic overflow"
+    }
+  ],
+  "types": [
+    {
+      "name": "Claimed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "session",
+            "type": "pubkey"
+          },
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "amounts",
+            "docs": [
+              "Paid from vault 0 and vault 1."
+            ],
+            "type": {
+              "array": [
+                "u64",
+                2
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Observed",
+      "docs": [
+        "Emitted by observe. Explorer shows events as base64 `Program data:` lines,",
+        "so observe also prints a plain msg! line for the demo."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "session",
+            "type": "pubkey"
+          },
+          {
+            "name": "index",
+            "type": "u8"
+          },
+          {
+            "name": "period_id",
+            "type": "u32"
+          },
+          {
+            "name": "value",
+            "type": "i64"
+          },
+          {
+            "name": "stats",
+            "type": {
+              "array": [
+                {
+                  "defined": {
+                    "name": "ProductStats"
+                  }
+                },
+                2
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Position",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "session",
+            "type": "pubkey"
+          },
+          {
+            "name": "deposited",
+            "docs": [
+              "Deposits per side, same order as `Session::side_totals`."
+            ],
+            "type": {
+              "array": [
+                "u64",
+                4
+              ]
+            }
+          },
+          {
+            "name": "claimed",
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "_reserved",
+            "type": {
+              "array": [
+                "u8",
+                16
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "ProductParams",
+      "docs": [
+        "One product's term sheet, fixed at create_session.",
+        "Demo values: product 0 = { MaxMove, +1, 0, 80_000 }, product 1 = { Accumulate, +1, 40_000, 800_000 }."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "kind",
+            "type": {
+              "defined": {
+                "name": "StatKind"
+              }
+            }
+          },
+          {
+            "name": "direction",
+            "docs": [
+              "+1 or -1."
+            ],
+            "type": "i8"
+          },
+          {
+            "name": "threshold",
+            "docs": [
+              "In x units (40_000 = 4.00%). Ignored for MaxMove."
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "cap",
+            "docs": [
+              "The statistic value that scores 1.0 (80_000 = 8 pp; 800_000 = 80 pp-months)."
+            ],
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ProductStats",
+      "docs": [
+        "One product's running statistic."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "extreme",
+            "docs": [
+              "Running maximum of y (MaxMove only)."
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "stat",
+            "docs": [
+              "The statistic so far, in x units (D for MaxMove, A for Accumulate)."
+            ],
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Session",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "creator",
+            "type": "pubkey"
+          },
+          {
+            "name": "controller",
+            "docs": [
+              "Signs lock_and_start, observe and sweep_dust (the keeper)."
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "nonce",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "vault_bumps",
+            "type": {
+              "array": [
+                "u8",
+                2
+              ]
+            }
+          },
+          {
+            "name": "state",
+            "type": {
+              "defined": {
+                "name": "SessionState"
+              }
+            }
+          },
+          {
+            "name": "deposit_deadline",
+            "type": "i64"
+          },
+          {
+            "name": "replay_deadline",
+            "type": "i64"
+          },
+          {
+            "name": "term_sheet_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "dataset_id",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "source_digest",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "series_code",
+            "docs": [
+              "FRED id, zero-padded, e.g. b\"CPIAUCNS\"."
+            ],
+            "type": {
+              "array": [
+                "u8",
+                16
+              ]
+            }
+          },
+          {
+            "name": "start_period",
+            "docs": [
+              "First observation month as YYYYMM, e.g. 202101."
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "expected_count",
+            "type": "u8"
+          },
+          {
+            "name": "products",
+            "type": {
+              "array": [
+                {
+                  "defined": {
+                    "name": "ProductParams"
+                  }
+                },
+                2
+              ]
+            }
+          },
+          {
+            "name": "commitment",
+            "docs": [
+              "C_i: the commitment the next observation must open."
+            ],
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "terminal",
+            "docs": [
+              "C_N: must equal `commitment` once the last row is posted."
+            ],
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "next_index",
+            "type": "u8"
+          },
+          {
+            "name": "next_period",
+            "docs": [
+              "Month the next observation must carry, YYYYMM (December rolls to January)."
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "values",
+            "type": {
+              "array": [
+                "i64",
+                48
+              ]
+            }
+          },
+          {
+            "name": "stats",
+            "type": {
+              "array": [
+                {
+                  "defined": {
+                    "name": "ProductStats"
+                  }
+                },
+                2
+              ]
+            }
+          },
+          {
+            "name": "side_totals",
+            "type": {
+              "array": [
+                "u64",
+                4
+              ]
+            }
+          },
+          {
+            "name": "matched",
+            "docs": [
+              "M = min(S_0, S_1) per product, recorded at lock."
+            ],
+            "type": {
+              "array": [
+                "u64",
+                2
+              ]
+            }
+          },
+          {
+            "name": "payout_budget",
+            "docs": [
+              "P_j per side, set at settle."
+            ],
+            "type": {
+              "array": [
+                "u64",
+                4
+              ]
+            }
+          },
+          {
+            "name": "refund_budget",
+            "docs": [
+              "R_j = S_j - M per side, set at settle."
+            ],
+            "type": {
+              "array": [
+                "u64",
+                4
+              ]
+            }
+          },
+          {
+            "name": "scores",
+            "docs": [
+              "Scores in millionths, set at settle."
+            ],
+            "type": {
+              "array": [
+                "u64",
+                2
+              ]
+            }
+          },
+          {
+            "name": "position_count",
+            "type": "u32"
+          },
+          {
+            "name": "claimed_count",
+            "type": "u32"
+          },
+          {
+            "name": "_reserved",
+            "docs": [
+              "Room for late fields without changing the layout."
+            ],
+            "type": {
+              "array": [
+                "u8",
+                64
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "SessionParams",
+      "docs": [
+        "Arguments of create_session."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "controller",
+            "type": "pubkey"
+          },
+          {
+            "name": "deposit_deadline",
+            "type": "i64"
+          },
+          {
+            "name": "replay_deadline",
+            "type": "i64"
+          },
+          {
+            "name": "term_sheet_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "dataset_id",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "source_digest",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "series_code",
+            "type": {
+              "array": [
+                "u8",
+                16
+              ]
+            }
+          },
+          {
+            "name": "start_period",
+            "type": "u32"
+          },
+          {
+            "name": "expected_count",
+            "type": "u8"
+          },
+          {
+            "name": "products",
+            "type": {
+              "array": [
+                {
+                  "defined": {
+                    "name": "ProductParams"
+                  }
+                },
+                2
+              ]
+            }
+          },
+          {
+            "name": "initial_commitment",
+            "docs": [
+              "C_0."
+            ],
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "terminal_commitment",
+            "docs": [
+              "C_N."
+            ],
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "SessionState",
+      "docs": [
+        "Open -> Running -> Settled, or Open / Running -> Refunding."
+      ],
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Open"
+          },
+          {
+            "name": "Running"
+          },
+          {
+            "name": "Settled"
+          },
+          {
+            "name": "Refunding"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Settled",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "session",
+            "type": "pubkey"
+          },
+          {
+            "name": "scores",
+            "type": {
+              "array": [
+                "u64",
+                2
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "StatKind",
+      "docs": [
+        "Which path statistic a product settles on. The maths works on y = direction * x."
+      ],
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "MaxMove"
+          },
+          {
+            "name": "Accumulate"
+          }
+        ]
+      }
+    }
+  ],
+  "constants": [
+    {
+      "name": "MAX_OBS",
+      "docs": [
+        "Most observations a session holds (48 monthly rows). `Session::values` is sized to this."
+      ],
+      "type": "u8",
+      "value": "48"
+    },
+    {
+      "name": "POSITION_SEED",
+      "docs": [
+        "Position PDA: ['position', session, owner]."
+      ],
+      "type": "bytes",
+      "value": "[112, 111, 115, 105, 116, 105, 111, 110]"
+    },
+    {
+      "name": "SCALE",
+      "docs": [
+        "Scores are in millionths: 1_000_000 = 1.0."
+      ],
+      "type": "u64",
+      "value": "1000000"
+    },
+    {
+      "name": "SESSION_SEED",
+      "docs": [
+        "Session PDA: ['session', creator, nonce as u64 little-endian]."
+      ],
+      "type": "bytes",
+      "value": "[115, 101, 115, 115, 105, 111, 110]"
+    },
+    {
+      "name": "VAULT_0",
+      "docs": [
+        "Product index byte for vault 0 and vault 1. Named constants keep the vault",
+        "addresses resolvable from the IDL; a raw `&[0u8]` literal is not."
+      ],
+      "type": "bytes",
+      "value": "[0]"
+    },
+    {
+      "name": "VAULT_1",
+      "type": "bytes",
+      "value": "[1]"
+    },
+    {
+      "name": "VAULT_SEED",
+      "docs": [
+        "Vault PDA: ['vault', session, product index as one byte]. Authority = the Session PDA."
+      ],
+      "type": "bytes",
+      "value": "[118, 97, 117, 108, 116]"
+    }
+  ]
+}
