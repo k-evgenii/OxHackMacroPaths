@@ -11,7 +11,11 @@
     "typecheck": "tsc --noEmit",
     "tsx": "tsx",
     "env:check": "tsx scripts/env-check.ts",
-    "smoke:transfer": "tsx scripts/smoke-transfer.ts"
+    "smoke:transfer": "tsx scripts/smoke-transfer.ts",
+    "session:create": "tsx src/run.ts",
+    "program:load": "tsx scripts/load-program.ts",
+    "admin": "tsx src/admin.ts",
+    "replay": "tsx src/replay.ts"
   },
   "dependencies": {
     "@anchor-lang/core": "1.0.2",

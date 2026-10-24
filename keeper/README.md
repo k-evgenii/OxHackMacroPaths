@@ -27,6 +27,21 @@ pixi run npm --prefix keeper run env:check   # prints set/not set, RPC host, kee
   `getSignatureState()` / `isBlockhashExpired()` for resume logic. It only rebuilds a transaction once the
   previous one's blockhash is past the finalized block height and the signature is still unknown,
   so it cannot double-post. See the header comment.
+- `src/session.ts`: `create_session` inputs, instruction and read-back for the `cursor_main` program.
+  `checkIdl` fails if `packages/client/idl.json` has different `create_session` args (see `docs/DECISIONS.md`).
+  Tests: `npx tsx --test keeper/src/session.test.ts`.
+- `src/run.ts`: part 1 creates the PLAY mint (6 decimals), calls `create_session` with everything from
+  `data/cpi-yoy-replay.json`, writes `data/session.json`, and checks every Session field it set. Part 2
+  seeds the four sides from the keeper (`--seed 90,100,90,100` by default, `--seed none` to skip).
+- `src/program.ts`: generic IDL instruction builder (accounts matched by IDL name), account decoding,
+  PLAY formatting, `data/session.json` helpers. Tests: `npx tsx --test keeper/src/program.test.ts`.
+- `src/replay.ts`: `npm run replay` posts the 48 observations in order, at least 2 s apart, each only after
+  the previous one confirms. It resumes from `Session.next_index`. A row is never double-posted, even across
+  `kill -9`: the signature is saved to `data/replay-pending.json` before each broadcast, and on restart that
+  transaction must be confirmed or provably expired before the row is rebuilt.
+- `src/ops.ts` and `src/admin.ts`: `npm run admin -- <seed|lock|settle|status>` for the session in
+  `data/session.json`. Every command reads the session first and sends nothing if that step is already
+  done.
 
 ## Local smoke test (no devnet)
 
@@ -45,3 +60,30 @@ DOTENV_PATH=/tmp/keeper-local/local.env pixi run npm --prefix keeper run smoke:t
 The smoke test refuses to run unless `RPC_URL` points at localhost. It covers a SOL transfer, an on-chain
 failure (thrown once, never resubmitted), a preflight rejection, and with `--expiry` an expired blockhash
 that is rebuilt exactly once.
+
+## Create a session locally (task 10)
+
+The program must be loaded at the IDL's address. With no program keypair, load a built `.so` into
+Surfpool via the `surfnet_writeProgram` cheatcode (local only):
+
+```bash
+pixi run npx --prefix keeper tsx keeper/src/prepare.ts   # writes data/cpi-yoy-replay.json
+anchor build                      # or cargo-build-sbf; gives target/deploy/macropaths.so
+DOTENV_PATH=/tmp/keeper-local/local.env pixi run npm --prefix keeper run program:load -- \
+  target/deploy/macropaths.so FvT786RtMTtbdXWemA9zgA9rfwhvxFsKY1ypiMMNwMbS
+# fund the keeper (Surfpool started with --airdrop-amount 0), then:
+DOTENV_PATH=/tmp/keeper-local/local.env pixi run npm --prefix keeper run session:create
+```
+
+Then lock it, replay the 48 rows (safe to kill and restart at any point), and settle:
+
+```bash
+DOTENV_PATH=/tmp/keeper-local/local.env pixi run npm --prefix keeper run admin -- lock
+DOTENV_PATH=/tmp/keeper-local/local.env pixi run npm --prefix keeper run replay   # --limit n, --interval-ms
+DOTENV_PATH=/tmp/keeper-local/local.env pixi run npm --prefix keeper run admin -- settle   # after 48 rows
+DOTENV_PATH=/tmp/keeper-local/local.env pixi run npm --prefix keeper run admin -- status
+```
+
+Options: `--session-id`, `--mint`, `--deposit-window`, `--replay-window`, `--idl`, `--replay`,
+`--out`, `--seed`. If you re-run with an existing `--session-id`, nothing is sent: it re-checks the session against
+`data/session.json`. It exits 1 if any read-back field differs.
