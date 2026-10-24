@@ -791,3 +791,69 @@ fn hex32(label: &str, raw: &str) -> [u8; 32] {
     }
     out
 }
+
+#[test]
+fn security_set_entry_quote_past_deadline() {
+    let mut env = common::env();
+    let authority = env.authority.insecure_clone();
+    let quoted = common::put_session(&mut env, 20, |_| {});
+    let fresh = common::put_session(&mut env, 21, |_| {});
+    let deadline = common::read::<macropaths::Session>(&env, &quoted).deposit_deadline;
+    assert_eq!(
+        common::read::<macropaths::Session>(&env, &fresh).deposit_deadline,
+        deadline
+    );
+    let first = [macropaths::QUOTE_MIN, macropaths::QUOTE_MAX];
+    let late = [macropaths::QUOTE_MAX, macropaths::QUOTE_MIN];
+    let (quoted_pda, _) = common::quote_pda(&quoted);
+    let (fresh_pda, _) = common::quote_pda(&fresh);
+
+    common::set_time(&mut env, deadline);
+    common::send(
+        &mut env,
+        set_quote_ix(authority.pubkey(), &quoted, first),
+        &[&authority],
+    )
+    .unwrap_or_else(|err| panic!("{}", err.meta.pretty_logs()));
+    let stored = common::read::<macropaths::EntryQuote>(&env, &quoted_pda);
+    assert_eq!(stored.p, first);
+    assert!(stored.is_set);
+
+    common::set_time(
+        &mut env,
+        deadline.checked_add(1).expect("one second past deadline"),
+    );
+    let before = account_data(&env, &quoted_pda);
+    common::assert_err(
+        common::send(
+            &mut env,
+            set_quote_ix(authority.pubkey(), &quoted, late),
+            &[&authority],
+        ),
+        macropaths::MacroError::PastDeadline,
+    );
+    assert_eq!(account_data(&env, &quoted_pda), before);
+
+    common::assert_err(
+        common::send(
+            &mut env,
+            set_quote_ix(authority.pubkey(), &fresh, first),
+            &[&authority],
+        ),
+        macropaths::MacroError::PastDeadline,
+    );
+    assert!(env.svm.get_account(&fresh_pda).is_none());
+}
+
+fn set_quote_ix(authority: Pubkey, session: &Pubkey, p: [u64; 2]) -> Instruction {
+    let (quote, _) = common::quote_pda(session);
+    instruction(
+        macropaths::accounts::SetEntryQuote {
+            authority,
+            session: *session,
+            quote,
+            system_program: anchor_lang::system_program::ID,
+        },
+        macropaths::instruction::SetEntryQuote { p },
+    )
+}
