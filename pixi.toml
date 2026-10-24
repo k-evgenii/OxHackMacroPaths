@@ -1,0 +1,42 @@
+[workspace]
+authors = ["Evgenii Kondratenko <k0nd0r.a1.0ne@gmail.com>"]
+channels = ["conda-forge"]
+name = "OxHackMacroPaths"
+platforms = ["win-64", "linux-64", "osx-64", "osx-arm64"]
+version = "0.1.0"
+
+[tasks]
+versions = "node --version && npm --version && rustc --version && cargo --version && python --version"
+prepare = "python data/prepare.py"
+vectors = "python tests/make_vectors.py"
+forecast = "python forecast/ar1.py"
+
+[dependencies]
+nodejs = "20.*"
+rust = "1.89.*"
+python = "3.12.*"
+pkg-config = ">=0.29.2,<0.30"
+openssl = ">=3.6.5,<4"
+clang = ">=22.1.8,<24"
+cmake = ">=4.4.4,<5"
+make = ">=4.4.1,<5"
+git = ">=2.56.0,<3"
+pandas = ">=3.1.0,<4"
+numpy = ">=2.5.4,<3"
+scipy = ">=1.18.1,<2"
+statsmodels = ">=0.15.0,<0.16"
+requests = ">=2.34.2,<3"
+pyarrow = ">=25.0.0,<26"
+matplotlib = ">=3.11.2,<4"
+
+[target.linux-64.dependencies]
+libudev = ">=262.1,<263"
+
+[feature.notebook.dependencies]
+jupyterlab = "*"
+
+[feature.notebook.tasks]
+jupyter = "jupyter lab"
+
+[environments]
+notebook = ["notebook"]
