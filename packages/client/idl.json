@@ -1,0 +1,1772 @@
+{
+  "address": "FvT786RtMTtbdXWemA9zgA9rfwhvxFsKY1ypiMMNwMbS",
+  "metadata": {
+    "name": "macropaths",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
+  "instructions": [
+    {
+      "name": "buy_cover",
+      "discriminator": [
+        43,
+        59,
+        234,
+        123,
+        199,
+        21,
+        0,
+        167
+      ],
+      "accounts": [
+        {
+          "name": "buyer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "session",
+          "writable": true
+        },
+        {
+          "name": "quote",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  113,
+                  117,
+                  111,
+                  116,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "session"
+              }
+            ]
+          }
+        },
+        {
+          "name": "seller",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  101,
+                  108,
+                  108,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "session"
+              }
+            ]
+          }
+        },
+        {
+          "name": "seller_ta",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  101,
+                  108,
+                  108,
+                  101,
+                  114,
+                  95,
+                  116,
+                  97
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "session"
+              }
+            ]
+          }
+        },
+        {
+          "name": "cover",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  118,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "session"
+              },
+              {
+                "kind": "account",
+                "path": "buyer"
+              }
+            ]
+          }
+        },
+        {
+          "name": "buyer_ta",
+          "writable": true
+        },
+        {
+          "name": "vault",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "product",
+          "type": "u8"
+        },
+        {
+          "name": "units",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "claim",
+      "discriminator": [
+        62,
+        198,
+        214,
+        193,
+        213,
+        159,
+        108,
+        210
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "signer": true,
+          "relations": [
+            "position"
+          ]
+        },
+        {
+          "name": "session",
+          "writable": true,
+          "relations": [
+            "position"
+          ]
+        },
+        {
+          "name": "position",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  115,
+                  105,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "session"
+              },
+              {
+                "kind": "account",
+                "path": "owner"
+              }
+            ]
+          }
+        },
+        {
+          "name": "owner_ta",
+          "writable": true
+        },
+        {
+          "name": "vault_0",
+          "writable": true
+        },
+        {
+          "name": "vault_1",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "claim_cover",
+      "discriminator": [
+        149,
+        6,
+        213,
+        94,
+        5,
+        202,
+        216,
+        111
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "signer": true,
+          "relations": [
+            "cover"
+          ]
+        },
+        {
+          "name": "session",
+          "writable": true,
+          "relations": [
+            "cover"
+          ]
+        },
+        {
+          "name": "cover",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  118,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "session"
+              },
+              {
+                "kind": "account",
+                "path": "owner"
+              }
+            ]
+          }
+        },
+        {
+          "name": "owner_ta",
+          "writable": true
+        },
+        {
+          "name": "vault_0",
+          "writable": true
+        },
+        {
+          "name": "vault_1",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "create_session",
+      "discriminator": [
+        242,
+        193,
+        143,
+        179,
+        150,
+        25,
+        122,
+        227
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "session",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  101,
+                  115,
+                  115,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              },
+              {
+                "kind": "arg",
+                "path": "session_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "play_mint"
+        },
+        {
+          "name": "vault_0",
+          "writable": true
+        },
+        {
+          "name": "vault_1",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "session_id",
+          "type": "u64"
+        },
+        {
+          "name": "k",
+          "type": "i64"
+        },
+        {
+          "name": "d_cap",
+          "type": "i64"
+        },
+        {
+          "name": "a_cap",
+          "type": "i64"
+        },
+        {
+          "name": "deposit_deadline",
+          "type": "i64"
+        },
+        {
+          "name": "replay_deadline",
+          "type": "i64"
+        },
+        {
+          "name": "dataset_id",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "c0",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "terminal",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "deposit",
+      "discriminator": [
+        242,
+        35,
+        198,
+        137,
+        82,
+        225,
+        242,
+        182
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "session",
+          "writable": true
+        },
+        {
+          "name": "position",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  115,
+                  105,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "session"
+              },
+              {
+                "kind": "account",
+                "path": "owner"
+              }
+            ]
+          }
+        },
+        {
+          "name": "owner_ta",
+          "writable": true
+        },
+        {
+          "name": "vault_0",
+          "writable": true
+        },
+        {
+          "name": "vault_1",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "amounts",
+          "type": {
+            "array": [
+              "u64",
+              4
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "expire_incomplete",
+      "discriminator": [
+        100,
+        225,
+        15,
+        34,
+        76,
+        155,
+        27,
+        245
+      ],
+      "accounts": [
+        {
+          "name": "session",
+          "writable": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "lock_and_start",
+      "discriminator": [
+        189,
+        212,
+        52,
+        196,
+        58,
+        43,
+        11,
+        147
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "session"
+          ]
+        },
+        {
+          "name": "session",
+          "writable": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "observe",
+      "discriminator": [
+        204,
+        78,
+        178,
+        115,
+        194,
+        147,
+        65,
+        74
+      ],
+      "accounts": [
+        {
+          "name": "session",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "index",
+          "type": "u8"
+        },
+        {
+          "name": "period_id",
+          "type": "u32"
+        },
+        {
+          "name": "value",
+          "type": "i64"
+        },
+        {
+          "name": "next_commitment",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "seller_fund",
+      "discriminator": [
+        36,
+        123,
+        106,
+        198,
+        53,
+        7,
+        192,
+        176
+      ],
+      "accounts": [
+        {
+          "name": "seller_wallet",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "session"
+        },
+        {
+          "name": "seller",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  101,
+                  108,
+                  108,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "session"
+              }
+            ]
+          }
+        },
+        {
+          "name": "seller_ta",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  101,
+                  108,
+                  108,
+                  101,
+                  114,
+                  95,
+                  116,
+                  97
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "session"
+              }
+            ]
+          }
+        },
+        {
+          "name": "seller_wallet_ta",
+          "writable": true
+        },
+        {
+          "name": "play_mint"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "seller_settle",
+      "discriminator": [
+        141,
+        184,
+        27,
+        2,
+        111,
+        26,
+        44,
+        187
+      ],
+      "accounts": [
+        {
+          "name": "session",
+          "writable": true
+        },
+        {
+          "name": "seller",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  101,
+                  108,
+                  108,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "session"
+              }
+            ]
+          }
+        },
+        {
+          "name": "seller_ta",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  101,
+                  108,
+                  108,
+                  101,
+                  114,
+                  95,
+                  116,
+                  97
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "session"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "product",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "seller_withdraw",
+      "discriminator": [
+        151,
+        183,
+        229,
+        20,
+        161,
+        5,
+        96,
+        15
+      ],
+      "accounts": [
+        {
+          "name": "seller_wallet",
+          "signer": true
+        },
+        {
+          "name": "session"
+        },
+        {
+          "name": "seller",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  101,
+                  108,
+                  108,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "session"
+              }
+            ]
+          }
+        },
+        {
+          "name": "seller_ta",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  101,
+                  108,
+                  108,
+                  101,
+                  114,
+                  95,
+                  116,
+                  97
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "session"
+              }
+            ]
+          }
+        },
+        {
+          "name": "seller_wallet_ta",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "set_entry_quote",
+      "discriminator": [
+        225,
+        157,
+        3,
+        210,
+        32,
+        130,
+        237,
+        117
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "session"
+          ]
+        },
+        {
+          "name": "session"
+        },
+        {
+          "name": "quote",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  113,
+                  117,
+                  111,
+                  116,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "session"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "p",
+          "type": {
+            "array": [
+              "u64",
+              2
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "settle",
+      "discriminator": [
+        175,
+        42,
+        185,
+        87,
+        144,
+        131,
+        102,
+        212
+      ],
+      "accounts": [
+        {
+          "name": "session",
+          "writable": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "sweep_dust",
+      "discriminator": [
+        9,
+        49,
+        242,
+        88,
+        156,
+        84,
+        109,
+        15
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "session"
+          ]
+        },
+        {
+          "name": "session",
+          "writable": true
+        },
+        {
+          "name": "treasury_ta",
+          "writable": true
+        },
+        {
+          "name": "vault_0",
+          "writable": true
+        },
+        {
+          "name": "vault_1",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": []
+    }
+  ],
+  "accounts": [
+    {
+      "name": "Cover",
+      "discriminator": [
+        104,
+        157,
+        160,
+        193,
+        104,
+        133,
+        228,
+        74
+      ]
+    },
+    {
+      "name": "EntryQuote",
+      "discriminator": [
+        6,
+        18,
+        46,
+        149,
+        250,
+        106,
+        88,
+        70
+      ]
+    },
+    {
+      "name": "Position",
+      "discriminator": [
+        170,
+        188,
+        143,
+        228,
+        122,
+        64,
+        247,
+        208
+      ]
+    },
+    {
+      "name": "Seller",
+      "discriminator": [
+        76,
+        163,
+        162,
+        59,
+        115,
+        49,
+        116,
+        39
+      ]
+    },
+    {
+      "name": "Session",
+      "discriminator": [
+        243,
+        81,
+        72,
+        115,
+        214,
+        188,
+        72,
+        144
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "Claimed",
+      "discriminator": [
+        217,
+        192,
+        123,
+        72,
+        108,
+        150,
+        248,
+        33
+      ]
+    },
+    {
+      "name": "CoverBought",
+      "discriminator": [
+        128,
+        196,
+        83,
+        24,
+        47,
+        194,
+        179,
+        102
+      ]
+    },
+    {
+      "name": "Observed",
+      "discriminator": [
+        154,
+        65,
+        198,
+        52,
+        238,
+        11,
+        193,
+        59
+      ]
+    },
+    {
+      "name": "Settled",
+      "discriminator": [
+        232,
+        210,
+        40,
+        17,
+        142,
+        124,
+        145,
+        238
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "InvalidParams",
+      "msg": "Session parameters are invalid"
+    },
+    {
+      "code": 6001,
+      "name": "InvalidProduct",
+      "msg": "Product index is out of range"
+    },
+    {
+      "code": 6002,
+      "name": "WrongState",
+      "msg": "Session is in the wrong state"
+    },
+    {
+      "code": 6003,
+      "name": "PastDeadline",
+      "msg": "Deadline has passed"
+    },
+    {
+      "code": 6004,
+      "name": "ZeroAmount",
+      "msg": "Amount is zero"
+    },
+    {
+      "code": 6005,
+      "name": "WrongMint",
+      "msg": "Token mint does not match the session"
+    },
+    {
+      "code": 6006,
+      "name": "WrongOwner",
+      "msg": "Token account owner does not match"
+    },
+    {
+      "code": 6007,
+      "name": "EmptySide",
+      "msg": "A side total is empty"
+    },
+    {
+      "code": 6008,
+      "name": "WrongIndex",
+      "msg": "Observation index does not match"
+    },
+    {
+      "code": 6009,
+      "name": "BadCommitment",
+      "msg": "Commitment does not match"
+    },
+    {
+      "code": 6010,
+      "name": "PeriodNotIncreasing",
+      "msg": "Period is not increasing"
+    },
+    {
+      "code": 6011,
+      "name": "ChainIncomplete",
+      "msg": "Commitment chain is incomplete"
+    },
+    {
+      "code": 6012,
+      "name": "AlreadyClaimed",
+      "msg": "Already claimed"
+    },
+    {
+      "code": 6013,
+      "name": "NotExpired",
+      "msg": "Session has not expired"
+    },
+    {
+      "code": 6014,
+      "name": "NotAllClaimed",
+      "msg": "Not all claims are finished"
+    },
+    {
+      "code": 6015,
+      "name": "MathOverflow",
+      "msg": "Arithmetic overflow"
+    },
+    {
+      "code": 6016,
+      "name": "QuoteOutOfRange",
+      "msg": "Quote is outside the allowed range"
+    },
+    {
+      "code": 6017,
+      "name": "QuoteFrozen",
+      "msg": "Quote is frozen"
+    },
+    {
+      "code": 6018,
+      "name": "QuoteNotSet",
+      "msg": "Quote is not set"
+    },
+    {
+      "code": 6019,
+      "name": "InsufficientSellerFunds",
+      "msg": "Seller free cash is insufficient"
+    },
+    {
+      "code": 6020,
+      "name": "WrongSeller",
+      "msg": "Seller wallet does not match"
+    },
+    {
+      "code": 6021,
+      "name": "SellerEscrowOutstanding",
+      "msg": "Seller escrow is outstanding"
+    },
+    {
+      "code": 6022,
+      "name": "AlreadySettled",
+      "msg": "Seller product is already settled"
+    }
+  ],
+  "types": [
+    {
+      "name": "Claimed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "session",
+            "type": "pubkey"
+          },
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "amounts",
+            "type": {
+              "array": [
+                "u64",
+                2
+              ]
+            }
+          },
+          {
+            "name": "refund",
+            "type": "bool"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Cover",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "session",
+            "type": "pubkey"
+          },
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "units",
+            "type": {
+              "array": [
+                "u64",
+                2
+              ]
+            }
+          },
+          {
+            "name": "premium_paid",
+            "type": {
+              "array": [
+                "u64",
+                2
+              ]
+            }
+          },
+          {
+            "name": "claimed",
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CoverBought",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "session",
+            "type": "pubkey"
+          },
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "product",
+            "type": "u8"
+          },
+          {
+            "name": "units",
+            "type": "u64"
+          },
+          {
+            "name": "buyer_paid",
+            "type": "u64"
+          },
+          {
+            "name": "seller_paid",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "EntryQuote",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "session",
+            "type": "pubkey"
+          },
+          {
+            "name": "p",
+            "type": {
+              "array": [
+                "u64",
+                2
+              ]
+            }
+          },
+          {
+            "name": "is_set",
+            "type": "bool"
+          },
+          {
+            "name": "frozen",
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Observed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "session",
+            "type": "pubkey"
+          },
+          {
+            "name": "index",
+            "type": "u8"
+          },
+          {
+            "name": "period_id",
+            "type": "u32"
+          },
+          {
+            "name": "value",
+            "type": "i64"
+          },
+          {
+            "name": "peak",
+            "type": "i64"
+          },
+          {
+            "name": "max_decline",
+            "type": "i64"
+          },
+          {
+            "name": "excess_acc",
+            "type": "i64"
+          },
+          {
+            "name": "commitment",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "Position",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "session",
+            "type": "pubkey"
+          },
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "deposited",
+            "type": {
+              "array": [
+                "u64",
+                4
+              ]
+            }
+          },
+          {
+            "name": "claimed",
+            "type": "bool"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Seller",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "session",
+            "type": "pubkey"
+          },
+          {
+            "name": "seller",
+            "type": "pubkey"
+          },
+          {
+            "name": "free_cash",
+            "type": "u64"
+          },
+          {
+            "name": "escrow",
+            "type": {
+              "array": [
+                "u64",
+                2
+              ]
+            }
+          },
+          {
+            "name": "n_sold",
+            "type": {
+              "array": [
+                "u64",
+                2
+              ]
+            }
+          },
+          {
+            "name": "premium",
+            "type": {
+              "array": [
+                "u64",
+                2
+              ]
+            }
+          },
+          {
+            "name": "settled",
+            "type": {
+              "array": [
+                "bool",
+                2
+              ]
+            }
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "ta_bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Session",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "session_id",
+            "type": "u64"
+          },
+          {
+            "name": "play_mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "vaults",
+            "type": {
+              "array": [
+                "pubkey",
+                2
+              ]
+            }
+          },
+          {
+            "name": "dataset_id",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "commitment",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "terminal",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "n_obs",
+            "type": "u8"
+          },
+          {
+            "name": "next_index",
+            "type": "u8"
+          },
+          {
+            "name": "last_period_id",
+            "type": "u32"
+          },
+          {
+            "name": "state",
+            "type": {
+              "defined": {
+                "name": "SessionState"
+              }
+            }
+          },
+          {
+            "name": "k",
+            "type": "i64"
+          },
+          {
+            "name": "d_cap",
+            "type": "i64"
+          },
+          {
+            "name": "a_cap",
+            "type": "i64"
+          },
+          {
+            "name": "deposit_deadline",
+            "type": "i64"
+          },
+          {
+            "name": "replay_deadline",
+            "type": "i64"
+          },
+          {
+            "name": "side_totals",
+            "type": {
+              "array": [
+                "u64",
+                4
+              ]
+            }
+          },
+          {
+            "name": "matched",
+            "type": {
+              "array": [
+                "u64",
+                2
+              ]
+            }
+          },
+          {
+            "name": "peak",
+            "type": "i64"
+          },
+          {
+            "name": "max_decline",
+            "type": "i64"
+          },
+          {
+            "name": "excess_acc",
+            "type": "i64"
+          },
+          {
+            "name": "values",
+            "type": {
+              "array": [
+                "i64",
+                48
+              ]
+            }
+          },
+          {
+            "name": "scores",
+            "type": {
+              "array": [
+                "u64",
+                2
+              ]
+            }
+          },
+          {
+            "name": "p_budget",
+            "type": {
+              "array": [
+                "u64",
+                4
+              ]
+            }
+          },
+          {
+            "name": "r_budget",
+            "type": {
+              "array": [
+                "u64",
+                4
+              ]
+            }
+          },
+          {
+            "name": "position_count",
+            "type": "u32"
+          },
+          {
+            "name": "claimed_count",
+            "type": "u32"
+          },
+          {
+            "name": "cover_count",
+            "type": "u32"
+          },
+          {
+            "name": "cover_claimed_count",
+            "type": "u32"
+          },
+          {
+            "name": "seller_products_open",
+            "type": "u8"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "vault_bumps",
+            "type": {
+              "array": [
+                "u8",
+                2
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "SessionState",
+      "repr": {
+        "kind": "rust"
+      },
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Open"
+          },
+          {
+            "name": "Running"
+          },
+          {
+            "name": "Settled"
+          },
+          {
+            "name": "Refunding"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Settled",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "session",
+            "type": "pubkey"
+          },
+          {
+            "name": "scores",
+            "type": {
+              "array": [
+                "u64",
+                2
+              ]
+            }
+          },
+          {
+            "name": "matched",
+            "type": {
+              "array": [
+                "u64",
+                2
+              ]
+            }
+          },
+          {
+            "name": "p_budget",
+            "type": {
+              "array": [
+                "u64",
+                4
+              ]
+            }
+          },
+          {
+            "name": "r_budget",
+            "type": {
+              "array": [
+                "u64",
+                4
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}
