@@ -368,6 +368,96 @@ pub fn put_position(
     position
 }
 
+/// Writes a Seller at `seller_pda(session)` and the SPL token account at `seller_ta_pda(session)`.
+///
+/// `free_cash`, `escrow`, `n_sold`, `premium` and `settled` start at zero. `bump` and `ta_bump`
+/// are the canonical `find_program_address` bumps. `apply` runs after those defaults. The token
+/// account uses the PLAY mint, owner `session`, and amount `free_cash` after `apply`, minted so
+/// supply matches.
+pub fn put_seller(
+    env: &mut Env,
+    session: &Pubkey,
+    seller_wallet: &Pubkey,
+    apply: impl FnOnce(&mut macropaths::Seller),
+) -> Pubkey {
+    let (seller, bump) = seller_pda(session);
+    let (seller_ta, ta_bump) = seller_ta_pda(session);
+    let mut account = macropaths::Seller {
+        session: *session,
+        seller: *seller_wallet,
+        free_cash: 0,
+        escrow: [0; 2],
+        n_sold: [0; 2],
+        premium: [0; 2],
+        settled: [false; 2],
+        bump,
+        ta_bump,
+    };
+    apply(&mut account);
+    install_program_account(env, &seller, &account);
+    let token = SplAccount {
+        mint: env.mint,
+        owner: *session,
+        amount: 0,
+        delegate: COption::None,
+        state: AccountState::Initialized,
+        is_native: COption::None,
+        delegated_amount: 0,
+        close_authority: COption::None,
+    };
+    let mut data = vec![0u8; SplAccount::LEN];
+    SplAccount::pack(token, &mut data).expect("pack seller token account");
+    install_account(env, &seller_ta, data, anchor_spl::token::ID);
+    if account.free_cash > 0 {
+        MintTo::new(
+            &mut env.svm,
+            &env.payer,
+            &env.mint,
+            &seller_ta,
+            account.free_cash,
+        )
+        .send()
+        .unwrap_or_else(|err| panic!("mint seller token account: {}", err.meta.pretty_logs()));
+    }
+    seller
+}
+
+/// Writes an EntryQuote at `quote_pda(session)` with `is_set` and the canonical bump.
+pub fn put_quote(env: &mut Env, session: &Pubkey, p: [u64; 2], frozen: bool) -> Pubkey {
+    let (quote, bump) = quote_pda(session);
+    let account = macropaths::EntryQuote {
+        session: *session,
+        p,
+        is_set: true,
+        frozen,
+        bump,
+    };
+    install_program_account(env, &quote, &account);
+    quote
+}
+
+/// Writes a Cover at `cover_pda(session, owner)`.
+pub fn put_cover(
+    env: &mut Env,
+    session: &Pubkey,
+    owner: &Pubkey,
+    units: [u64; 2],
+    premium_paid: [u64; 2],
+    claimed: bool,
+) -> Pubkey {
+    let (cover, bump) = cover_pda(session, owner);
+    let account = macropaths::Cover {
+        session: *session,
+        owner: *owner,
+        units,
+        premium_paid,
+        claimed,
+        bump,
+    };
+    install_program_account(env, &cover, &account);
+    cover
+}
+
 fn instruction<A: ToAccountMetas, D: InstructionData>(accounts: A, data: D) -> Instruction {
     Instruction {
         program_id: macropaths::ID,
