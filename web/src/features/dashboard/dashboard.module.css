@@ -17,8 +17,8 @@
   color: var(--mp-muted, #5f626e);
   font-size: 13px;
 }
-.heading { margin: 0; font-size: clamp(28px, 4vw, 36px); line-height: 1.15; color: var(--mp-text, #1b1b1f); }
-.headingSmall { margin: 0; font-size: 28px; color: var(--mp-text, #1b1b1f); }
+.heading { margin: 0; font-size: clamp(28px, 4vw, 36px); line-height: 1.15; color: inherit; }
+.headingSmall { margin: 0; font-size: 28px; color: inherit; }
 .lede { margin: 0; max-width: 60ch; color: var(--mp-muted, #5f626e); font-size: 16px; }
 .actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
 .linkButton {
