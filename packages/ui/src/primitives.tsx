@@ -1,4 +1,7 @@
 import type { ButtonHTMLAttributes, ReactNode } from "react";
+import type { EmptyStateProps, ErrorStateProps, PartialDataNoticeProps, SkeletonProps } from "./primitives-types";
+
+export type { EmptyStateProps, ErrorStateProps, PartialDataNoticeProps, SkeletonProps } from "./primitives-types";
 
 export function cx(...parts: Array<string | false | null | undefined>): string {
   return parts.filter(Boolean).join(" ");
@@ -85,21 +88,9 @@ export function StatusPill({ tone, children }: { tone: StatusTone; children?: Re
 
 /* ---------- Data states. Display-only: callers map errors to safe text. ---------- */
 
-export interface SkeletonProps {
-  className?: string;
-  label?: string;
-}
-
 /** One placeholder block. Announced once via its label; give it geometry with className. */
 export function Skeleton({ className, label = "Loading" }: SkeletonProps) {
   return <span className={cx("mp-skeleton", className)} role="status" aria-label={label} aria-busy="true" />;
-}
-
-export interface EmptyStateProps {
-  title: string;
-  description?: string;
-  action?: ReactNode;
-  className?: string;
 }
 
 /** Data loaded and there is genuinely nothing. Not for unavailable data. */
@@ -127,14 +118,6 @@ function RetryButton({ onRetry, retrying }: { onRetry: () => void; retrying?: bo
   );
 }
 
-export interface ErrorStateProps {
-  title?: string;
-  description: string;
-  onRetry?: () => void;
-  retrying?: boolean;
-  className?: string;
-}
-
 /** Data could not be loaded. Shows only the caller-supplied safe description. */
 export function ErrorState({ title = "Unable to load", description, onRetry, retrying, className }: ErrorStateProps) {
   return (
@@ -148,13 +131,6 @@ export function ErrorState({ title = "Unable to load", description, onRetry, ret
       ) : null}
     </div>
   );
-}
-
-export interface PartialDataNoticeProps {
-  description: string;
-  onRetry?: () => void;
-  retrying?: boolean;
-  className?: string;
 }
 
 /** Some data is shown but the set is incomplete. Rendered beside, not instead of, the data. */
@@ -301,3 +277,21 @@ export const Icon = {
     </svg>
   ),
 };
+
+/* Disclosure. Native <details>/<summary>: keyboard, Enter/Space toggling and
+   expanded state come from the platform, so it works in server components. */
+export interface DisclosureProps {
+  summary: ReactNode;
+  children: ReactNode;
+  defaultOpen?: boolean;
+  className?: string;
+}
+
+export function Disclosure({ summary, children, defaultOpen, className }: DisclosureProps) {
+  return (
+    <details className={cx("mp-disclosure", className)} open={defaultOpen || undefined}>
+      <summary className="mp-disclosure__summary">{summary}</summary>
+      <div className="mp-disclosure__body">{children}</div>
+    </details>
+  );
+}

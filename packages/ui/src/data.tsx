@@ -231,3 +231,125 @@ export function ActivityFeed({ groups }: { groups: Array<{ title: string; items:
     </div>
   );
 }
+
+/* ---------------------------------------------------------------------------
+ * Holding display primitives. Display-only: callers pass exact, pre-formatted
+ * strings. `null` means unavailable and is never rendered as zero.
+ * ------------------------------------------------------------------------- */
+
+export type AmountDirection = "in" | "out" | "none";
+
+export interface AmountValueProps {
+  /** Pre-formatted magnitude, e.g. "1,234.56". null = unavailable. */
+  value: string | null;
+  unit?: string;
+  /** Signed wallet movement; adds a sign and words, not only colour. */
+  direction?: AmountDirection;
+  unavailableLabel?: string;
+  className?: string;
+}
+
+export function AmountValue({ value, unit, direction = "none", unavailableLabel = "Unavailable", className }: AmountValueProps) {
+  if (value === null) {
+    return <span className={cx("mp-amount", "mp-amount--unavailable", className)}>{unavailableLabel}</span>;
+  }
+  const sign = direction === "in" ? "+" : direction === "out" ? "−" : "";
+  const spoken = direction === "in" ? "Incoming " : direction === "out" ? "Outgoing " : "";
+  return (
+    <span
+      className={cx("mp-amount", "mp-num", direction === "in" && "mp-up", direction === "out" && "mp-down", className)}
+      aria-label={`${spoken}${value}${unit ? ` ${unit}` : ""}`}
+    >
+      {sign}
+      {value}
+      {unit ? <span className="mp-amount__unit"> {unit}</span> : null}
+    </span>
+  );
+}
+
+export interface HoldingRowProps {
+  label: ReactNode;
+  value: ReactNode;
+  meta?: ReactNode;
+}
+
+export function HoldingRow({ label, value, meta }: HoldingRowProps) {
+  return (
+    <div className="mp-holding">
+      <dt className="mp-holding__label">{label}</dt>
+      <dd className="mp-holding__value">
+        {value}
+        {meta ? <span className="mp-holding__meta">{meta}</span> : null}
+      </dd>
+    </div>
+  );
+}
+
+export function HoldingList({ children, label, className }: { children: ReactNode; label?: string; className?: string }) {
+  return (
+    <dl className={cx("mp-holdings", className)} aria-label={label}>
+      {children}
+    </dl>
+  );
+}
+
+/* ---------------------------------------------------------------------------
+ * ShareBar: composition with exact bigint shares. Zero segments get zero
+ * width (no minimum), and every segment is listed with its label and the
+ * caller-formatted value, so the bar is never the only carrier of meaning.
+ * ------------------------------------------------------------------------- */
+
+export interface ShareSegment {
+  label: string;
+  /** Exact base units. */
+  value: bigint;
+  /** Caller-formatted display of value, e.g. "1,250.000000 PLAY". */
+  formattedValue: string;
+}
+
+/** Share in basis points (0..10000), floor-rounded with bigint. Total 0 gives 0. */
+export function shareBps(value: bigint, total: bigint): number {
+  if (total <= BigInt(0) || value <= BigInt(0)) return 0;
+  return Number((value * BigInt(10000)) / total);
+}
+
+export function formatBps(bps: number): string {
+  return `${Math.floor(bps / 100)}.${String(bps % 100).padStart(2, "0")}%`;
+}
+
+export interface ShareBarProps {
+  title: string;
+  segments: ShareSegment[];
+  emptyLabel?: string;
+}
+
+export function ShareBar({ title, segments, emptyLabel = "Nothing deposited yet" }: ShareBarProps) {
+  const zero = BigInt(0);
+  const total = segments.reduce((a, s) => a + (s.value > zero ? s.value : zero), zero);
+  return (
+    <figure className="mp-share">
+      <figcaption className="mp-share__title">{title}</figcaption>
+      <div className="mp-share__bar" aria-hidden="true">
+        {total > zero
+          ? segments.map((s, i) => {
+              const bps = shareBps(s.value, total);
+              return bps > 0 ? <span key={s.label} className={`mp-share__seg mp-share__seg--${i % 4}`} style={{ width: `${bps / 100}%` }} /> : null;
+            })
+          : null}
+      </div>
+      {total === zero ? <p className="mp-share__empty">{emptyLabel}</p> : null}
+      <ul className="mp-share__legend">
+        {segments.map((s, i) => (
+          <li key={s.label}>
+            <span className={`mp-share__swatch mp-share__seg--${i % 4}`} aria-hidden="true" />
+            <span className="mp-share__label">{s.label}</span>
+            <span className="mp-share__value mp-num">
+              {s.formattedValue}
+              {total > zero ? ` · ${formatBps(shareBps(s.value, total))}` : ""}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </figure>
+  );
+}

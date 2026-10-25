@@ -112,11 +112,11 @@ describe("StatusPill", () => {
 
 describe("Buttons", () => {
   it("default to type=button and pass disabled through", () => {
-    const out = html(h(Button, { disabled: true }, "Claim"));
+    const out = html(h(Button, { disabled: true } as never, "Claim"));
     expect(out).toContain('type="button"');
     expect(out).toContain("disabled");
   });
   it("icon-only buttons carry an accessible name", () => {
-    expect(html(h(IconButton, { label: "Notifications" }, "!"))).toContain('aria-label="Notifications"');
+    expect(html(h(IconButton, { label: "Notifications" } as never, "!"))).toContain('aria-label="Notifications"');
   });
 });

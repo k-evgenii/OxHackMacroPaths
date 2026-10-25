@@ -14,7 +14,7 @@ export default mergeConfig(
     server: { fs: { allow: [path.resolve(web, "..")] } },
     test: {
       root: web,
-      include: ["test/ui-primitives/**/*.test.ts"],
+      include: ["test/ui-primitives/**/*.test.ts", "test/ui-primitives/**/*.test.tsx"],
       server: { deps: { inline: [/packages\/ui/] } },
       alias: [
         { find: /^react$/, replacement: path.join(web, "node_modules/react/index.js") },
