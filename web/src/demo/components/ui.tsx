@@ -1,5 +1,11 @@
 "use client";
-import type { ReactNode } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 export const fmt = (n: number, dp = 2) =>
   n
     .toLocaleString("en-GB", {
@@ -7,6 +13,46 @@ export const fmt = (n: number, dp = 2) =>
       maximumFractionDigits: dp,
     })
     .replace(/^-/, "−");
+/** Animate changes only; the first render and assistive text show the exact value. */
+export function AnimatedNumber({
+  value,
+  decimals = 2,
+  className = "",
+}: {
+  value: number;
+  decimals?: number;
+  className?: string;
+}) {
+  const [shown, setShown] = useState(value);
+  const previous = useRef(value);
+  useEffect(() => {
+    const from = previous.current;
+    if (
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
+      from === value
+    ) {
+      previous.current = value;
+      setShown(value);
+      return;
+    }
+    let frame = 0;
+    const start = performance.now();
+    const tick = (time: number) => {
+      const progress = Math.min(1, (time - start) / 480);
+      previous.current = from + (value - from) * (1 - (1 - progress) ** 3);
+      setShown(previous.current);
+      if (progress < 1) frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [value]);
+  return (
+    <span className={className}>
+      <span aria-hidden="true">{fmt(shown, decimals)}</span>
+      <span className="sr-only">{fmt(value, decimals)}</span>
+    </span>
+  );
+}
 export function Card({
   children,
   className = "",
@@ -18,7 +64,12 @@ export function Card({
 }) {
   return (
     <section
-      className={`min-w-0 rounded-3xl border border-line bg-panel p-5 shadow-[0_1px_2px_rgba(0,0,0,0.03)] sm:p-6 ${order !== undefined ? "reveal" : ""} ${className}`}
+      className={`mp-card min-w-0 p-5 sm:p-6 ${order !== undefined ? "reveal" : ""} ${className}`}
+      style={
+        {
+          "--mp-enter-delay": `${Math.min(order ?? 0, 6) * 45}ms`,
+        } as CSSProperties
+      }
     >
       {children}
     </section>
@@ -33,7 +84,7 @@ export function Tag({
 }) {
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${tone === "up" ? "bg-up/10 text-up" : tone === "accent" ? "bg-accent/10 text-brand" : "border border-line bg-panel-2 text-muted"}`}
+      className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold tracking-[.01em] ${tone === "up" ? "bg-up/10 text-up" : tone === "accent" ? "bg-accent/10 text-brand" : tone === "forecast" ? "bg-forecast/10 text-forecast" : "border border-line bg-panel-2 text-muted"}`}
     >
       {children}
     </span>
@@ -57,7 +108,7 @@ export function Button({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`min-h-12 w-full rounded-full px-5 py-3 text-sm font-semibold transition active:scale-[.98] disabled:cursor-not-allowed disabled:opacity-40 ${variant === "primary" ? "bg-accent text-white hover:brightness-105" : variant === "dark" ? "bg-night text-white" : "border border-line bg-panel-2 text-text"} ${className}`}
+      className={`mp-button w-full px-5 py-3 text-sm disabled:cursor-not-allowed disabled:opacity-40 ${variant === "primary" ? "mp-button-primary" : variant === "dark" ? "bg-night text-white hover:bg-night/90" : "border border-line bg-panel text-text hover:bg-panel-2"} ${className}`}
     >
       {children}
     </button>
@@ -104,8 +155,8 @@ export function StepBar({
   onGo: (s: StepKey) => void;
 }) {
   return (
-    <nav aria-label="Walkthrough progress">
-      <ol className="grid grid-cols-3 gap-1.5 rounded-full border border-line bg-panel p-1.5">
+    <nav aria-label="Position progress">
+      <ol className="grid grid-cols-3 gap-1.5 rounded-2xl border border-line bg-panel p-1.5">
         {(
           [
             { key: "choose", label: "Choose" },
@@ -119,10 +170,10 @@ export function StepBar({
               onClick={() => onGo(s.key)}
               disabled={!enabled[s.key]}
               aria-current={current === s.key ? "step" : undefined}
-              className={`flex w-full items-center justify-center gap-2 rounded-full px-2 py-3 text-sm transition disabled:opacity-40 ${current === s.key ? "bg-night text-white" : "hover:bg-panel-2"}`}
+              className={`flex w-full items-center justify-center gap-2 rounded-xl px-2 py-3 text-sm font-medium transition disabled:opacity-40 ${current === s.key ? "bg-night text-white" : "text-muted hover:bg-panel-2 hover:text-text"}`}
             >
               <span
-                className={`grid h-5 w-5 shrink-0 place-items-center rounded-full text-xs ${current === s.key ? "bg-accent text-white" : "bg-panel-2 text-muted"}`}
+                className={`grid h-5 w-5 shrink-0 place-items-center rounded-full text-xs font-semibold ${current === s.key ? "bg-accent text-accent-ink" : done[s.key] ? "bg-up/10 text-up" : "bg-panel-2 text-muted"}`}
               >
                 {done[s.key] ? "✓" : i + 1}
               </span>

@@ -59,16 +59,16 @@ export default function Proof() {
     <Card className="!p-5">
       <details>
         <summary className="cursor-pointer font-semibold">
-          On-chain proof{" "}
+          Settlement & verification{" "}
           <span className="ml-2 text-xs font-normal text-muted">
             Recorded reference session ↗
           </span>
         </summary>
         <div className="mt-4 space-y-4 text-sm">
           <p className="max-w-2xl text-muted">
-            The keeper funded and settled this separate devnet session. Your
-            walkthrough uses its historical data and payout formula; your clicks
-            do not send wallet transactions.
+            The keeper funded and settled this reference session on Solana
+            devnet. Personal positions use the same historical path and formula
+            in preview; the links below show the recorded on-chain activity.
           </p>
           <div className="flex flex-wrap gap-2">
             <Tag>

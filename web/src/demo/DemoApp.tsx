@@ -4,7 +4,17 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import ScreenChoose from "./components/ScreenChoose";
 import Proof from "./components/Proof";
-import { Button, Card, StepBar, Tag, fmt, type StepKey } from "./components/ui";
+import Dashboard from "./components/Dashboard";
+import InflationTimeline from "./components/InflationTimeline";
+import {
+  AnimatedNumber,
+  Button,
+  Card,
+  StepBar,
+  Tag,
+  fmt,
+  type StepKey,
+} from "./components/ui";
 import {
   CPI_YOY,
   DEMO_WALLET_BALANCE,
@@ -25,7 +35,14 @@ import {
   type Run,
 } from "./lib/history";
 
-type Screen = "home" | "account" | "wallet" | "history" | "explore" | StepKey;
+type Screen =
+  | "home"
+  | "account"
+  | "wallet"
+  | "history"
+  | "explore"
+  | "news"
+  | StepKey;
 const DEFAULT_AMOUNTS: Amounts = [10, 0, 10, 0];
 const ExploreScreen = dynamic(() => import("./components/ExploreScreen"), {
   loading: () => (
@@ -38,10 +55,22 @@ const ExploreScreen = dynamic(() => import("./components/ExploreScreen"), {
   ),
 });
 
+const NewsScreen = dynamic(() => import("./components/NewsScreen"), {
+  loading: () => (
+    <div
+      role="status"
+      className="h-80 motion-safe:animate-pulse rounded-2xl bg-panel p-6 text-muted"
+    >
+      Loading the inflation brief…
+    </div>
+  ),
+});
+
 export default function DemoApp() {
   const [screen, setScreen] = useState<Screen>("home");
   const [ready, setReady] = useState(false);
   const [name, setName] = useState("");
+  const [query, setQuery] = useState("");
   const [draftName, setDraftName] = useState("");
   const [runs, setRuns] = useState<Run[]>([]);
   const [amounts, setAmounts] = useState<Amounts>(DEFAULT_AMOUNTS);
@@ -71,7 +100,10 @@ export default function DemoApp() {
     }
   }, []);
   useEffect(() => {
-    if (ready) titleRef.current?.focus();
+    if (ready) {
+      titleRef.current?.focus({ preventScroll: true });
+      window.scrollTo(0, 0);
+    }
   }, [screen, ready]);
   useEffect(() => {
     if (!running) return;
@@ -113,7 +145,7 @@ export default function DemoApp() {
   function startNew() {
     if (runs.length >= 100) {
       setStorageNotice(
-        "This demo ledger has reached 100 runs. Reset it in Demo controls to start again.",
+        "You have saved 100 position previews. Reset your practice balance in Wallet to start again.",
       );
       setScreen("wallet");
       return;
@@ -144,13 +176,14 @@ export default function DemoApp() {
     setScreen("home");
   }
   const nav = [
-    { key: "play", label: "Play" },
+    { key: "home", label: "Discover" },
     { key: "explore", label: "Explore" },
-    { key: "history", label: "History" },
+    { key: "news", label: "News" },
+    { key: "history", label: "Portfolio" },
     { key: "wallet", label: "Wallet" },
   ] as const;
   const activeNav = ["choose", "watch", "claim"].includes(screen)
-    ? "play"
+    ? "home"
     : screen;
 
   return (
@@ -161,66 +194,91 @@ export default function DemoApp() {
       >
         Skip to content
       </a>
-      <header className="sticky top-0 z-30 border-b border-line bg-ink/95 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-4 md:px-8">
+      <header className="sticky top-0 z-30 border-b border-line bg-panel/95 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3 md:px-8">
           <button
             type="button"
             onClick={() => setScreen("home")}
             className="flex items-center gap-2.5"
             aria-label="MacroPaths home"
           >
-            <span className="grid h-9 w-9 place-items-center rounded-xl bg-accent font-bold text-white">
-              M<span className="sr-only">acroPaths</span>
+            <span className="grid h-8 w-8 place-items-center rounded-xl bg-accent text-accent-ink">
+              <svg
+                viewBox="0 0 24 24"
+                className="h-5 w-5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden
+              >
+                <path d="M3 17 8 7l5 9 4-6 4 3" />
+              </svg>
             </span>
-            <span className="text-lg font-semibold tracking-tight">
-              MacroPaths<span className="ml-1 text-accent">.</span>
+            <span className="text-lg font-bold tracking-tight">
+              MacroPaths<span className="text-accent">.</span>
             </span>
           </button>
           <nav
             aria-label="Main"
-            className="order-3 flex w-full gap-1 rounded-full bg-night p-1.5 sm:order-none sm:w-auto"
+            className="mp-nav order-3 w-full justify-between overflow-x-auto lg:order-none lg:w-auto"
           >
             {nav.map((n) => (
               <button
                 key={n.key}
                 type="button"
-                disabled={!name}
                 aria-current={activeNav === n.key ? "page" : undefined}
-                onClick={() => setScreen(n.key === "play" ? nextStep : n.key)}
-                className={`flex-1 rounded-full px-4 py-2 text-sm font-medium transition disabled:opacity-40 ${activeNav === n.key ? "bg-accent text-white" : "text-white/80 hover:bg-white/10"}`}
+                onClick={() => setScreen(n.key)}
+                className="mp-nav-item shrink-0"
               >
                 {n.label}
               </button>
             ))}
           </nav>
-          <button
-            type="button"
-            onClick={() => setScreen("account")}
-            aria-label="Account settings"
-            className="flex items-center gap-2 rounded-full border border-line bg-panel py-1.5 pl-1.5 pr-3 text-sm"
-          >
-            <span className="grid h-7 w-7 place-items-center rounded-full bg-accent/10 font-semibold text-brand">
-              {name ? name.slice(0, 1).toUpperCase() : "↗"}
+          <div className="flex items-center gap-2">
+            <span className="hidden items-center gap-1.5 rounded-full bg-up/8 px-2.5 py-1.5 text-[10px] font-semibold text-up sm:inline-flex">
+              <span className="h-1.5 w-1.5 rounded-full bg-teal" aria-hidden />
+              Devnet
             </span>
-            <span className="max-w-24 truncate">{name || "Demo profile"}</span>
-          </button>
+            <button
+              type="button"
+              onClick={() => setScreen("wallet")}
+              className="hidden rounded-xl border border-line px-3 py-2 text-xs font-semibold sm:block"
+            >
+              <AnimatedNumber value={balance} /> PLAY
+            </button>
+            <button
+              type="button"
+              onClick={() => setScreen("account")}
+              aria-label="Account settings"
+              className="grid h-9 w-9 place-items-center rounded-full bg-forecast/10 text-xs font-semibold text-forecast"
+            >
+              {name ? (
+                name.slice(0, 1).toUpperCase()
+              ) : (
+                <svg
+                  viewBox="0 0 20 20"
+                  className="h-4 w-4"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  aria-hidden
+                >
+                  <circle cx="10" cy="6" r="3" />
+                  <path d="M4 18v-2a6 6 0 0 1 12 0v2" />
+                </svg>
+              )}
+            </button>
+          </div>
         </div>
       </header>
-      <div className="border-b border-line bg-panel">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-1 px-4 py-2 text-xs md:px-8">
-          <span className="font-medium text-brand">
-            Interactive walkthrough · no wallet transactions
-          </span>
-          <span className="text-muted">
-            US CPI case study · PLAY has no cash value
-          </span>
-        </div>
-      </div>
       <main
+        key={screen}
         id="demo-main"
         ref={titleRef}
         tabIndex={-1}
-        className="mx-auto max-w-6xl space-y-6 px-4 pb-16 pt-7 outline-none md:px-8 md:pt-10"
+        className="mp-page-enter mx-auto max-w-7xl space-y-6 px-4 pb-12 pt-6 outline-none md:px-8 md:pt-7"
       >
         {storageNotice ? (
           <p
@@ -235,9 +293,9 @@ export default function DemoApp() {
             role="status"
             className="h-80 motion-safe:animate-pulse rounded-3xl border border-line bg-panel p-8 text-muted"
           >
-            Loading your demo…
+            Loading MacroPaths…
           </div>
-        ) : !name || screen === "account" ? (
+        ) : screen === "account" ? (
           <div className="mx-auto grid max-w-4xl gap-8 py-5 md:grid-cols-2 md:items-center">
             <div>
               <Tag tone="accent">MacroPaths · OxHack ’26</Tag>
@@ -254,7 +312,7 @@ export default function DemoApp() {
                 {[
                   "Choose a goal and your More / Less sides",
                   "Replay the historical case study",
-                  "Review your result and demo wallet",
+                  "Review your result and portfolio",
                 ].map((s, i) => (
                   <li key={s} className="flex gap-3">
                     <span className="num text-brand">0{i + 1}</span>
@@ -268,8 +326,8 @@ export default function DemoApp() {
                 {name ? "Account settings" : "Make yourself at home"}
               </h2>
               <p className="mt-2 text-sm text-muted">
-                A local demo profile for this browser. No password or real
-                account is needed.
+                Personalise MacroPaths on this device. Your display name is
+                saved in this browser.
               </p>
               <form onSubmit={profileSubmit} className="mt-6 space-y-4">
                 <label
@@ -293,12 +351,12 @@ export default function DemoApp() {
                   disabled={!draftName.trim()}
                   className="h-12 w-full rounded-full bg-accent text-sm font-semibold text-white disabled:opacity-40"
                 >
-                  {name ? "Save profile" : "Enter demo →"}
+                  {name ? "Save profile" : "Save & continue →"}
                 </button>
               </form>
               <p className="mt-4 text-xs leading-relaxed text-muted">
-                Only your display name and demo history are saved locally.
-                Wallet identity and real transaction signing are separate.
+                Your profile and practice portfolio stay on this device. Wallet
+                identity and transaction signing are separate.
               </p>
               {name ? (
                 <button
@@ -311,7 +369,7 @@ export default function DemoApp() {
                   }}
                   className="mt-5 text-sm text-brand underline"
                 >
-                  Leave demo profile
+                  Clear profile
                 </button>
               ) : null}
             </Card>
@@ -319,157 +377,32 @@ export default function DemoApp() {
         ) : (
           <>
             {screen === "home" ? (
-              <>
-                <section className="reveal relative overflow-hidden rounded-3xl bg-night px-7 py-9 text-white md:px-10 md:py-12">
-                  <div
-                    className="pointer-events-none absolute -right-20 -top-28 h-96 w-96 rounded-full bg-accent/20 blur-3xl"
-                    aria-hidden
-                  />
-                  <div className="relative grid gap-8 md:grid-cols-[1.5fr_1fr] md:items-center">
-                    <div>
-                      <p className="text-sm font-medium text-[#ffb489]">
-                        YOUR EXPOSURE. YOUR CHOICE.
-                      </p>
-                      <h1 className="mt-4 text-4xl font-semibold leading-[1.08] tracking-tight md:text-6xl">
-                        A position on the path.
-                        <br />
-                        <span className="text-[#ff9a5c]">
-                          Not just the endpoint.
-                        </span>
-                      </h1>
-                      <p className="mt-5 max-w-xl leading-relaxed text-white/75">
-                        Inflation can run hot, stay high or cool sharply. Choose
-                        which movement matters to you, then follow the payout
-                        rule through a historical case study.
-                      </p>
-                      <div className="mt-7 flex flex-wrap gap-3">
-                        <button
-                          type="button"
-                          onClick={() => setScreen(nextStep)}
-                          className="rounded-full bg-accent px-6 py-3 text-sm font-semibold text-white"
-                        >
-                          {deposited
-                            ? "Continue your walkthrough →"
-                            : "Choose your goal →"}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setScreen("explore")}
-                          className="rounded-full border border-white/20 px-6 py-3 text-sm font-medium text-white"
-                        >
-                          Explore the history ↗
-                        </button>
-                      </div>
-                    </div>
-                    <div className="space-y-3 rounded-2xl border border-white/15 bg-white/5 p-5">
-                      <p className="text-xs font-medium uppercase tracking-widest text-white/50">
-                        Hello, {name}
-                      </p>
-                      <p className="mt-2 text-sm text-white/70">
-                        Your demo balance
-                      </p>
-                      <p className="num text-4xl font-semibold">
-                        {fmt(balance)}
-                        <span className="ml-2 text-sm font-normal text-white/60">
-                          PLAY
-                        </span>
-                      </p>
-                      <div className="border-t border-white/10 pt-4 text-sm text-white/70">
-                        <p>
-                          {runs.length} completed walkthrough
-                          {runs.length === 1 ? "" : "s"}
-                        </p>
-                        <p className="mt-1">
-                          {deposited && !claimed
-                            ? `${fmt(total)} PLAY in this demo position`
-                            : "Ready when you are"}
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setScreen("wallet")}
-                        className="text-sm font-medium text-[#ffb489]"
-                      >
-                        Open demo wallet →
-                      </button>
-                    </div>
-                  </div>
-                </section>
-                <div className="flex flex-wrap items-end justify-between gap-3">
-                  <div>
-                    <h2 className="text-2xl font-semibold tracking-tight">
-                      Two ways to follow inflation
-                    </h2>
-                    <p className="mt-1 text-sm text-muted">
-                      You choose the side. We explain the rule.
-                    </p>
-                  </div>
-                  <Tag>US CPI · More / Less</Tag>
-                </div>
-                <div className="grid gap-5 md:grid-cols-2">
-                  {[
-                    {
-                      n: "01",
-                      title: "Inflation Cooling",
-                      text: "Pays on the largest fall in inflation from an earlier peak.",
-                      rule: "More cooling → a higher More-side score",
-                      stat: "8 point",
-                      sub: "fall reaches the score cap",
-                    },
-                    {
-                      n: "02",
-                      title: "Excess Inflation",
-                      text: "Pays on how long and how far inflation stays above 4%.",
-                      rule: "More excess → a higher More-side score",
-                      stat: "80 point-month",
-                      sub: "excess reaches the score cap",
-                    },
-                  ].map((p) => (
-                    <Card key={p.n}>
-                      <div className="flex items-center justify-between">
-                        <span className="num text-sm text-brand">
-                          {p.n} / PATH PRODUCT
-                        </span>
-                        <span className="text-2xl text-accent" aria-hidden>
-                          ↗
-                        </span>
-                      </div>
-                      <h3 className="mt-5 text-2xl font-semibold">{p.title}</h3>
-                      <p className="mt-2 max-w-md text-muted">{p.text}</p>
-                      <p className="mt-5 text-sm font-medium">{p.rule}</p>
-                      <div className="mt-5 border-t border-line pt-4">
-                        <span className="num text-xl font-semibold">
-                          {p.stat}
-                        </span>
-                        <span className="ml-2 text-xs text-muted">{p.sub}</span>
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-                <Card className="!py-5">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <h2 className="font-semibold">
-                        Four years of history. Twelve seconds to understand it.
-                      </h2>
-                      <p className="mt-1 max-w-3xl text-sm text-muted">
-                        This case study compresses Jan 2021–Dec 2024. The
-                        historical dates describe the dataset, not a new
-                        four-year commitment. Future terms are outside this
-                        demo.
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setScreen("choose")}
-                      className="shrink-0 text-sm font-semibold text-brand"
-                    >
-                      See how it works →
-                    </button>
-                  </div>
-                </Card>
-                <Proof />
-              </>
+              <Dashboard
+                balance={balance}
+                locked={deposited && !claimed ? total : 0}
+                runs={runs.length}
+                deposited={deposited && !claimed}
+                query={query}
+                onQuery={setQuery}
+                onStart={() => (claimed ? startNew() : setScreen(nextStep))}
+                onExplore={() => setScreen("explore")}
+                onNews={() => setScreen("news")}
+                onWallet={() => setScreen("wallet")}
+                onSelect={(product, side) => {
+                  if (deposited && !claimed) {
+                    setScreen(nextStep);
+                    return;
+                  }
+                  if (runs.length >= 100) {
+                    setScreen("choose");
+                    return;
+                  }
+                  resetPosition();
+                  const next: Amounts = [0, 0, 0, 0];
+                  next[product * 2 + side] = 10;
+                  setAmounts(next);
+                }}
+              />
             ) : null}
 
             {["choose", "watch", "claim"].includes(screen) ? (
@@ -488,11 +421,11 @@ export default function DemoApp() {
               runs.length >= 100 ? (
                 <Card>
                   <h1 className="text-2xl font-semibold">
-                    Your demo ledger is full.
+                    Your saved portfolio has reached its limit.
                   </h1>
                   <p className="mt-3 text-sm text-muted">
-                    You have completed 100 walkthroughs. Reset the demo ledger
-                    in Wallet to start again with 1,000 PLAY.
+                    You have saved 100 position previews. Reset the practice
+                    balance in Wallet to start again.
                   </p>
                   <div className="mt-5 max-w-64">
                     <Button onClick={() => setScreen("wallet")}>
@@ -522,15 +455,13 @@ export default function DemoApp() {
             {screen === "watch" ? (
               <>
                 <div>
-                  <Tag tone="accent">
-                    Historical replay · 12-second walkthrough
-                  </Tag>
+                  <Tag tone="accent">US CPI · Jan 2021–Dec 2024</Tag>
                   <h1 className="mt-3 text-4xl font-semibold tracking-tight">
                     Every month changes the path.
                   </h1>
                   <p className="mt-2 max-w-2xl text-muted">
-                    Your {fmt(total)} demo PLAY follows the 2021–24 case study.
-                    The scores update from the recorded monthly readings.
+                    Follow your {fmt(total)} PLAY position across the full
+                    period. Each recorded month contributes to the score.
                   </p>
                 </div>
                 <Card>
@@ -596,7 +527,7 @@ export default function DemoApp() {
                       <div key={p.l} className="rounded-2xl bg-panel-2 p-4">
                         <p className="text-xs text-muted">{p.l}</p>
                         <p className="num mt-2 text-3xl font-semibold">
-                          {(p.s * 100).toFixed(2)}%
+                          <AnimatedNumber value={p.s * 100} />%
                         </p>
                         <p className="mt-2 text-xs text-muted">{p.t}</p>
                       </div>
@@ -611,7 +542,7 @@ export default function DemoApp() {
                     <div className="w-full sm:w-56">
                       {done ? (
                         <Button onClick={() => setScreen("claim")}>
-                          See illustrative result →
+                          Review settlement →
                         </Button>
                       ) : (
                         <Button
@@ -624,6 +555,9 @@ export default function DemoApp() {
                     </div>
                   </div>
                 </Card>
+                <Card>
+                  <InflationTimeline observed={observed} />
+                </Card>
                 <Proof />
               </>
             ) : null}
@@ -632,12 +566,12 @@ export default function DemoApp() {
                 <div>
                   <Tag tone={claimed ? "up" : "accent"}>
                     {claimed
-                      ? "Saved to demo history"
-                      : "Historical case study complete"}
+                      ? "Saved to portfolio"
+                      : "48 of 48 readings complete"}
                   </Tag>
                   <h1 className="mt-3 text-4xl font-semibold tracking-tight">
                     {claimed
-                      ? "Your walkthrough, complete."
+                      ? "Result added to your portfolio."
                       : "The path has a result."}
                   </h1>
                   <p className="mt-2 text-muted">
@@ -650,10 +584,10 @@ export default function DemoApp() {
                     <div>
                       <p className="text-sm text-muted">Illustrative payout</p>
                       <p className="num mt-3 text-5xl font-semibold text-brand">
-                        {fmt(payout, 6)}
+                        <AnimatedNumber value={payout} decimals={6} />
                       </p>
                       <p className="mt-2 text-sm text-muted">
-                        PLAY on {fmt(total)} demo PLAY put in
+                        PLAY on a {fmt(total)} PLAY practice position
                       </p>
                       <p
                         className={`num mt-5 text-lg ${payout >= total ? "text-up" : "text-down"}`}
@@ -689,18 +623,18 @@ export default function DemoApp() {
                       <div className="mt-5">
                         {claimed ? (
                           <Button onClick={() => setScreen("history")}>
-                            View demo history →
+                            View portfolio →
                           </Button>
                         ) : (
                           <Button onClick={finishRun} disabled={!done}>
-                            Complete demo claim →
+                            Save settlement preview →
                           </Button>
                         )}
                       </div>
                       <p className="mt-2 text-xs text-muted">
                         {claimed
                           ? "Result saved in this browser."
-                          : "Updates your local demo ledger and history."}
+                          : "Practice portfolio only · no wallet transfer."}
                       </p>
                     </div>
                   </div>
@@ -721,7 +655,7 @@ export default function DemoApp() {
                     <Card key={p.t}>
                       <p className="text-sm text-muted">{p.t}</p>
                       <p className="num mt-2 text-3xl font-semibold">
-                        {(p.s * 100).toFixed(2)}%
+                        <AnimatedNumber value={p.s * 100} />%
                       </p>
                       <p className="mt-2 text-xs text-muted">{p.text}</p>
                     </Card>
@@ -731,18 +665,19 @@ export default function DemoApp() {
               </>
             ) : null}
             {screen === "explore" ? <ExploreScreen /> : null}
+            {screen === "news" ? <NewsScreen /> : null}
             {screen === "history" ? (
               <>
                 <div className="flex flex-wrap items-end justify-between gap-3">
                   <div>
-                    <Tag>Local demo history</Tag>
+                    <Tag>Practice portfolio</Tag>
                     <h1 className="mt-3 text-4xl font-semibold tracking-tight">
                       Your choices. Your results.
                     </h1>
                     <p className="mt-2 max-w-2xl text-muted">
-                      Completed walkthroughs saved in this browser. Every run
-                      uses the same recorded path; changing sides changes the
-                      result.
+                      Your settled position previews, saved on this device.
+                      Compare how different sides respond to the same inflation
+                      path.
                     </p>
                   </div>
                   <button
@@ -752,14 +687,14 @@ export default function DemoApp() {
                     }
                     className="rounded-full bg-night px-5 py-3 text-sm font-semibold text-white"
                   >
-                    New walkthrough →
+                    New position →
                   </button>
                 </div>
                 {newRunPrompt ? (
                   <Card>
                     <p>
-                      Start a new walkthrough? Your unfinished local position
-                      will be reset.
+                      Start a new position? Your unfinished preview will be
+                      reset.
                     </p>
                     <div className="mt-4 flex gap-4">
                       <button
@@ -787,11 +722,12 @@ export default function DemoApp() {
                       Your first result starts with a choice.
                     </h2>
                     <p className="mt-2 text-sm text-muted">
-                      Complete a demo claim to save your result here.
+                      Build a position and save its settlement preview to see it
+                      here.
                     </p>
                     <div className="mx-auto mt-5 max-w-56">
                       <Button onClick={() => setScreen(nextStep)}>
-                        Continue walkthrough →
+                        Build a position →
                       </Button>
                     </div>
                   </Card>
@@ -802,9 +738,9 @@ export default function DemoApp() {
                         <div className="flex flex-wrap items-center justify-between gap-4">
                           <div>
                             <p className="font-semibold">
-                              Walkthrough {runs.length - i}{" "}
+                              Position {runs.length - i}{" "}
                               <span className="ml-2 text-xs font-normal text-muted">
-                                Demo complete
+                                Preview settled
                               </span>
                             </p>
                             <p className="mt-1 text-xs text-muted">
@@ -839,29 +775,30 @@ export default function DemoApp() {
             {screen === "wallet" ? (
               <>
                 <div>
-                  <Tag>Demo ledger · stored in this browser</Tag>
+                  <Tag>PLAY wallet · Devnet</Tag>
                   <h1 className="mt-3 text-4xl font-semibold tracking-tight">
                     Everything in one place.
                   </h1>
                   <p className="mt-2 max-w-2xl text-muted">
-                    Track the walkthrough’s PLAY balance, position and results.
-                    A real Solana wallet is not connected.
+                    Your practice balance and position activity, together.
+                    Activity stays on this device; a signing wallet is not
+                    connected.
                   </p>
                 </div>
                 <section className="rounded-3xl bg-night p-7 text-white md:p-9">
                   <div className="flex flex-wrap items-start justify-between gap-5">
                     <div>
                       <p className="text-sm text-white/60">
-                        Available demo balance
+                        Available practice balance
                       </p>
                       <p className="num mt-3 text-4xl font-semibold sm:text-5xl">
-                        {fmt(balance)}{" "}
+                        <AnimatedNumber value={balance} />{" "}
                         <span className="text-lg font-normal text-white/50">
                           PLAY
                         </span>
                       </p>
                       <p className="mt-4 text-xs text-white/60">
-                        Started with 1,000 demo PLAY · no cash value
+                        1,000 PLAY starting balance · test tokens, no cash value
                       </p>
                     </div>
                     <span className="rounded-full border border-white/20 px-3 py-1.5 text-xs text-white/70">
@@ -871,14 +808,14 @@ export default function DemoApp() {
                   <div className="mt-7 grid gap-5 border-t border-white/15 pt-5 sm:grid-cols-3">
                     {[
                       {
-                        l: "In demo position",
+                        l: "In position",
                         v: deposited && !claimed ? total : 0,
                       },
                       {
                         l: "Completed payouts",
                         v: runs.reduce((s, r) => s + r.back, 0),
                       },
-                      { l: "Net demo result", v: historyDelta },
+                      { l: "Net result", v: historyDelta },
                     ].map((p) => (
                       <div key={p.l}>
                         <p className="text-xs text-white/60">{p.l}</p>
@@ -888,26 +825,26 @@ export default function DemoApp() {
                   </div>
                 </section>
                 <Card>
-                  <h2 className="text-xl font-semibold">Demo activity</h2>
+                  <h2 className="text-xl font-semibold">Activity</h2>
                   <p className="mt-1 text-sm text-muted">
                     Local records only. For actual on-chain activity, open the
                     proof below.
                   </p>
                   {!runs.length && !deposited ? (
                     <p className="py-8 text-sm text-muted">
-                      Your walkthrough activity will appear here.
+                      Your position activity will appear here.
                     </p>
                   ) : (
                     <ul className="mt-5 divide-y divide-line">
                       {deposited && !claimed ? (
                         <li className="flex justify-between gap-3 py-4 text-sm">
                           <span>
-                            Current demo position
+                            Current position preview
                             <span className="mt-1 block text-xs text-muted">
                               {running
                                 ? "Historical replay running"
                                 : done
-                                  ? "Ready for demo claim"
+                                  ? "Settlement preview ready"
                                   : "Replay paused"}
                             </span>
                           </span>
@@ -920,7 +857,9 @@ export default function DemoApp() {
                           className="flex justify-between gap-3 py-4 text-sm"
                         >
                           <div>
-                            <p className="font-medium">Completed demo run</p>
+                            <p className="font-medium">
+                              Position preview settled
+                            </p>
                             <p className="mt-1 text-xs text-muted">
                               {fmt(r.put)} put in → {fmt(r.back)} illustrative
                               payout
@@ -940,11 +879,11 @@ export default function DemoApp() {
                 <Proof />
                 <details className="rounded-2xl border border-line px-5 py-4 text-sm">
                   <summary className="cursor-pointer text-muted">
-                    Demo controls
+                    Practice settings
                   </summary>
                   <p className="mt-3 text-xs text-muted">
-                    Reset removes this browser’s demo history and restores 1,000
-                    PLAY. Your profile is kept.
+                    Reset removes this device’s saved previews and restores
+                    1,000 PLAY. Your profile is kept.
                   </p>
                   {resetPrompt ? (
                     <div className="mt-4 flex gap-4">
@@ -974,7 +913,7 @@ export default function DemoApp() {
                       onClick={() => setResetPrompt(true)}
                       className="mt-4 text-brand underline"
                     >
-                      Reset demo ledger
+                      Reset practice balance
                     </button>
                   )}
                 </details>
@@ -983,9 +922,11 @@ export default function DemoApp() {
           </>
         )}
       </main>
-      <footer className="mx-auto flex max-w-6xl flex-wrap justify-between gap-3 border-t border-line px-4 py-6 text-xs text-muted md:px-8">
+      <footer className="mx-auto flex max-w-7xl flex-wrap justify-between gap-3 border-t border-line px-4 py-6 text-[11px] text-muted md:px-8">
         <p>MacroPaths · OxHack ’26 · US BLS / FRED data</p>
-        <p>Historical transparency. Your decision.</p>
+        <p>
+          Solana devnet · PLAY test tokens · Personal positions are previews
+        </p>
       </footer>
     </div>
   );

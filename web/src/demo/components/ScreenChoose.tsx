@@ -25,7 +25,7 @@ const PRODUCTS = [
   {
     name: "Inflation Cooling",
     question: "How far did inflation fall from its peak?",
-    tip: "Score 0 to 1. A fall of 8 points or more from the peak scores 1.",
+    tip: "The score reaches 100% when inflation falls 8 percentage points from an earlier peak.",
     more: "Fell a lot",
     less: "Stayed high",
     idx: [0, 1] as const,
@@ -33,7 +33,7 @@ const PRODUCTS = [
   {
     name: "Excess Inflation",
     question: "How long and how far was it above 4%?",
-    tip: "Score 0 to 1. Adds up how far above 4% inflation was each month. Reaching the cap scores 1.",
+    tip: "Each month above 4% adds to the score. It reaches 100% at 80 point-months.",
     more: "Ran hot",
     less: "Stayed calm",
     idx: [2, 3] as const,
@@ -74,7 +74,8 @@ export default function ScreenChoose({
   ]);
 
   const total = amounts.reduce((s, v) => s + v, 0);
-  const tooMuch = total > Math.min(DEMO_WALLET_BALANCE, availableBalance);
+  const tooMuch = total > availableBalance;
+  const tooLarge = total > DEMO_WALLET_BALANCE;
   const range = payoutRange(amounts);
   const goal = goalFor(amounts);
 
@@ -120,14 +121,14 @@ export default function ScreenChoose({
     <div className="space-y-6">
       <div className="reveal">
         <h1 className="text-4xl font-semibold tracking-tight">
-          What do you want covered?
+          Build your position
         </h1>
         <p className="mt-2 text-muted">
-          Choose a scenario to explore. Adjust More or Less yourself. These
-          examples are not recommendations.
+          Start with a view on inflation. Choose More or Less for each product,
+          then set your PLAY amount.
         </p>
         <p className="mt-2 text-xs text-brand">
-          Historical walkthrough · Jan 2021–Dec 2024 · no tokens are sent
+          US CPI · Jan 2021–Dec 2024 · Practice position
         </p>
       </div>
 
@@ -276,26 +277,31 @@ export default function ScreenChoose({
       <Card order={3}>
         <div className="grid gap-6 md:grid-cols-3 md:items-center">
           <div>
-            <p className="text-sm text-muted">Demo amount</p>
+            <p className="text-sm text-muted">Position size</p>
             <p className="num mt-1 text-3xl font-semibold">{fmt(total)} PLAY</p>
           </div>
           <div>
-            <p className="text-sm text-muted">Illustrative payout range</p>
+            <p className="text-sm text-muted">Potential payout range</p>
             <p className="num mt-1 text-2xl font-semibold">
               {fmt(range.min)} – {fmt(range.max)} PLAY
             </p>
           </div>
           <div ref={triggerRef}>
             <Button
-              disabled={total <= 0 || tooMuch || deposited}
+              disabled={total <= 0 || tooMuch || tooLarge || deposited}
               onClick={() => setReview(true)}
             >
               {deposited
-                ? "Demo position saved ✓"
-                : `Review ${fmt(total)} demo PLAY`}
+                ? "Position preview saved ✓"
+                : `Review ${fmt(total)} PLAY`}
             </Button>
             {tooMuch ? (
               <p className="mt-2 text-sm text-down">More than your balance.</p>
+            ) : null}
+            {tooLarge && !tooMuch ? (
+              <p className="mt-2 text-sm text-down">
+                Maximum 1,000 PLAY per practice position.
+              </p>
             ) : null}
             {total <= 0 ? (
               <p className="mt-2 text-sm text-muted">
@@ -303,8 +309,7 @@ export default function ScreenChoose({
               </p>
             ) : null}
             <WhatHappens>
-              Review your sides, then start a local historical replay. No wallet
-              transaction.
+              Review your sides and the historical period before confirming.
             </WhatHappens>
           </div>
         </div>
@@ -337,10 +342,10 @@ export default function ScreenChoose({
         className="fixed inset-0 m-auto w-[calc(100%_-_2rem)] max-w-md rounded-3xl border border-line bg-panel p-6 text-text shadow-xl backdrop:bg-black/40"
       >
         <h2 id="review-title" className="text-2xl font-semibold">
-          Review your demo position
+          Review position
         </h2>
         <p className="mt-2 text-sm text-muted">
-          Local walkthrough · 48 historical months in 12 seconds
+          US CPI · 48 monthly readings · Jan 2021–Dec 2024
         </p>
         <dl className="my-5 space-y-3 text-sm">
           {amounts.map((a, j) =>
@@ -362,17 +367,17 @@ export default function ScreenChoose({
           )}
           <div className="flex justify-between border-t border-line pt-3 font-semibold">
             <dt>Total</dt>
-            <dd className="num">{fmt(total)} demo PLAY</dd>
+            <dd className="num">{fmt(total)} PLAY</dd>
           </div>
         </dl>
         <Button
-          disabled={tooMuch || total <= 0 || deposited}
+          disabled={tooMuch || tooLarge || total <= 0 || deposited}
           onClick={() => {
             setReview(false);
             onDeposited();
           }}
         >
-          Confirm demo position →
+          Confirm practice position →
         </Button>
         <button
           type="button"
@@ -383,7 +388,8 @@ export default function ScreenChoose({
           Back to edit
         </button>
         <p className="mt-3 text-xs text-muted">
-          Your balance changes locally. Nothing is deposited on Solana.
+          Practice position · no wallet transfer. Your PLAY balance updates on
+          this device.
         </p>
       </dialog>
     </div>

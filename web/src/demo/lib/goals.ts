@@ -14,28 +14,28 @@ export type Goal = {
 export const GOALS: Goal[] = [
   {
     key: "hot",
-    label: "Cover me if inflation runs hot",
+    label: "Sustained inflation",
     detail: "Pays more the longer inflation stays above 4%.",
     who: "Savers, firms with rising costs",
     preset: [0, 0, 10, 0],
   },
   {
     key: "sticky",
-    label: "Cover me if inflation stays sticky",
+    label: "Higher for longer",
     detail: "Pays when inflation overshoots and won't come down.",
     who: "Tenants and SMEs with CPI-linked rent",
     preset: [0, 10, 10, 0],
   },
   {
     key: "cools",
-    label: "Cover my linker if inflation cools",
+    label: "A sharp cool-down",
     detail: "Pays by how far inflation falls from its peak.",
     who: "Inflation-linked bondholders",
     preset: [10, 0, 0, 0],
   },
   {
     key: "income",
-    label: "Steady my CPI-linked income",
+    label: "Cooling without the heat",
     detail: "Pays if inflation drops sharply or never overshoots.",
     who: "Landlords and lenders with CPI-indexed income",
     preset: [10, 0, 0, 10],
