@@ -33,7 +33,7 @@ done
 pytest_file() { # path
   if [ -f "$1" ]; then run "py:$1" "$PY" "$1"; else skip "py:$1" "file absent"; fi
 }
-for t in data/test_presentation.py research/test_planner.py forecast/test_link.py data/test_fetch.py; do
+for t in data/test_presentation.py research/test_planner.py forecast/test_link.py tests/data/test_fetch.py; do
   pytest_file "$t"
 done
 
