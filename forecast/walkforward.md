@@ -218,7 +218,7 @@ Pre-origin caps at 2021-01: Cooling 76973 (7.6973 pp), Excess 1881805 (188.1805 
 
 - Series CPIAUCNS, snapshot `data/snapshots/CPIAUCNS.json` (sha256 `8caae39af6be41fe2d129abdd898d4033752b794418cba1765155fe3c304f266`), retrieved 2026-10-24T16:25:32Z, raw sha256 `cfab9b9be4a5d4f06253c4dcc3f7e0b28b1d58837e710dd7cb1fd54a49e7ad7c`; levels 1913-01..2025-09, year-on-year 1914-01..2025-09 (1341 months). FRED's CPIAUCNS has an empty value at 2025-10; the series is used only up to the first missing value and nothing here needs any month after 2024-12.
 - Command `pixi run python forecast/walkforward.py --paths 10000 --seed 20261025`; seed 20261025, 10000 paths.
-- Code sha256: `forecast/walkforward.py` 2f5fffb33727…, `forecast/backtest.py` 70e24114f81c…, `research/macrolib.py` 5653ae9482c9…, `tests/make_vectors.py` 38f196d34c3d….
+- Code sha256: `forecast/walkforward.py` 2f5fffb33727…, `forecast/backtest.py` 70e24114f81c…, `research/macrolib.py` 4df837603f1b…, `tests/make_vectors.py` 38f196d34c3d….
 - The JSON also records the git commit of `forecast/backtest.py` and the Python, numpy, pandas and scipy versions (`provenance.environment`; not compared by `--check`).
 
 ```bash

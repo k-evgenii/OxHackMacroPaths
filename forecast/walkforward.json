@@ -110,7 +110,7 @@
   "code_sha256": {
    "forecast/walkforward.py": "2f5fffb337276a47e9bf7d51a3de27488200b60e26a243a4a844b9377c761625",
    "forecast/backtest.py": "70e24114f81c4b91147f1b5a9862cd7b370ea3b6388d7423a80232c4c130fc67",
-   "research/macrolib.py": "5653ae9482c99e113e726939e70f33771fce92e227cbabe6f7ea6f2867e4bdfa",
+   "research/macrolib.py": "4df837603f1b48b21c7f0504cdfbcadc04c6429bf099a969086f27aee1a65715",
    "tests/make_vectors.py": "38f196d34c3dc36be5fd6083a1a2a92650e83c09afe98751fd9c642c0b1d6020"
   },
   "environment": {
