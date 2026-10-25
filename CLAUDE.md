@@ -11,17 +11,21 @@ MacroPaths (OxHack '26) is a Solana program, written in Anchor 1.0.2, that pays 
 
 A funded single-seller "cover" extension sits on top. The design is deliberately **not** a prediction market, AMM, order book, LP vault or per-user matched book; don't reintroduce any of them. In code, comments and docs, never write "fair value", "bet", "option" or "insurance". Use "forecast", "position" and "cover".
 
-The specification is `docs/program-spec.md`. Agent rules are in `AGENTS.md`, plus `.cursor/rules/program.mdc`. Decisions are recorded in `docs/DECISIONS.md`, and the deployed program and sessions in `docs/deployments.md`.
+The specification is `docs/program-spec.md`. Agent rules are in `AGENTS.md`, plus `.cursor/rules/program.mdc`. Decisions are recorded in `docs/DECISIONS.md`, and the deployed program and sessions in `docs/deployments.md`. `docs/verify.md` recomputes session A's hashes, scores and the worked payout by hand; `docs/security-review.md` is the countersigned review.
+
+**The deployed program is fixed.** Devnet `FvT786RtMTtbdXWemA9zgA9rfwhvxFsKY1ypiMMNwMbS` runs commit `dab88ff`; reference session A (`B89zLL…BVju`) is settled at 827387 / 863980 and is read-only. Don't deploy, upgrade, settle another session or spend SOL unless asked.
 
 ## Branches
 
 - **`cursor_main` is the integration branch.** Work branches from it (`agent/NN-name`, `phill/<task>`, …), and PRs target it.
 - **`main` only moves forward to `cursor_main`** at team gates. Never push to `main`.
-- **Research lives on `evgenii/macro-research`**: `research/`, `forecast/`, notebooks. It stays separate from the integration branches.
+- **Research lives on `evgenii/macro-research`**: `research/`, `forecast/`, notebooks. Keep it off `cursor_main`; research PRs target that branch. (PR #32's backtest commits also reached `main`.)
+- **The frontend lives on `evgenii/frontend`**: `web/` (Next.js) and the UI parts of `packages/client/`. Frontend PRs target that branch; `cursor_main` has no `web/`.
 - **Shared program files** (`lib.rs`, `instructions.rs`, `error.rs`, `events.rs`) are add-only: never remove or reorder someone else's lines. `state.rs` and `constants.rs` have owners, so ask before changing them.
 
 ## Toolchain (non-obvious)
 
+- **`pixi run prepare` and `pixi run forecast`** point at `data/prepare.py` and `forecast/ar1.py`, which are on no branch yet; both tasks fail.
 - **Pixi for everything:** `pixi install --locked`, then `pixi run <cmd>` or `pixi shell`. Node 20 and the Python 3.12 stack only exist inside pixi; outside it you get system Node 18. Don't edit `pixi.toml` or `pixi.lock` casually. There is no CI.
 - **Rust comes from rustup, not pixi.** `rust-toolchain.toml` pins 1.89.0. Rust inside pixi shadows rustup's `cargo`, and `anchor build` then fails with `no such command: +1.89.0-sbpf-solana-…`.
 - **Anchor CLI must be 1.0.2.** The Solana installer gives 1.1.2, so run `avm install 1.0.2 && avm use 1.0.2`. The crates are pinned `=1.0.2`; a bare `"1.0.2"` resolves to 1.2.x.
@@ -43,8 +47,15 @@ pixi run fetch                              # freeze FRED series into data/snaps
 # keeper (TypeScript)
 pixi run npm --prefix keeper ci
 pixi run npm --prefix keeper run typecheck
+pixi run npx --prefix keeper tsx --test keeper/src/*.test.ts           # all keeper tests
 pixi run npx --prefix keeper tsx --test keeper/src/session.test.ts      # one keeper test file
 pixi run npx --prefix keeper tsx keeper/src/prepare.ts --check tests/vectors.json
+
+# web (on evgenii/frontend); packages/client must be installed first (web depends on file:../packages/client)
+(cd packages/client && pixi run npm ci) && cd web && pixi run npm ci
+cp .env.example .env.local      # RPC_URL: a keyed devnet endpoint; the public one rate-limits getTransaction
+pixi run npm run dev            # NEXT_PUBLIC_USE_FIXTURES=1 serves packages/client/fixtures with no RPC
+pixi run npm test && pixi run npm run typecheck && pixi run npm run lint && pixi run npm run build
 ```
 
 **The LiteSVM tests load `target/deploy/macropaths.so`, not your source.** After any program change, rebuild with `anchor build --ignore-keys` or `cargo-build-sbf`, or the tests run the old binary.
@@ -91,10 +102,11 @@ Data flows from FRED into a hash chain, and three implementations must agree on 
 - **Config:** `.env` provides `RPC_URL` and `KEEPER_KEYPAIR` (a path); `DOTENV_PATH` overrides it. `env.ts` never prints secret values.
 - **Flow:**
   1. `prepare.ts`.
-  2. `npm run session:create` (`run.ts`): mint, `create_session`, a field-by-field read-back, then seed the sides. Writes `data/session.json`.
+  2. `npm run session:create` (`run.ts`): mint, `create_session`, a field-by-field read-back, then seed the sides. Writes `data/session.json`. Without `--session-id` the id is the cluster time, so it refuses to replace an existing `data/session.json` unless given `--session-id`, another `--out`, or `--force`.
   3. `npm run admin -- lock`.
   4. `npm run replay`: resumes from `Session.next_index`.
-  5. `npm run admin -- settle`, then `status`, claim, expire and sweep; `seller.ts` drives the cover side.
+  5. `npm run admin -- settle`, then `status`, `claim` (defaults to the keeper's own position), expire and sweep. `seller.ts` drives the cover side (`admin -- seller fund|quote|buy|claim-cover|settle|withdraw`); `sweep` refuses until every cover is claimed, so run `seller claim-cover --keypair <buyer>` first.
+  - `keeper/README.md` has the local Surfpool demo and the devnet runbook (explicit `--session-id`, seller steps before `lock`).
 - **`--session-file`** selects a session other than the default `data/session.json`.
 - **`tx.ts` `sendAndConfirmWithRetry`** only rebuilds a transaction after its blockhash has provably expired, so it can't double-post.
 - **`replay.ts` saves each signature to `data/replay-pending.json` before broadcasting.** That file is shared, so replay one session at a time.
