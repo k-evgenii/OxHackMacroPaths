@@ -1,40 +1,15 @@
 // Research artifacts (off chain, advisory): forecast/manifest.json, forecast/table.json, forecast/planner.json.
 // Schemas (shared, in @macropaths/client) cover only the fields the /forecast and /planner pages read.
-import { queryOptions } from "@tanstack/react-query";
-import { Forecast, Manifest, PlannerArtifact, type ManifestProduct } from "@macropaths/client";
-import { fetchJson } from "@/lib/api-client";
+import type { Forecast, Manifest, ManifestProduct } from "@macropaths/client";
 import bundleIdentity from "../../public/data/bundle-identity.json";
 
-/** Id of the published research bundle (also served as /data/bundle-identity.json and in /api/artifacts/bundle). */
+/** Id of the published research bundle (also served as /data/bundle-identity.json and in /api/artifacts/bundle).
+ *  Use with researchBundleQuery(PUBLISHED_BUNDLE_ID) from @/lib/queries. */
 export const PUBLISHED_BUNDLE_ID: string = bundleIdentity.id;
 
-// Schemas now live in the shared client contract (frontend v2 foundation); re-exported for compatibility.
-export {
-  Manifest,
-  ManifestProduct,
-  Forecast,
-  Fit,
-  Scenario,
-  PlannerArtifact,
-} from "@macropaths/client";
-
-// Static research files: fetched once per page load. Keys carry the bundle id so a republished bundle never
-// reuses a stale cache entry.
-export const manifestQuery = queryOptions({
-  queryKey: ["artifact", "manifest", PUBLISHED_BUNDLE_ID],
-  queryFn: () => fetchJson("/api/artifacts/manifest", Manifest),
-  staleTime: Infinity,
-});
-export const forecastQuery = queryOptions({
-  queryKey: ["artifact", "forecast", PUBLISHED_BUNDLE_ID],
-  queryFn: () => fetchJson("/api/artifacts/forecast", Forecast),
-  staleTime: Infinity,
-});
-export const plannerQuery = queryOptions({
-  queryKey: ["artifact", "planner", PUBLISHED_BUNDLE_ID],
-  queryFn: () => fetchJson("/api/artifacts/planner", PlannerArtifact),
-  staleTime: Infinity,
-});
+// Shared schemas (client contract) and legacy queries (worker 10) re-exported for compatibility; nothing is defined here.
+export { Manifest, ManifestProduct, Forecast, Fit, Scenario, PlannerArtifact } from "@macropaths/client";
+export { manifestQuery, forecastQuery, plannerQuery, researchBundleQuery } from "@/lib/queries/research";
 
 /** "2026-10-24T13:29:31Z" -> "2026-10-24 13:29 UTC": the data date of a source snapshot. */
 export function fmtRetrieved(iso: string): string {
