@@ -13,7 +13,6 @@ import {
   buildTerms,
   buildVault,
   classifyError,
-  compositionShares,
   explainFigures,
   plainSummary,
   walkthroughStep,
@@ -87,14 +86,16 @@ describe("chart", () => {
     expect(c.series[0].points).toHaveLength(48);
     expect(c.series[0].points[0]).toMatchObject({ id: "obs-0", x: 0, label: "Jan 2021", formattedValue: "1.40 %" });
     expect(c.threshold.value).toBe(4);
-    expect(c.threshold.label).toBe("69.1 point-months above 4.00 %");
+    expect(c.threshold.label).toBe("Threshold 4.00 %");
+    expect(c.threshold.bandLabel).toBe("69.1 point-months above 4.00 %");
     expect(c.xTicks.map((t) => t.label)).toEqual(["2021", "2022", "2023", "2024"]);
   });
 
   it("threshold follows terms.k, not a hardcoded 4%", () => {
     const c = buildChartModel({ ...A, terms: { ...A.terms, k: "30000" } });
-    expect(c.threshold.label).toBe("69.1 point-months above 3.00 %");
-    expect(buildChartModel(partial(0, "Open")).threshold.label).toBe("Threshold 4.00 %");
+    expect(c.threshold.label).toBe("Threshold 3.00 %");
+    expect(c.threshold.bandLabel).toBe("69.1 point-months above 3.00 %");
+    expect(buildChartModel(partial(0, "Open")).threshold.bandLabel).toBeUndefined();
   });
 
   it("range selection crops the display but not scores", () => {
@@ -237,9 +238,14 @@ describe("curation and approved additions", () => {
     expect(explainFigures(overviewOf(partial(0, "Open"))).cooling).toMatch(/not determined yet/);
   });
 
-  it("composition shares are bigint-exact basis points", () => {
-    expect(compositionShares(A.sideTotals)).toEqual([2368, 2631, 2368, 2631]);
-    expect(compositionShares(["0", "0", "0", "0"])).toEqual([0, 0, 0, 0]);
+  it("composition segments pass exact raw side totals to the shared ShareBar", () => {
+    expect(buildVault(overviewOf(A)).segments.map((s) => s.raw)).toEqual(A.sideTotals);
+    expect(buildVault(overviewOf(A)).segments.map((s) => s.label)).toEqual([
+      "Inflation Cooling · More",
+      "Inflation Cooling · Less",
+      "Excess Inflation · More",
+      "Excess Inflation · Less",
+    ]);
   });
 
   it("walkthrough reveals the recorded path to the final scores", () => {

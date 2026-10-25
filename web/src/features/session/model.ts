@@ -175,7 +175,7 @@ export type ChartModel = {
     points: Array<{ id: string; x: number; value: number | null; label: string; formattedValue: string }>;
     tone: "primary";
   }>;
-  threshold: { value: number; label: string };
+  threshold: { value: number; label: string; bandLabel?: string };
   xTicks: Array<{ x: number; label: string }>;
   observations: Array<{ id: string; month: string; value: string }>;
 };
@@ -203,10 +203,8 @@ export function buildChartModel(session: SessionView, range: ChartRange = "all")
   const ticks = rows.filter((r, idx) => (range === "all" ? r.periodId % 100 === 1 : idx % 3 === 0));
   const threshold = {
     value: plotPp(session.terms.k),
-    label:
-      session.path.length > 0
-        ? `${fmtPointMonths(session.stats.excessAcc, 1)} above ${fmtPp(session.terms.k, 2)}`
-        : `Threshold ${fmtPp(session.terms.k, 2)}`,
+    label: `Threshold ${fmtPp(session.terms.k, 2)}`,
+    bandLabel: session.path.length > 0 ? `${fmtPointMonths(session.stats.excessAcc, 1)} above ${fmtPp(session.terms.k, 2)}` : undefined,
   };
   const first = rows[0];
   const last = rows[rows.length - 1];
@@ -229,7 +227,7 @@ export function buildChartModel(session: SessionView, range: ChartRange = "all")
 
 export type VaultModel = {
   totalDeposited: string;
-  segments: Array<{ id: string; label: string; amount: string }>;
+  segments: Array<{ id: string; label: string; amount: string; raw: string }>;
   current: { status: "ok"; total: string; perProduct: Array<{ label: string; amount: string }> } | { status: "unavailable" };
 };
 
@@ -245,6 +243,7 @@ export function buildVault(overview: Pick<SessionOverviewResponse, "session" | "
       id: `${p.key}-${side.toLowerCase()}`,
       label: `${p.name} · ${side}`,
       amount: fmtPlay(s.sideTotals[p.index * 2 + k]),
+      raw: s.sideTotals[p.index * 2 + k],
     })),
   );
   const v = overview.vault;
@@ -410,14 +409,6 @@ export function explainFigures(overview: Pick<SessionOverviewResponse, "session"
     cooling: `Largest decline ${ppMagnitude(s.stats.maxDecline)} ÷ decline cap ${ppMagnitude(s.terms.dCap)}${result(h.scores[0].value)}${capped(s.stats.maxDecline, s.terms.dCap)}.`,
     excess: `Excess ${fmtPointMonths(s.stats.excessAcc, 1)} ÷ excess cap ${fmtPointMonths(s.terms.aCap, 1)}${result(h.scores[1].value)}${capped(s.stats.excessAcc, s.terms.aCap)}.`,
   };
-}
-
-/** Basis-point shares of the four pool-contribution sides, bigint-exact (floor; sums ≤ 10000). */
-export function compositionShares(sideTotals: readonly string[]): number[] {
-  const t = sideTotals.map((v) => BigInt(v));
-  const total = t.reduce((a, b) => a + b, 0n);
-  if (total === 0n) return t.map(() => 0);
-  return t.map((v) => Number((v * 10_000n) / total));
 }
 
 export type WalkthroughStep = {

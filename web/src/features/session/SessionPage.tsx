@@ -2,7 +2,7 @@
 import { useEffect, useId, useMemo, useState } from "react";
 import Link from "next/link";
 import type { SessionOverviewResponse } from "@macropaths/client";
-import { Button, Card, EmptyState, ErrorState, GlowLineChart, Skeleton, StatusPill } from "@macropaths/ui";
+import { Button, Card, EmptyState, Explain, ShareBar, ErrorState, GlowLineChart, Skeleton, StatusPill } from "@macropaths/ui";
 import { useSessionOverview, useWalletOverview } from "@/lib/hooks";
 import { useWalletConnection } from "@/features/wallet-connect";
 import {
@@ -14,7 +14,6 @@ import {
   buildTerms,
   buildVault,
   classifyError,
-  compositionShares,
   explainFigures,
   plainSummary,
   walkthroughStep,
@@ -143,12 +142,9 @@ function HeroChart({ overview }: { overview: SessionOverviewResponse }) {
   const full = useMemo(() => buildChartModel(s, range), [s, range]);
   const listId = useId();
   const step = walk == null ? null : walkthroughStep(s, walk);
-  const chart = useMemo(() => {
-    if (walk == null) return full;
-    // Progressive reveal: only the months recorded up to the current step; never beyond the path.
-    const all = buildChartModel(s, "all");
-    return { ...all, series: all.series.map((x) => ({ ...x, points: x.points.slice(0, walk + 1) })) };
-  }, [full, s, walk]);
+  const chart = full;
+  // Progressive reveal (walkthrough): the chart draws only months up to this recorded point.
+  const revealId = walk == null ? null : `obs-${s.path[Math.min(walk, s.path.length - 1)].i}`;
   const last = s.path.length - 1;
 
   useEffect(() => {
@@ -195,6 +191,7 @@ function HeroChart({ overview }: { overview: SessionOverviewResponse }) {
             variant="hero"
             selectedPointId={selected}
             onSelectedPointChange={setSelected}
+            revealUpToPointId={revealId}
           />
           <div className={styles.walkthrough} role="group" aria-label="How a cover pays out">
             {walk == null ? (
@@ -263,7 +260,7 @@ function ResultSummary({ overview }: { overview: SessionOverviewResponse }) {
           <dt>Last replay reading</dt>
           <dd className={styles.figureValue}>{h.lastReading ? h.lastReading.value : "No readings yet"}</dd>
           <dd className={styles.figureNote}>{h.lastReading ? h.lastReading.month : "Waiting for the first month"}</dd>
-          <dd><Explain text={ex.lastReading} /></dd>
+          <dd><ExplainNumber name="last replay reading" text={ex.lastReading} /></dd>
         </div>
         {h.scores.map((sc, i) => (
           <div className={styles.figure} key={sc.key}>
@@ -271,7 +268,7 @@ function ResultSummary({ overview }: { overview: SessionOverviewResponse }) {
             <dd className={styles.figureValue}>{sc.value ?? "Not determined yet"}</dd>
             {sc.statistic ? <dd className={styles.figureNote}>{sc.statistic}</dd> : null}
             <dd className={styles.figureNote}>{sc.note}</dd>
-            <dd><Explain text={explain[i]} /></dd>
+            <dd><ExplainNumber name={`${sc.name} score`} text={explain[i]} /></dd>
           </div>
         ))}
       </dl>
@@ -281,12 +278,11 @@ function ResultSummary({ overview }: { overview: SessionOverviewResponse }) {
   );
 }
 
-function Explain({ text }: { text: string }) {
+function ExplainNumber({ name, text }: { name: string; text: string }) {
   return (
-    <details className={styles.explainNum}>
-      <summary>Explain this number</summary>
+    <Explain label={`Explain ${name}`} title={name} trigger="Explain this number" className={styles.explainNum}>
       <p>{text}</p>
-    </details>
+    </Explain>
   );
 }
 
@@ -389,23 +385,21 @@ function Holdings({ overview }: { overview: SessionOverviewResponse }) {
 
 function Vaults({ overview }: { overview: SessionOverviewResponse }) {
   const v = buildVault(overview);
-  const shares = compositionShares(overview.session.sideTotals);
   return (
     <section className={styles.section} aria-labelledby="session-vaults">
       <h2 id="session-vaults" className={styles.sectionTitle}>Pool and vaults</h2>
       <div className={styles.vaultGrid}>
         <Card title="Total deposited" subtitle="All pool contributions in this session" as="div">
           <p className={styles.bigNum}>{v.totalDeposited}</p>
-          <div className={styles.composition} role="img" aria-label={`Pool contributions by side: ${v.segments.map((seg, i) => `${seg.label} ${fmtShare(shares[i])}`).join(", ")}`}>
-            {v.segments.map((seg, i) =>
-              shares[i] > 0 ? <span key={seg.id} className={styles.compSeg} data-i={i} style={{ flexGrow: shares[i] }} /> : null,
-            )}
-          </div>
+          <ShareBar
+            title="Pool contributions by side"
+            segments={v.segments.map((seg) => ({ label: seg.label, value: BigInt(seg.raw), formattedValue: seg.amount }))}
+          />
           <dl className={styles.rows}>
-            {v.segments.map((seg, i) => (
+            {v.segments.map((seg) => (
               <div key={seg.id} className={styles.row}>
-                <dt><span className={styles.swatch} data-i={i} aria-hidden="true" />{seg.label}</dt>
-                <dd className={styles.num}>{seg.amount} · {fmtShare(shares[i])}</dd>
+                <dt>{seg.label}</dt>
+                <dd className={styles.num}>{seg.amount}</dd>
               </div>
             ))}
           </dl>
@@ -471,7 +465,3 @@ function Calculation({ overview }: { overview: SessionOverviewResponse }) {
   );
 }
 
-/** Basis points -> "23.7%" (display only). */
-function fmtShare(bps: number): string {
-  return `${(bps / 100).toFixed(1)}%`;
-}
