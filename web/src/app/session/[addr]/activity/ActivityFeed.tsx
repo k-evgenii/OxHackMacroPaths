@@ -66,8 +66,8 @@ export function ActivityFeed({ addr }: { addr: string }) {
         <EmptyState title="No events yet" />
       ) : (
         <ol className="flex flex-col">
-          {events.map((e) => (
-            <li key={`${e.signature}-${e.type}`} className="flex min-w-0 flex-col gap-1 border-b border-border/50 py-3 text-sm last:border-0 sm:flex-row sm:items-baseline sm:gap-3">
+          {events.map((e, i) => (
+            <li key={`${e.signature}-${e.type}-${i}`} className="flex min-w-0 flex-col gap-1 border-b border-border/50 py-3 text-sm last:border-0 sm:flex-row sm:items-baseline sm:gap-3">
               <div className="flex shrink-0 items-center gap-2 sm:w-32">
                 <Badge variant={typeVariant[e.type]}>{e.type}</Badge>
               </div>

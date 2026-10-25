@@ -17,7 +17,8 @@ export function Provenance({ className = "" }: { className?: string }) {
     >
       <p>
         <span className="font-medium text-text">Not live.</span> Precomputed forecast, an illustration until settlement; settlement
-        uses the realised on-chain path only.
+        uses the realised on-chain path only. Caps here are the manifest&apos;s research p90 caps and research scores use them; a
+        session scores against the terms shown on its own page.
       </p>
       <p className="mt-1">
         Data as of:{" "}

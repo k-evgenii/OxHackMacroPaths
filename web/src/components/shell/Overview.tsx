@@ -1,44 +1,58 @@
 "use client";
 import Link from "next/link";
 import { useQueries } from "@tanstack/react-query";
-import { PRODUCT_NAMES, type SessionSummary } from "@macropaths/client";
+import { PRODUCT_NAMES, type SessionSummary, type SessionView } from "@macropaths/client";
 import { Addr, Badge, Card, Countdown, ErrorState, Num, Skeleton, Stat, Table, type Column } from "@/components/ui";
 import { Provenance } from "@/components/shell/Provenance";
-import { forecastQuery, manifestQuery, productStatus, quoteFor } from "@/lib/artifacts";
-import { fmtMillionthsPct, fmtPlay, shortAddr, useHealth, useSessions } from "@/lib/hooks";
+import { ResearchCap } from "@/components/shell/ResearchCaps";
+import { forecastQuery, manifestQuery, productStatus, quoteFor, type Forecast, type Manifest } from "@/lib/artifacts";
+import { DEFAULT_SESSION } from "@/lib/api-client";
+import { fmtMillionthsPct, fmtPlay, shortAddr, useHealth, useSession, useSessions } from "@/lib/hooks";
 
 const BADGE = { good: "ok", warn: "bad", muted: "neutral" } as const;
+
+/** The research products with their status, illustrative quote and research p90 cap (beside the session's own cap). */
+export function ProductsList({ manifest, forecast, session }: { manifest: Manifest; forecast: Forecast; session?: SessionView }) {
+  return (
+    <ul className="flex flex-col">
+      {manifest.products.map((p) => {
+        const status = productStatus(p);
+        return (
+          <li key={p.key} className="flex flex-col gap-1 border-b border-border/50 py-3 text-sm last:border-0 sm:flex-row sm:items-baseline sm:gap-4">
+            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+              <span className="font-medium">{p.name}</span>
+              <Badge variant={BADGE[status.tone]}>{status.label}</Badge>
+            </div>
+            <div className="text-xs text-muted sm:text-right">
+              <div>{status.detail}</div>
+              <div className="num">
+                Illustrative seller entry quote {fmtMillionthsPct(String(Math.trunc(quoteFor(forecast, p.key))))} of the maximum payout, illustration until settlement
+              </div>
+              <div>
+                <ResearchCap p={p} session={session} />
+              </div>
+            </div>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
 
 /** Products the program and research layer know about, with what is executable on the deployed program. */
 function Products() {
   const [m, f] = useQueries({ queries: [manifestQuery, forecastQuery] });
+  // The reference session gives the on-chain caps to show beside the research p90 caps; optional, never blocking.
+  const session = useSession(DEFAULT_SESSION).data;
   const err = m.error ?? f.error;
   return (
-    <Card title="Products" action={<span className="text-xs text-muted">quotes are model illustrations, not live prices</span>}>
+    <Card title="Products" action={<span className="text-xs text-muted">quotes and caps are research illustrations, not live prices or session terms</span>}>
       {err ? (
         <ErrorState error={err} onRetry={() => { m.refetch(); f.refetch(); }} />
       ) : !m.data || !f.data ? (
         <Skeleton className="h-24 w-full" />
       ) : (
-        <ul className="flex flex-col">
-          {m.data.products.map((p) => {
-            const status = productStatus(p);
-            return (
-              <li key={p.key} className="flex flex-col gap-1 border-b border-border/50 py-3 text-sm last:border-0 sm:flex-row sm:items-baseline sm:gap-4">
-                <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-                  <span className="font-medium">{p.name}</span>
-                  <Badge variant={BADGE[status.tone]}>{status.label}</Badge>
-                </div>
-                <div className="text-xs text-muted sm:text-right">
-                  <div>{status.detail}</div>
-                  <div className="num">
-                    Illustrative seller entry quote {fmtMillionthsPct(String(Math.trunc(quoteFor(f.data, p.key))))} of the maximum payout, illustration until settlement
-                  </div>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
+        <ProductsList manifest={m.data} forecast={f.data} session={session} />
       )}
       <div className="mt-3 flex flex-wrap gap-4 text-sm">
         <Link href="/forecast" className="text-primary hover:underline">Forecast</Link>
