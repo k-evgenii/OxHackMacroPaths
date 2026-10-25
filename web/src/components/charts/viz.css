@@ -1,0 +1,39 @@
+/* Chart tokens (dataviz reference palette). Dark is the app default; light applies under data-theme="light" or OS light. */
+.viz-root {
+  color-scheme: dark;
+  --viz-surface: #1a1a19;
+  --viz-text: #f0efec;
+  --viz-muted: #c3c2b7;
+  --viz-grid: rgba(255, 255, 255, 0.08);
+  --viz-value: #3987e5;
+  --viz-peak: #d95926;
+  --viz-excess: #3987e5;
+  --viz-k: #c3c2b7;
+  --viz-track: rgba(255, 255, 255, 0.1);
+}
+@media (prefers-color-scheme: light) {
+  :root:where(:not([data-theme="dark"])) .viz-root {
+    color-scheme: light;
+    --viz-surface: #fcfcfb;
+    --viz-text: #0b0b0b;
+    --viz-muted: #52514e;
+    --viz-grid: rgba(0, 0, 0, 0.08);
+    --viz-value: #2a78d6;
+    --viz-peak: #eb6834;
+    --viz-excess: #2a78d6;
+    --viz-k: #52514e;
+    --viz-track: rgba(0, 0, 0, 0.1);
+  }
+}
+:root[data-theme="light"] .viz-root {
+  color-scheme: light;
+  --viz-surface: #fcfcfb;
+  --viz-text: #0b0b0b;
+  --viz-muted: #52514e;
+  --viz-grid: rgba(0, 0, 0, 0.08);
+  --viz-value: #2a78d6;
+  --viz-peak: #eb6834;
+  --viz-excess: #2a78d6;
+  --viz-k: #52514e;
+  --viz-track: rgba(0, 0, 0, 0.1);
+}
