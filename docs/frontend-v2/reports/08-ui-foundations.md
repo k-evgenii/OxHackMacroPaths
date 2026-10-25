@@ -1,28 +1,42 @@
 # Report — Agent 08 UI foundations
 
 - Branch: `frontend-v2/08-ui-foundations`
-- Base SHA: `6d2865bf526f0bf980293d9cdcfec547acbfd9f8` (foundation checkpoint from `frontend-v2/integration` not yet merged)
+- Base: `6d2865b`, plus checkpoint 1 merged (`frontend-v2/integration` @ 85a62e8)
 
 ## Done
 
-- `packages/ui/src/styles.css`: light theme replaced with the approved warm-light tokens using the frozen `--mp-*` names (`--mp-bg #f2f1f5`, `--mp-surface #fafafc`, `--mp-surface-raised`, `--mp-text`, `--mp-muted #5f626e`, `--mp-primary #315cf5`, `--mp-chart-bg #101722`, `--mp-path`, `--mp-chart-muted`, `--mp-up #117653`, `--mp-down #b63749`, `--mp-radius-card/control/pill`). Legacy names (`--mp-ink`, `--mp-accent`, `--mp-surface-2`, ...) are kept as aliases so existing components and routes still render. Primary buttons now come out blue on the light theme. Cards use the 20px radius. Font stack prefers `--font-geist-sans`. Added `--mp-space-7: 48px`, the focus tokens `--mp-focus` and `--mp-focus-inverse` (inverse ring on `.mp-card--inverse` and `.mp-chart-surface`), 44px minimum touch targets on buttons, icon buttons, segments and chips, `prefers-reduced-motion` handling, and the styles for the state components. The dark theme block is unchanged.
-- `packages/ui/src/primitives.tsx`, already exported through the barrel, so the barrel needs no change:
-  - `Skeleton`, `EmptyState`, `ErrorState` and `PartialDataNotice` follow the exact interfaces.md props. ErrorState has `role="alert"` and PartialDataNotice has `role="status"` with the text "Partial data.". Retry buttons are `type="button"`. While `retrying` is set, the retry button is marked `aria-busy` and `aria-disabled` and its click is inert. The primitives render only the description the caller passes in, never an Error object.
-  - `StatusPill` keeps its props. It adds the tone `"unavailable"` (labelled "Status unavailable", with a hollow dot), exports a `statusLabels` map, and adds a `data-status` attribute. The status is always shown as text, and the dot is `aria-hidden`.
-- Tests: `web/test/ui-primitives/states.test.ts` (13 tests) cover the labelled single-status skeleton, empty vs error, retry callbacks and busy state, partial-data wording, long text, a text label for every status, button types, disabled state and icon-button names.
+- **Tokens (`styles.css`).** The light theme uses the approved warm-light `--mp-*` tokens. Legacy token names remain as aliases. Also added: the focus tokens `--mp-focus` and `--mp-focus-inverse` (the inverse ring applies on inverse and chart surfaces), 44px minimum targets, reduced-motion rules, a 20px card radius and the Geist font stack. The dark theme is unchanged.
+- **`primitives.tsx`:**
+  - `Skeleton`, `EmptyState`, `ErrorState` and `PartialDataNotice` now use the shared types from `primitives-types.ts`, which are re-exported.
+  - Retry buttons are `aria-busy` and inert while `retrying` is set.
+  - `StatusPill` has a new `"unavailable"` tone and a `statusLabels` map. Status is always shown as text.
+  - New `Disclosure({ summary, children, defaultOpen?, className? })` built on native `<details>`/`<summary>`, so it is safe in server components.
+- **`data.tsx`, holding display primitives:**
+  - `AmountValue({ value: string|null, unit?, direction?: "in"|"out"|"none", unavailableLabel?, className? })`. `null` renders "Unavailable", never 0. Direction adds a +/− sign and an aria label ("Incoming"/"Outgoing"), so it never relies on colour alone.
+  - `HoldingList({ children, label?, className? })` and `HoldingRow({ label, value, meta? })` render as a `<dl>`.
+  - `ShareBar({ title, segments: ShareSegment[], emptyLabel? })` with `ShareSegment = { label, value: bigint, formattedValue }`. Shares are computed with bigint and floor-rounded to basis points (`shareBps`, `formatBps`). Zero segments get no width, and every segment is listed with its label, value and percentage. An all-zero bar shows "Nothing deposited yet".
+- **`dialog.tsx` (new, `"use client"`):**
+  - `Dialog({ open, onClose, title, description?, children?, actions?, closeLabel?, className? })` is built on native `<dialog>` with `showModal()`. Escape, the backdrop and the named close button all call `onClose`. The dialog is labelled by its title.
+  - **`Explain`**, the "explain this number" popover for worker 12: `Explain({ label, children, trigger?, title?, className? })`.
+    - The trigger is a 44px `type="button"` with `aria-label={label}`, `aria-expanded` and `aria-controls`.
+    - The panel is a focusable `role="region"`, and focus moves to it on open.
+    - Escape closes the panel and returns focus to the trigger. Pointer-down outside closes it, which also covers touch.
+    - Content is whatever the caller passes; the component does no number formatting.
+- **`session.ts` (curator findings).** `SIDE_LABELS` is now `["More", "Less"]`; Protection/Counterparty are removed. `sideSegments` now returns `{ label, value: bigint }[]`, and `totalLocked` now returns a `bigint`; the float math is gone. I added a `big()` helper. No web code consumed these.
+- **Tests (`web/test/ui-primitives/`).** `states.test.ts`, `holdings-dialog.test.tsx` and `share-explain.test.tsx`, 26 tests in total.
 
-## Checks run
+## Checks
 
-`npx vitest run --config test/ui-primitives/vitest.config.ts test/ui-primitives` in WSL: 13/13 passed. I ran `npm ci` in `web/` in WSL. I did not run tsc.
-
-## Not done / blockers
-
-- **Screenshots:** none. There is no preview harness in the foundation yet, so I did not check the 375, 768 or 1440 px layouts in a browser.
-- **CompositionBar zero state:** this lives in `charts.tsx`, which Agent 09 owns. The brief asks for a truthful zero state, so this request goes to 09/15: the CompositionBar must not set a minimum width on segments with value 0, and it must render a text label and value for each segment.
-- Not added yet: `SegmentedControl` (exists in `navigation.tsx`, unchanged), Dialog and Disclosure primitives, and new holding display primitives. Card, Button and IconButton APIs are unchanged.
+- **Tests:** `npx vitest run --config test/ui-primitives/vitest.config.ts test/ui-primitives` passes 26/26.
+- **Stopgap config kept.** I restored `web/test/ui-primitives/vitest.config.ts`. With only the foundation wiring, all suites fail: `@macropaths/ui` is a symlink to `packages/ui`, and `react/jsx-dev-runtime` cannot be resolved from there.
+- **tsc:** 59 errors repo-wide. The errors in the kit are all `Cannot find module 'react'` from `packages/ui/src/*` plus errors that follow from it (`ButtonProps` loses its HTML attributes, and one implicit `any`). The rest are other owners' files. Nothing in my code fails beyond the React resolution.
 
 ## Integration requests (Agent 15)
 
-1. Wire `@macropaths/ui` as a web dependency, or add a resolver config. Today `packages/ui` has no `node_modules`, so `react/jsx-*` cannot be resolved from it under vitest. My owned `web/test/ui-primitives/vitest.config.ts` is a stopgap and can be deleted once that is wired. Also, the default vitest `include` only matches `*.test.ts`.
-2. The barrel needs no change. New exports via `primitives`: `Skeleton`, `EmptyState`, `ErrorState`, `PartialDataNotice`, `statusLabels` and their props types. `StatusTone` now includes `"unavailable"`.
-3. Legacy adapter consumers: `session.ts` is unchanged and still exported as `session`.
+1. Make `react` and `@types/react` resolvable from `packages/ui`, so both tsc and vitest work. Options: `compilerOptions.paths` or `typeRoots` in `web/tsconfig`, plus vitest `resolve.dedupe`/alias or `preserveSymlinks`. Once that is done, my stopgap config can be deleted.
+2. Barrel: add `export * from "./dialog";` to `packages/ui/src/index.ts` to expose `Dialog` and `Explain`. Everything else is already exported through `primitives` and `data`.
+3. CompositionBar in `charts.tsx` (Agent 09) still uses float shares. Prefer `ShareBar` for the four-side composition, or have 09 adopt `shareBps`.
+
+## Not done
+
+- **Screenshots:** none. There is no preview harness, so I did not check the 375 / 768 / 1440 px layouts in a browser.
