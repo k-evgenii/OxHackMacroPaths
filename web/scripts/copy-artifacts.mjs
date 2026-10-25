@@ -1,18 +1,11 @@
-// Refresh web/public/data/{manifest,forecast,planner}.json from the repo's forecast/ dir when it exists.
-// Without it (fresh clone, CI) the committed copies are kept silently.
-import { copyFileSync, existsSync, mkdirSync } from "node:fs";
+// Refresh web/public/data from research output only when asked: `node scripts/copy-artifacts.mjs --from ../forecast`.
+// Without --from it does nothing, so dev, build and CI never overwrite the published, hash-pinned bundle
+// (forecast/ in the repo holds newer research output than the bundle). --from runs the validated publication
+// (scripts/artifacts/publish.mjs), which also rewrites bundle-identity.json.
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 
-const web = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const src = path.resolve(web, "../forecast");
-const dst = path.join(web, "public", "data");
-const map = { "manifest.json": "manifest.json", "table.json": "forecast.json", "planner.json": "planner.json" };
-
-if (existsSync(src)) {
-  mkdirSync(dst, { recursive: true });
-  for (const [from, to] of Object.entries(map)) {
-    const f = path.join(src, from);
-    if (existsSync(f)) copyFileSync(f, path.join(dst, to));
-  }
+const i = process.argv.indexOf("--from");
+if (i >= 0) {
+  const { publish, runCli } = await import("./artifacts/fsbundle.mjs");
+  runCli(() => console.log(`published research bundle ${publish(path.resolve(process.argv[i + 1])).id}`));
 }
