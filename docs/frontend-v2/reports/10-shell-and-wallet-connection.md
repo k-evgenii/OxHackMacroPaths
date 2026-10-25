@@ -47,7 +47,7 @@ Consumer requests from the coordinator:
 
 ## Evidence
 
-See the final message for the exact vitest and tsc results run after checkpoint 1. The tests are in `src/lib/queries/*.test.ts`, `src/features/wallet-connect/controller.test.ts` and `src/features/shell/selection.test.ts`. They cover:
+After merging integration e442d21: `npx vitest run src/features src/lib` passed 40 of 40 across 5 files. `npx tsc --noEmit` reports 0 errors in owned files. The 22 errors it does report are all in `../packages/ui` (missing `react` types under packages/ui), which this worker does not own. The tests are in `src/lib/queries/*.test.ts`, `src/features/wallet-connect/controller.test.ts` and `src/features/shell/selection.test.ts`. They cover:
 - frozen keys and owner isolation;
 - polling policy;
 - `retry: 0` for history;
