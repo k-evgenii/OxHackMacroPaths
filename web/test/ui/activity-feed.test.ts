@@ -15,6 +15,8 @@ const claimed = (refund: boolean): EventView => ({
   signature: SIG,
   slot: 1,
   blockTime: null,
+  session: OWNER,
+  eventIndex: refund ? 1 : 0,
   data: { owner: OWNER, amounts: ["1", "2"], refund },
 });
 

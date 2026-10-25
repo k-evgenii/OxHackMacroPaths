@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "cluster": "devnet",
+  "defaultSession": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+  "sessions": [
+    {
+      "address": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "presentation": {
+        "label": "Session A \u00b7 2021\u20132024 replay",
+        "mode": "historical_replay",
+        "layout": "v1",
+        "firstPeriodId": 202101,
+        "researchBundleId": null
+      }
+    }
+  ],
+  "products": [
+    {
+      "key": "cooling",
+      "name": "Inflation Cooling",
+      "description": "Cover that pays as inflation falls from its peak.",
+      "status": "supported",
+      "productIndex": 0
+    },
+    {
+      "key": "excess",
+      "name": "Excess Inflation",
+      "description": "Cover that pays as inflation stays above the threshold.",
+      "status": "supported",
+      "productIndex": 1
+    },
+    {
+      "key": "fuel",
+      "name": "Fuel",
+      "description": "Research only: gasoline price cover model.",
+      "status": "research",
+      "productIndex": null
+    }
+  ],
+  "research": {
+    "bundleId": "research-74f8198078d806de",
+    "path": "/api/artifacts/bundle"
+  }
+}

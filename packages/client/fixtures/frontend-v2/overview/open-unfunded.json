@@ -1,0 +1,129 @@
+{
+  "_synthetic": "SYNTHETIC test data for frontend v2 scenarios; not an on-chain read.",
+  "session": {
+    "address": "ApcEnrz7vQgXDSJoHJwQXA8v7pF7FtUxnfrqbigp8gWP",
+    "sessionId": "1792890196",
+    "authority": "EuUN3PSjtV5bp1nY2JoFjPSCGxJjAXPMx7TA2kKSwgmy",
+    "playMint": "AvVf2k9ixDvLjGnjCD4MDGTVBFfrhvzGgzwvptweaPWW",
+    "vaults": [
+      "rkJxRNiRJHz9M6xMJ58mRPF3BdnDchSKZxxmtJA2Y2P",
+      "VDDFXSV5kiggVMTVpYq5hDUN11iAUcx9dbsVQy2JgPY"
+    ],
+    "state": "Open",
+    "datasetId": "328f498b394e988f88f763947e0c656cb0e988321c3f66228c8549946401143e",
+    "commitment": "b5a06c8e2aa10b7fe1339666afb92af7a30cf98e318efde9acdc4a6c5733abef",
+    "terminal": "0000000000000000000000000000000000000000000000000000000000000000",
+    "integrityOk": false,
+    "nObs": 48,
+    "nextIndex": 0,
+    "lastPeriodId": 202412,
+    "terms": {
+      "k": "40000",
+      "dCap": "80000",
+      "aCap": "800000"
+    },
+    "depositDeadline": 1792889792,
+    "replayDeadline": 1792893392,
+    "sideTotals": [
+      "20000000",
+      "10000000",
+      "0",
+      "5000000"
+    ],
+    "matched": [
+      "0",
+      "0"
+    ],
+    "stats": {
+      "peak": null,
+      "maxDecline": "0",
+      "excessAcc": "0"
+    },
+    "scores": [
+      "0",
+      "0"
+    ],
+    "pBudget": [
+      "0",
+      "0",
+      "0",
+      "0"
+    ],
+    "rBudget": [
+      "0",
+      "0",
+      "0",
+      "0"
+    ],
+    "counts": {
+      "positions": 1,
+      "claimed": 0,
+      "covers": 0,
+      "coversClaimed": 0,
+      "sellerProductsOpen": 0
+    },
+    "path": [],
+    "_synthetic": "SYNTHETIC test data for frontend v2 scenarios; not an on-chain read."
+  },
+  "meta": {
+    "source": "fixture",
+    "fetchedAt": "2026-10-25T00:00:00.000Z"
+  },
+  "presentation": {
+    "label": "Synthetic Open (unfunded seller)",
+    "mode": "historical_replay",
+    "layout": "v1",
+    "firstPeriodId": 202101,
+    "researchBundleId": null
+  },
+  "derived": {
+    "currentScores": null,
+    "poolDeposited": "35000000"
+  },
+  "vault": {
+    "status": "ok",
+    "data": {
+      "amounts": [
+        "30000000",
+        "5000000"
+      ],
+      "total": "35000000"
+    }
+  },
+  "coverOffer": {
+    "status": "ok",
+    "data": {
+      "seller": {
+        "address": "FFeNnWt7RsZkgFiGC1ivRdLyLsjxXMMgs4tduiBbcZsa",
+        "seller": "Fv6d1wJGDa4aDXFav1orCdoWoGcbiu5dUaEsFFvux3Ho",
+        "freeCash": "0",
+        "escrow": [
+          "0",
+          "0"
+        ],
+        "nSold": [
+          "0",
+          "0"
+        ],
+        "premium": [
+          "0",
+          "0"
+        ],
+        "settled": [
+          false,
+          false
+        ]
+      },
+      "quote": {
+        "address": "48ts7DYibxjwD9ymbc4XnkuLfVtACWL4AHxt3v4jbahF",
+        "p": [
+          "384852",
+          "57153"
+        ],
+        "isSet": true,
+        "frozen": false
+      },
+      "status": "unfunded"
+    }
+  }
+}
