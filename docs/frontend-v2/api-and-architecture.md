@@ -81,7 +81,7 @@ Publish manifest, forecast and planner as one versioned bundle with content hash
 
 Remove artifact copying from predev/prebuild. Provide explicit sync plus validation commands; normal builds must not rewrite published data. Bundle imports or explicit build tracing must include the artifacts in serverless deployment; no dependence on a writable working directory.
 
-Reference A's test caps differ from research p90 caps. The inspected Fuel artifact uses 72833, while newer prose mentions 72844. A published bundle uses one internally consistent revision. Forecast/session overlays require a verified matching association; never silently borrow a research quote or score for another term set.
+Reference A's test caps differ from research p90 caps. In the inspected bundle the Fuel cap is 36411 (p90, 1e-4 usd-months) and the Fuel showcase statistic for 2021-01..2024-12 is 72833 (accumulated excess, 1e-4 usd-months, i.e. $7.2833 per gallon, score 1.0). Some newer prose cites 72844 for that statistic; no committed artifact contains it. A published bundle uses one internally consistent revision. Forecast/session overlays require a verified matching association; never silently borrow a research quote or score for another term set.
 
 ## Client query freshness
 

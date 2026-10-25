@@ -140,7 +140,7 @@ declare function summarizeHolding(
 ): HoldingSummary;
 ```
 
-For position paid, sum deposited; for cover paid, sum premiumPaid; cover.maximumPayout is the exact sum of cover.units. sumAmounts is the approved bigint reduction seam for feature aggregates; it never combines currencies/mints or unavailable entries. Amount means total payout/refund, not net profit. Claimed preserves historical amount but unclaimed is zero. If an existing unclaimed holding has an undetermined amount, unclaimedTotal is null rather than a misleading known total. With no holdings, unclaimedTotal is '0'. Amounts use the session's existing mint.
+For position paid, sum deposited; for cover paid, sum premiumPaid; cover.maximumPayout is the exact sum of cover.units. sumAmounts is the approved bigint reduction seam for feature aggregates; it never combines currencies/mints or unavailable entries. Amount means total payout/refund, not net profit. Claimed preserves historical amount but unclaimed is zero. If an existing unclaimed holding has an undetermined amount, unclaimedTotal is null rather than a misleading known total; it is also null when a holding has a Running illustration (status 'illustration', unclaimed null), because an illustration is not claimable. With no holdings, unclaimedTotal is '0'. Amounts use the session's existing mint.
 
 Running uses exact current scores and temporary pool budgets; Open is undetermined; Refunding uses deposits/premiums; Settled uses view payouts. Never convert token sums to Number. Helper display status is not an on-chain state.
 
@@ -180,6 +180,7 @@ type HistoryTransaction = {
   blockTime: number | null;
   finality: 'confirmed' | 'finalized';
   failed: boolean;
+  parentageResolved?: boolean; // Amendment 1: false = parentage unknown; null parents then mean unknown, so wallet decoding returns amount:null
   accountKeys: string[];
   instructions: InstructionNode[];
   logs: string[];
