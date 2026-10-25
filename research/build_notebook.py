@@ -32,7 +32,7 @@ sys.path.insert(0, str(pathlib.Path.cwd()))
 warnings.filterwarnings("ignore")
 import numpy as np, pandas as pd, matplotlib.pyplot as plt
 from macrolib import panel, fit_ou, rolling_windows, yoy, zscore, simulate_ar1, max_decline, max_rise, accumulated_excess, time_above, time_below, sahm_gap, load
-from products import PRODUCTS, BY_KEY, PANEL_SPEC
+from products import PRODUCTS, BY_KEY, OFFERABLE, PANEL_SPEC
 pd.set_option("display.width", 200, "display.max_columns", 40, "display.float_format", lambda v: f"{v:,.3f}")
 plt.rcParams["figure.dpi"] = 110
 P = panel(PANEL_SPEC)
@@ -172,7 +172,7 @@ What the heatmap and the crude clustering agree on, and what they don't:
 
 ## 6. The sub-pool menu
 
-Each row below is one two-sided sub-pool. The "more" side buys protection against the event; the "less" side is the natural party on the other side of that exposure, or a funded seller. All of them settle on the same committed monthly row, in one session, by the same side-budget rule.
+Each row below is one two-sided sub-pool. Rows built on copyrighted third-party data (the mortgage rate and VIX) stay in the history and correlation sections but are kept off this menu and out of the joint simulation; the reason is printed under the table. The "more" side buys protection against the event; the "less" side is the natural party on the other side of that exposure, or a funded seller. All of them settle on the same committed monthly row, in one session, by the same side-budget rule.
 """)
 code(r"""
 menu = pd.DataFrame([{
@@ -182,9 +182,13 @@ menu = pd.DataFrame([{
     "declared cap rule": p.cap_rule,
     "computed p90 cap": T.loc[p.name, "p90 (cap candidate)"],
     "realised score at computed p90 cap": T.loc[p.name, "score at p90 cap"],
-} for p in PRODUCTS]).set_index("product")
+} for p in OFFERABLE]).set_index("product")
 with pd.option_context("display.max_colwidth", 60):
     display(menu)
+print("kept off the menu (research rows only):")
+for p in PRODUCTS:
+    if p.not_offerable:
+        print(f"  {p.name}: {p.not_offerable}")
 """)
 
 md(r"""
@@ -245,7 +249,7 @@ md(r"""
 Expected payouts add regardless of dependence; the joint distribution matters for a seller's variance and for the tail where several sub-pools pay at once. A quick joint model: independent AR(1) dynamics per row, residuals correlated as in the pre-2021 residual correlation matrix (a small hand-written Cholesky keeps the notebook dependency-free).
 """)
 code(r"""
-keys = [k for k in ["excess", "hiking", "inversion", "mortgage", "real_wage", "gasoline", "vol", "housing"] if k in R]
+keys = [k for k in ["excess", "hiking", "inversion", "real_wage", "gasoline", "housing"] if k in R and not BY_KEY[k].not_offerable]
 fits_j = {k: fit_ou(R[k].rename(k)) for k in keys}
 resid = pd.DataFrame({k: (R[k].shift(-1) - (fits_j[k]["a"] + fits_j[k]["b"] * R[k]))[:HIST_END] for k in keys}).dropna()
 Rc = resid.corr().values

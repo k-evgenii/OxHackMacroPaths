@@ -17,6 +17,11 @@ from macrolib import (accumulated_excess, max_decline, max_rise, sahm_gap, time_
                       time_below, yoy, zscore)
 
 
+# FRED's series notes (checked 25 Oct 2026): "Copyright, 2016, <owner>. Reprinted with permission."
+COPYRIGHTED = ("copyrighted third-party data on FRED (\"Copyright, 2016, {owner}. Reprinted with permission.\"); "
+               "settling on it would need the owner's permission, so it is research only")
+
+
 @dataclass
 class Product:
     key: str
@@ -31,6 +36,7 @@ class Product:
     build: Callable[[pd.DataFrame], pd.Series] = field(repr=False)
     fn: Callable = field(repr=False)
     fn_kw: dict = field(default_factory=dict, repr=False)
+    not_offerable: str = ""       # why the row stays as research only and is kept off the menu
 
     def series(self, P: pd.DataFrame) -> pd.Series:
         s = self.build(P)
@@ -101,7 +107,8 @@ PRODUCTS: list[Product] = [
             "homebuilders, realtors, mortgage originators",
             "existing fixed-rate mortgage holders (their asset gains value)",
             "max_rise", None, "90th pct of pre-2021 windows",
-            lambda P: P["MORTGAGE30US"], max_rise),
+            lambda P: P["MORTGAGE30US"], max_rise,
+            not_offerable=COPYRIGHTED.format(owner="Freddie Mac")),
     Product("gasoline", "Fuel Pass-through", "gasoline, dollars per gallon",
             "sustained gasoline above 3.50 dollars: dollar-months",
             "fleets, airlines, delivery firms, commuters",
@@ -131,7 +138,8 @@ PRODUCTS: list[Product] = [
             "equity-heavy portfolios, volatility sellers",
             "vol funds, long-vol strategies",
             "time_above", 25.0, "48 months",
-            lambda P: P["VIXCLS"], time_above, {"k": 25.0}),
+            lambda P: P["VIXCLS"], time_above, {"k": 25.0},
+            not_offerable=COPYRIGHTED.format(owner="Chicago Board Options Exchange, Inc")),
     Product("openings", "Hiring Freeze", "job openings per unemployed (v/u)",
             "decline in labour-market tightness from its peak",
             "staffing firms, HR software, wage-indexed contracts",
@@ -148,6 +156,7 @@ PRODUCTS: list[Product] = [
 ]
 
 BY_KEY = {p.key: p for p in PRODUCTS}
+OFFERABLE = [p for p in PRODUCTS if not p.not_offerable]
 
 PANEL_SPEC = {
     "CPIAUCNS": "mean", "PCEPILFE": "mean", "UNRATE": "mean", "FEDFUNDS": "mean",
