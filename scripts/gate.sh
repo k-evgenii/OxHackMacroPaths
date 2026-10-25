@@ -31,7 +31,9 @@ for d in snapshots raw; do
 done
 
 pytest_file() { # path
-  if [ -f "$1" ]; then run "py:$1" "$PY" "$1"; else skip "py:$1" "file absent"; fi
+  if [ ! -f "$1" ]; then skip "py:$1" "file absent"
+  elif grep -q "^import pytest" "$1" && ! "$PY" -c "import pytest" 2>/dev/null; then skip "py:$1" "pytest not installed"
+  else run "py:$1" "$PY" "$1"; fi
 }
 for t in data/test_presentation.py research/test_planner.py forecast/test_link.py tests/data/test_fetch.py; do
   pytest_file "$t"
