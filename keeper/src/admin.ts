@@ -7,10 +7,12 @@
  *   --idl <file>           program IDL (default packages/client/idl.json)
  *   --session-file <file>  default data/session.json
  *   --treasury <pubkey>    sweep: receives the vault dust (PLAY account created if missing)
- *   --keypair <file>       claim: position owner. seller buy: buyer
+ *   --keypair <file>       claim: position owner (default: the keeper from .env). seller buy: buyer.
+ *                          seller claim-cover: cover owner
  *   seller fund <PLAY>
  *   seller quote --p0 <millionths> --p1 <millionths> [--from-forecast forecast/table.json]
  *   seller buy --product <0|1> --units <PLAY> --keypair <file>
+ *   seller claim-cover --keypair <file>    (after settle; sweep needs every cover claimed)
  *   seller settle --product <0|1>
  *   seller withdraw <PLAY>
  *
@@ -35,7 +37,7 @@ import {
   type Ctx,
 } from "./ops.js";
 import { parsePlay } from "./program.js";
-import { buyCover, fundSeller, loadForecastPrices, quoteSeller, settleSeller, withdrawSeller } from "./seller.js";
+import { buyCover, claimCover, fundSeller, loadForecastPrices, quoteSeller, settleSeller, withdrawSeller } from "./seller.js";
 
 const USAGE =
   "usage: admin.ts <seed|lock|settle|status|expire|sweep|claim|seller> [--amounts a,b,c,d] [--idl f] [--session-file f] [--treasury <pubkey>] [--keypair <file>]";
@@ -114,6 +116,14 @@ async function runSeller(ctx: Ctx): Promise<number> {
     await buyCover(ctx, parseProduct(args.product), parsePlay(args.units), loadKeypair(keypairPath(args.keypair, ctx.repoRoot)));
     return 0;
   }
+  if (sub === "claim-cover" || sub === "claim") {
+    if (!args.keypair) {
+      console.error("usage: admin.ts seller claim-cover --keypair <file>");
+      return 2;
+    }
+    await claimCover(ctx, loadKeypair(keypairPath(args.keypair, ctx.repoRoot)));
+    return 0;
+  }
   if (sub === "settle") {
     await settleSeller(ctx, parseProduct(args.product));
     return 0;
@@ -127,7 +137,7 @@ async function runSeller(ctx: Ctx): Promise<number> {
     await withdrawSeller(ctx, parsePlay(amount));
     return 0;
   }
-  console.error("usage: admin.ts seller <fund|quote|buy|settle|withdraw>");
+  console.error("usage: admin.ts seller <fund|quote|buy|claim-cover|settle|withdraw>");
   return 2;
 }
 
@@ -141,10 +151,6 @@ async function main(): Promise<number> {
     console.error("usage: admin.ts sweep --treasury <pubkey>");
     return 2;
   }
-  if (cmd === "claim" && !args.keypair) {
-    console.error("usage: admin.ts claim --keypair <file>");
-    return 2;
-  }
   const ctx = loadCtx({ idl: args.idl, sessionFile: args["session-file"] });
   console.log(`session ${ctx.session.toBase58()}`);
   if (cmd === "seed") await seedSides(ctx, parseSides(args.amounts, parsePlay));
@@ -152,7 +158,10 @@ async function main(): Promise<number> {
   if (cmd === "settle") await settleSession(ctx);
   if (cmd === "expire") await expireSession(ctx);
   if (cmd === "sweep") await sweepDust(ctx, new PublicKey(args.treasury!));
-  if (cmd === "claim") await claimPosition(ctx, loadKeypair(keypairPath(args.keypair!, ctx.repoRoot)));
+  if (cmd === "claim") {
+    // No --keypair: the keeper's own position (the seeder), read from .env like every other command.
+    await claimPosition(ctx, args.keypair ? loadKeypair(keypairPath(args.keypair, ctx.repoRoot)) : loadKeypair());
+  }
   if (cmd === "seller") {
     const code = await runSeller(ctx);
     if (code !== 0) return code;
