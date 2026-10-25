@@ -60,14 +60,12 @@ export function decimalToMillionths(raw: string): bigint {
   return whole + frac;
 }
 
-function toMillionths(v: unknown, what: string): bigint {
-  if (typeof v === "string") return decimalToMillionths(v);
-  if (typeof v === "number" && Number.isFinite(v) && v >= 0) {
-    const text = JSON.stringify(v);
-    if (!/^(\d+)(?:\.(\d+))?$/.test(text)) throw new Error(`${what} ${text} is not a plain decimal`);
-    return decimalToMillionths(text);
-  }
-  throw new Error(`${what} must be a decimal probability`);
+function toScaled(v: unknown, what: string, digits: number): bigint {
+  const text = typeof v === "number" && Number.isFinite(v) && v >= 0 ? JSON.stringify(v) : v;
+  if (typeof text !== "string") throw new Error(`${what} must be a decimal probability`);
+  const m = /^(\d+)(?:\.(\d+))?$/.exec(text.trim());
+  if (!m) throw new Error(`${what} ${text} is not a plain decimal`);
+  return BigInt(m[1]!) * 10n ** BigInt(digits) + BigInt((m[2] ?? "").slice(0, digits).padEnd(digits, "0") || "0");
 }
 
 /** `clamp(V + floor(σ / 2), 0.05, 0.95)` in millionths. */
@@ -79,19 +77,41 @@ export function clampQuote(vMillionths: bigint, sigmaMillionths: bigint): bigint
 }
 
 /**
- * Row 0 of a forecast table. `V` and `sigma` are probabilities; the same clamped price is used
- * for both products. Accepts a bare array or `{ rows: [...] }`.
+ * Entry prices from a forecast table, in millionths, as [cooling, excess].
+ * - `forecast/table.json`: its declared `quotes.p` when present (the policy's own output), otherwise
+ *   `clamp(V + sigma/2)` from row 0's `cooling` and `excess` cells.
+ * - A flat row 0 with `V` and `sigma` (bare array or `{ rows: [...] }`) gives the same price to both products.
  */
 export function pricesFromForecast(json: unknown): [bigint, bigint] {
+  const quotes = (json as { quotes?: { p?: unknown } } | null)?.quotes?.p;
+  if (Array.isArray(quotes)) {
+    if (quotes.length !== 2 || !quotes.every((x) => Number.isInteger(x))) throw new Error("forecast quotes.p must be two integers");
+    const [p0, p1] = quotes.map((x) => BigInt(x as number)) as [bigint, bigint];
+    requireQuote(p0, "quotes.p[0]");
+    requireQuote(p1, "quotes.p[1]");
+    return [p0, p1];
+  }
   const rows = Array.isArray(json) ? json : (json as { rows?: unknown } | null)?.rows;
   if (!Array.isArray(rows) || rows.length === 0) throw new Error("forecast table has no row 0");
   const row = rows[0] as Record<string, unknown>;
   if (!row || typeof row !== "object") throw new Error("forecast row 0 is not an object");
-  const v = row.V ?? row.v;
-  const sigma = row.sigma ?? row["σ"];
-  if (v === undefined || sigma === undefined) throw new Error("forecast row 0 needs V and sigma");
-  const p = clampQuote(toMillionths(v, "V"), toMillionths(sigma, "sigma"));
+  const cell = (c: unknown, what: string): bigint => {
+    const r = c as Record<string, unknown> | null;
+    const v = r?.V ?? r?.v;
+    const sigma = r?.sigma ?? r?.["σ"];
+    if (v === undefined || sigma === undefined) throw new Error(`forecast ${what} needs V and sigma`);
+    return quoteFrom(v, sigma);
+  };
+  if (row.cooling !== undefined || row.excess !== undefined) return [cell(row.cooling, "row 0 cooling"), cell(row.excess, "row 0 excess")];
+  const p = cell(row, "row 0");
   return [p, p];
+}
+
+/** `clamp(floor((V + sigma/2)·10^6))`, rounding once on the exact decimals (not after truncating each). */
+function quoteFrom(v: unknown, sigma: unknown): bigint {
+  const scale = 12;
+  const p = (toScaled(v, "V", scale) * 2n + toScaled(sigma, "sigma", scale)) / (2n * 10n ** BigInt(scale - 6));
+  return p < QUOTE_MIN ? QUOTE_MIN : p > QUOTE_MAX ? QUOTE_MAX : p;
 }
 
 export function loadForecastPrices(file: string): [bigint, bigint] {
@@ -202,32 +222,50 @@ export async function quoteSeller(ctx: Ctx, p0: bigint, p1: bigint): Promise<str
   ]);
 }
 
-/** buy_cover. Creates the buyer's PLAY account when it is missing and mints a shortfall from the keeper. */
+/**
+ * buy_cover up to `units` for `product` in `buyer`'s cover. Sends nothing when the cover already holds that
+ * many (the program adds units on every call, so a rerun would otherwise buy twice). Mints the buyer only the
+ * premium shortfall, `ceil(p·delta / ONE)`, and creates the buyer's PLAY account when it is missing.
+ */
 export async function buyCover(ctx: Ctx, product: 0 | 1, units: bigint, buyer: Keypair): Promise<string | null> {
   if (units <= 0n) throw new Error("units must be positive");
-  await requireOpen(ctx, "buy");
   const program = programId(ctx);
   const quote = quoteAddress(program, ctx.session);
   const seller = sellerAddress(program, ctx.session);
+  const cover = coverAddress(program, ctx.session, buyer.publicKey);
+  const existing = await fetchDecoded(ctx.connection, ctx.idl, "Cover", cover);
+  const held = existing ? big((existing.units as unknown[])[product]) : 0n;
+  if (held >= units) {
+    console.log(`buy: cover already holds ${play(held)} PLAY of product ${product}`);
+    return null;
+  }
+  const delta = units - held;
+  await requireOpen(ctx, "buy");
   const q = await fetchDecoded(ctx.connection, ctx.idl, "EntryQuote", quote);
   if (!q?.is_set) throw new Error("cannot buy: quote is not set");
-  if (!(await fetchDecoded(ctx.connection, ctx.idl, "Seller", seller))) throw new Error("cannot buy: seller is not funded");
-  const { ata, ixs } = await playFor(ctx, buyer.publicKey, units);
+  const s = await fetchDecoded(ctx.connection, ctx.idl, "Seller", seller);
+  if (!s) throw new Error("cannot buy: seller is not funded");
+  const p = big((q.p as unknown[])[product]);
+  const premium = (p * delta + 999_999n) / 1_000_000n;
+  const sellerPays = delta - premium;
+  const cash = big(s.free_cash);
+  if (sellerPays > cash) throw new Error(`cannot buy: seller needs ${play(sellerPays)} PLAY free_cash, has ${play(cash)}`);
+  const { ata, ixs } = await playFor(ctx, buyer.publicKey, premium);
   ixs.push(
-    instruction(ctx.idl, "buy_cover", { product, units: bn(units) }, {
+    instruction(ctx.idl, "buy_cover", { product, units: bn(delta) }, {
       buyer: buyer.publicKey,
       session: ctx.session,
       quote,
       seller,
       seller_ta: sellerTaAddress(program, ctx.session),
-      cover: coverAddress(program, ctx.session, buyer.publicKey),
+      cover,
       buyer_ta: ata,
       vault: new PublicKey(ctx.file.vaults[product]),
       token_program: TOKEN_PROGRAM_ID,
       system_program: SystemProgram.programId,
     }),
   );
-  console.log(`buy: product ${product} ${play(units)} PLAY`);
+  console.log(`buy: product ${product} ${play(delta)} PLAY (premium ${play(premium)})${held ? `, cover held ${play(held)}` : ""}`);
   return sendInstructions(ctx, "buy_cover", ixs, [ctx.keeper, buyer]);
 }
 

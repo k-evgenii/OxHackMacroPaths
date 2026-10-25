@@ -31,6 +31,18 @@ test("clampQuote: V + floor(sigma/2), bounded by 0.05 and 0.95", () => {
   assert.equal(clampQuote(900_000n, 200_000n), QUOTE_MAX);
 });
 
+test("pricesFromForecast: forecast/table.json uses its declared quotes", () => {
+  assert.deepEqual(pricesFromForecast({ quotes: { p: [384852, 57153] }, rows: [] }), [384852n, 57153n]);
+  assert.throws(() => pricesFromForecast({ quotes: { p: [10, 57153] } }), /outside/);
+});
+
+test("pricesFromForecast: per-product row 0 rounds once on the exact decimals", () => {
+  const row = { cooling: { V: 0.318360369, sigma: 0.13298382564574474 }, excess: { V: 0.0243611709, sigma: 0.0655849806919564 } };
+  // 0.318360369 + 0.0664919128... = 0.3848522818... -> 384852 (truncating each first would give 384851)
+  assert.deepEqual(pricesFromForecast({ rows: [row] }), [384852n, 57153n]);
+  assert.throws(() => pricesFromForecast({ rows: [{ cooling: {}, excess: {} }] }), /cooling needs V and sigma/);
+});
+
 test("pricesFromForecast: row 0, both products", () => {
   assert.deepEqual(pricesFromForecast([{ V: "0.40", sigma: "0.20" }]), [500_000n, 500_000n]);
   assert.deepEqual(pricesFromForecast({ rows: [{ V: 0.01, sigma: 0 }] }), [QUOTE_MIN, QUOTE_MIN]);
