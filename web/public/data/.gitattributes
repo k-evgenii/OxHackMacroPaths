@@ -1,0 +1,2 @@
+# Bundle identity hashes the exact bytes of these files; never let checkout rewrite line endings.
+*.json text eol=lf

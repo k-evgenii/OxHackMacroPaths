@@ -12,7 +12,6 @@
  */
 
 import type { ChangeRow } from "./data";
-import type { CompositionSegment } from "./charts";
 import type { PathPoint } from "./charts";
 import type { StatusTone } from "./primitives";
 
@@ -49,10 +48,9 @@ export const PRODUCTS = [
   { index: 1, key: "excess", name: "Excess Inflation", stat: "Accumulated excess above K" },
 ] as const;
 
-/* Side meaning, assumed from agents/18-planner-screen.md ("product 1 side 0" is the
-   cover a hedger buys). Rename here once the program spec confirms the wording.
-   Copy rule: never say bet, option, insurance or fair value. */
-export const SIDE_LABELS = ["Protection", "Counterparty"] as const;
+/* Approved side names (product-and-content.md): More benefits from a larger
+   product score, Less from a smaller one. Never Protection/Counterparty. */
+export const SIDE_LABELS = ["More", "Less"] as const;
 
 export const num = (x: NumLike): number => (typeof x === "number" ? x : Number(x.toString()));
 
@@ -147,16 +145,22 @@ export function scoreRows(s: SessionLike): ChangeRow[] {
   }));
 }
 
-/* CompositionBar segments: four product × side buckets in fixed order. */
-export function sideSegments(s: SessionLike): CompositionSegment[] {
+/* Exact integer view of a NumLike (BN / bigint / decimal string). */
+export const big = (x: NumLike): bigint =>
+  typeof x === "bigint" ? x : BigInt(typeof x === "number" ? Math.trunc(x) : x.toString());
+
+/* Four product x side buckets in fixed order, as exact base-unit bigints with
+   labels. Feed into ShareBar (data.tsx), which computes shares with bigint. */
+export function sideSegments(s: SessionLike): Array<{ label: string; value: bigint }> {
   return s.sideTotals.map((t, i) => ({
     label: `${PRODUCTS[Math.floor(i / 2)].name} · ${SIDE_LABELS[i % 2]}`,
-    value: num(t) / 10 ** PLAY_DECIMALS,
+    value: big(t),
   }));
 }
 
-export function totalLocked(s: SessionLike): number {
-  return s.sideTotals.reduce<number>((acc, t) => acc + num(t), 0);
+/* Sum of side totals in PLAY base units (historical pool contributions, not current vault value). */
+export function totalLocked(s: SessionLike): bigint {
+  return s.sideTotals.reduce<bigint>((acc, t) => acc + big(t), BigInt(0));
 }
 
 export function replayProgress(s: SessionLike): number {

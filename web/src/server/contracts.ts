@@ -51,6 +51,8 @@ export type HistoryTransaction = {
   blockTime: number | null;
   finality: "confirmed" | "finalized";
   failed: boolean;
+  /** Amendment 1: false means inner-instruction parentage could not be resolved (null parents are then "unknown", not "direct child"). Absent or true means resolved. */
+  parentageResolved?: boolean;
   accountKeys: string[];
   instructions: InstructionNode[];
   logs: string[];
