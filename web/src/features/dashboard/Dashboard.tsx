@@ -483,7 +483,9 @@ function Positions({ rows, multi }: { rows: PositionRow[]; multi: boolean }) {
 
 function RecentActivity({ owner, cluster, labelFor }: { owner: string; cluster: string; labelFor: (a: string) => string }) {
   const activity = useWalletActivity(owner, ACTIVITY_LIMIT);
-  const rows = activity.data ? activityRows(activity.data.items, { limit: ACTIVITY_LIMIT, cluster, labelFor }) : [];
+  // useWalletActivity is an infinite query; the dashboard shows only the newest page.
+  const firstPage = activity.data?.pages[0];
+  const rows = firstPage ? activityRows(firstPage.items,{ limit: ACTIVITY_LIMIT, cluster, labelFor }) : [];
   return (
     <Card
       title="Recent activity"
@@ -500,7 +502,7 @@ function RecentActivity({ owner, cluster, labelFor }: { owner: string; cluster: 
         <ErrorState description="Recent activity could not be read." onRetry={() => void activity.refetch()} retrying={activity.isFetching} />
       ) : (
         <>
-          {activity.data && activity.data.pending.length > 0 ? (
+          {firstPage && firstPage.pending.length > 0 ? (
             <PartialDataNotice description="Some recent transactions are still loading. See All activity to retry." />
           ) : null}
           {rows.length === 0 ? (
