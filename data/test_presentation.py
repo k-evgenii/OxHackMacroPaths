@@ -24,7 +24,7 @@ def test_one_filled_row_from_series_toml():
     filled = [r for r in rows if r["filled"]]
     assert len(filled) == 1 and filled[0]["date"] == "2025-10-01"
     spec = {s["id"]: s for s in tomllib.loads(P.CONFIG.read_text(encoding="utf-8"))["series"]}["CPIAUCNS"]
-    assert filled[0]["value_str"] == spec["fallback"]["value"] == "325.604"
+    assert filled[0]["value_str"] == (spec["fallback"][0] if isinstance(spec["fallback"], list) else spec["fallback"])["value"] == "325.604"
     assert all(r["value_str"] not in ("", ".") for r in rows)
 
 
