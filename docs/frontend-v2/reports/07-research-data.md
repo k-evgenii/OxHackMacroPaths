@@ -55,8 +55,12 @@ when Agent 10's `queries/research.ts` lands, `artifacts.ts` should re-export tho
 Production serves statically imported JSON (no cwd dependency). In that mode id/hashes come from `bundle-identity.json`;
 the validate command proves those hashes equal the file bytes. `ARTIFACTS_DIR` (tests) hashes the files directly.
 
-## Not yet done / blockers
+## Checkpoint 1 (integration 85a62e8)
 
-- Foundation checkpoint not merged: bundle response not yet passed through shared `ResearchBundle` zod (`okJson`);
-  `artifacts.ts` still defines its own legacy schemas/queries. Swap both after the checkpoint.
-- Test results: see final message.
+- Merged cleanly. `artifacts.ts` re-exports the shared schemas from `@macropaths/client`.
+- `/api/artifacts/bundle` now goes through `okJson(ResearchBundle, ...)`, and a test asserts the committed bundle parses.
+  Note: the shared schema drops unknown keys, so the bundle body's manifest/forecast/planner omit legacy-only fields
+  (e.g. `manifest.chain`, `forecast.caps`, `planner.labels`). The legacy `/api/artifacts/{name}` routes still return full files.
+- Real `npm ci` (no symlinks), Node 24 via nvm: full web suite 118 passed, 1 skipped, 0 failed (14 files passed);
+  `tsc --noEmit` reports no errors. The earlier events-route failures came from the symlinked node_modules and are gone.
+- Still open: legacy query constants should move to Agent 10's `queries/research.ts` and be re-exported here.
