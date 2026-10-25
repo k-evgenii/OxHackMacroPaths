@@ -342,3 +342,7 @@ export function LegendRow({ items }: { items: Array<{ label: string; value?: Rea
     </ul>
   );
 }
+
+/* Frozen v2 chart contract (Agent 09). Legacy exports above stay until Agent 15 migrates consumers. */
+export { GlowLineChart, GlowSparkline, GLOW_COLORS } from "./glow-chart";
+export type { GlowPoint, GlowSeries, GlowLineChartProps } from "./glow-chart";
