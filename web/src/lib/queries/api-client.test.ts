@@ -75,7 +75,8 @@ describe("fetchJson (live mode)", () => {
   });
 });
 
-describe("fetchJson (fixture mode)", () => {
+// First dynamic import of the fixture router transforms all fixture JSON (slow on /mnt).
+describe("fetchJson (fixture mode)", { timeout: 60_000 }, () => {
   it("answers client endpoints without network", async () => {
     const { fetchJson } = await load(true);
     const fetchMock = vi.fn();
