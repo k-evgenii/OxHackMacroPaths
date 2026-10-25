@@ -180,6 +180,7 @@ type HistoryTransaction = {
   blockTime: number | null;
   finality: 'confirmed' | 'finalized';
   failed: boolean;
+  parentageResolved?: boolean; // Amendment 1: false = parentage unknown; null parents then mean unknown, so wallet decoding returns amount:null
   accountKeys: string[];
   instructions: InstructionNode[];
   logs: string[];
