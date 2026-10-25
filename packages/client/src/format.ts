@@ -35,3 +35,20 @@ export function fmtPeriod(periodId: number): string {
   const m = periodId % 100;
   return m >= 1 && m <= 12 ? `${MONTHS[m - 1]} ${Math.floor(periodId / 100)}` : String(periodId);
 }
+
+// ---- frontend v2 shared exact formatters (interfaces.md "Exact helper exports") ----
+
+/** Signed difference in 1e-4 percentage points -> "+1.40 pp" / "-0.25 pp" / "0.00 pp". */
+export function fmtPpDifference(v: string | bigint, digits = 2): string {
+  const s = fixed(v, 4, digits);
+  const zero = !/[1-9]/.test(s);
+  return `${!zero && !s.startsWith("-") ? "+" : ""}${zero ? s.replace(/^-/, "") : s} pp`;
+}
+/** 1e-4 pp-months -> "69.1 point-months" (plain-language accumulated excess). */
+export function fmtPointMonths(v: string | bigint, digits = 1): string {
+  return `${fixed(v, 4, digits)} point-months`;
+}
+/** Quote price in millionths -> PLAY paid per one PLAY of maximum payout, e.g. "0.057153 PLAY". */
+export function fmtQuotePlay(v: string | bigint, digits = 6): string {
+  return `${fixed(v, 6, digits)} PLAY`;
+}
