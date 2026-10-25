@@ -3,6 +3,10 @@
 import { queryOptions } from "@tanstack/react-query";
 import { Forecast, Manifest, PlannerArtifact, type ManifestProduct } from "@macropaths/client";
 import { fetchJson } from "@/lib/api-client";
+import bundleIdentity from "../../public/data/bundle-identity.json";
+
+/** Id of the published research bundle (also served as /data/bundle-identity.json and in /api/artifacts/bundle). */
+export const PUBLISHED_BUNDLE_ID: string = bundleIdentity.id;
 
 // Schemas now live in the shared client contract (frontend v2 foundation); re-exported for compatibility.
 export {
@@ -14,19 +18,20 @@ export {
   PlannerArtifact,
 } from "@macropaths/client";
 
-// Static research files: fetched once per page load.
+// Static research files: fetched once per page load. Keys carry the bundle id so a republished bundle never
+// reuses a stale cache entry.
 export const manifestQuery = queryOptions({
-  queryKey: ["artifact", "manifest"],
+  queryKey: ["artifact", "manifest", PUBLISHED_BUNDLE_ID],
   queryFn: () => fetchJson("/api/artifacts/manifest", Manifest),
   staleTime: Infinity,
 });
 export const forecastQuery = queryOptions({
-  queryKey: ["artifact", "forecast"],
+  queryKey: ["artifact", "forecast", PUBLISHED_BUNDLE_ID],
   queryFn: () => fetchJson("/api/artifacts/forecast", Forecast),
   staleTime: Infinity,
 });
 export const plannerQuery = queryOptions({
-  queryKey: ["artifact", "planner"],
+  queryKey: ["artifact", "planner", PUBLISHED_BUNDLE_ID],
   queryFn: () => fetchJson("/api/artifacts/planner", PlannerArtifact),
   staleTime: Infinity,
 });

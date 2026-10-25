@@ -334,10 +334,12 @@ export function walletActivityId(
 ): string {
   return `${i.signature}:${i.instructionIndex}:${i.innerInstructionIndex ?? "top"}:${i.kind}`;
 }
+/** Research artifacts keep legacy fields (passthrough) while validating the fields consumers rely on. */
+const loose = <T extends z.ZodRawShape>(shape: T) => z.object(shape).passthrough();
 
 // ---- research artifacts (moved from web/src/lib/artifacts.ts; legacy fields preserved) ----
 
-export const ManifestProduct = z.object({
+export const ManifestProduct = loose({
   index: z.number().nullable(),
   key: z.string(),
   name: z.string(),
@@ -354,14 +356,14 @@ export const ManifestProduct = z.object({
 });
 export type ManifestProduct = z.infer<typeof ManifestProduct>;
 
-const StatScore = z.object({ stat: z.number(), score: z.number() });
-const Snapshot = z.object({ retrieved_at: z.string() });
-export const Manifest = z.object({
+const StatScore = loose({ stat: z.number(), score: z.number() });
+const Snapshot = loose({ retrieved_at: z.string() });
+export const Manifest = loose({
   version: z.number(),
   // Source snapshots the artefacts were computed from; retrieved_at is the data date shown on research screens.
   snapshots: z.record(Snapshot).optional(),
   products: z.array(ManifestProduct),
-  showcase: z.object({
+  showcase: loose({
     window: z.tuple([z.string(), z.string()]),
     cooling: StatScore,
     excess: StatScore,
@@ -371,7 +373,7 @@ export const Manifest = z.object({
 });
 export type Manifest = z.infer<typeof Manifest>;
 
-export const Fit = z.object({
+export const Fit = loose({
   a: z.number(),
   b: z.number(),
   resid_sd: z.number(),
@@ -380,15 +382,15 @@ export const Fit = z.object({
   half_life_months: z.number(),
 });
 export type Fit = z.infer<typeof Fit>;
-const Cell = z.object({ V: z.number(), sigma: z.number() });
+const Cell = loose({ V: z.number(), sigma: z.number() });
 
-export const Forecast = z.object({
+export const Forecast = loose({
   manifest_version: z.number().optional(),
   model: z.string(),
   seed: z.number().optional(),
   n_paths: z.number(),
-  fit: z.object({ cpi: Fit, fuel: Fit }),
-  quotes: z.object({
+  fit: loose({ cpi: Fit, fuel: Fit }),
+  quotes: loose({
     p: z.array(z.number()),
     products: z.array(z.string()),
     formula: z.string(),
@@ -396,11 +398,11 @@ export const Forecast = z.object({
   }),
   label: z.string(),
   // The terminal row (t = 48, the realised end state) has no calendar period: period_id is null there.
-  rows: z.array(z.object({ t: z.number(), period_id: z.number().nullable(), cooling: Cell, excess: Cell, fuel: Cell })),
+  rows: z.array(loose({ t: z.number(), period_id: z.number().nullable(), cooling: Cell, excess: Cell, fuel: Cell })),
 });
 export type Forecast = z.infer<typeof Forecast>;
 
-export const Scenario = z.object({
+export const Scenario = loose({
   start: z.string(),
   excess_score: z.number(),
   fuel_score: z.number(),
@@ -408,7 +410,7 @@ export const Scenario = z.object({
 });
 export type Scenario = z.infer<typeof Scenario>;
 
-const ResultRow = z.object({
+const ResultRow = loose({
   product: z.enum(["cash", "excess", "fuel"]),
   stake: z.number(),
   units: z.number(),
@@ -419,7 +421,7 @@ const ResultRow = z.object({
   expected_end_cash: z.number(),
 });
 
-const PlannerShowcase = z.object({
+const PlannerShowcase = loose({
   overrun: z.number(),
   stake: z.number(),
   units: z.number(),
@@ -429,13 +431,13 @@ const PlannerShowcase = z.object({
   cash_baseline_shortfall: z.number(),
 });
 
-export const PlannerArtifact = z.object({
+export const PlannerArtifact = loose({
   manifest_version: z.number().optional(),
-  prices: z.object({ excess: z.number(), fuel: z.number() }),
-  caps: z.object({ cooling: z.number(), excess: z.number(), fuel: z.number() }),
-  thresholds: z.object({ excess_k_1e4pp: z.number(), fuel_k_1e4usd: z.number() }),
+  prices: loose({ excess: z.number(), fuel: z.number() }),
+  caps: loose({ cooling: z.number(), excess: z.number(), fuel: z.number() }),
+  thresholds: loose({ excess_k_1e4pp: z.number(), fuel_k_1e4usd: z.number() }),
   scenario_note: z.string(),
-  defaults: z.object({ q: z.number(), G: z.number(), B: z.number() }),
+  defaults: loose({ q: z.number(), G: z.number(), B: z.number() }),
   scenarios: z.array(Scenario),
   showcase: Scenario.extend({ under_recommended: PlannerShowcase }),
   default_recommendation: ResultRow,
