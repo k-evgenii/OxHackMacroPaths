@@ -24,9 +24,27 @@ Branch: `frontend-v2/13-activity-page`.
 
 ## Not done / blockers
 
-- No component-render tests or screenshots: web has no DOM test library/jsdom in the current lock and the shared
-  hooks (`@/lib/hooks`, `@/features/wallet-connect`, `@/features/shell`) are not in the base, so the page cannot
-  compile or run until the checkpoint merge. Imports are coded to interfaces.md names exactly.
+- (Superseded by checkpoints 2/3 below.)
+
+## Checkpoints 2 and 3 (6a06725, aecb709) merged
+
+- Adapted to worker 10's real hooks: the pending notice uses `useWalletActivity(...).recovery`. Automatic recovery
+  stays in the shared helper. The page shows "Retrying…" while it retries and "Retry now" (`recovery.retry()`)
+  once it reports `exhausted`. When `needsRefresh` is set (a pending page has no cursor), it shows "Reload" (`refetch`).
+  `useSessionOverview(selected.address)` now passes null while loading. Expired-cursor detection uses `error.status === 400`.
+- CSS now uses shell theme tokens (`--surface/--text/--muted/--primary/--up/...`). Before this, the cards had light text on a light background inside the dark shell.
+- Tests: `vitest run src/features/activity` → 12/12 pass (10 model + 2 jsdom component tests: disconnected → Market
+  with zero `useWalletActivity` calls and no Explorer links; partial page with two actions under one signature, "Amount
+  unavailable", "Date unavailable", Explorer link names, manual Retry calling `recovery.retry`, and Load more). The
+  component test mocks the CSS module because vite cannot load the shared tailwind PostCSS config in tests. Worker 15 should look at this.
+- `tsc --noEmit`: 0 errors in activity files. 3 remaining errors are outside my ownership:
+  `test/api/resilience.test.ts` (×2, `RPC_URL` not exported from `@/server/rpc`), `test/planner/planner.test.ts:35`.
+- Playwright chromium, `NEXT_PUBLIC_USE_FIXTURES=1 next dev`, `/activity` at 375/768/1440: horizontal overflow 0,
+  48 Market rows (settled fixture), **zero** `/api/.../activity` or `/events` requests in Market mode while disconnected.
+  Screenshots: `docs/frontend-v2/reports/screenshots/13/{mine-disconnected,market}-{375,768,1440}.png`.
+- Not verified in a browser: the connected personal feed. The fixture wallet can't be connected headlessly. The jsdom tests cover that path instead.
+- Shell note (not mine): the fixed bottom nav overlaps content in full-page screenshots, and the disconnected
+  state shows a second "Connect wallet" next to the shell's.
 - Market-mode "zero history requests" and 375px overflow are by construction, not verified in a browser.
 
 ## Checkpoint 1 (85a62e8) merged
