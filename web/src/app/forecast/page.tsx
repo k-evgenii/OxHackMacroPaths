@@ -1,7 +1,8 @@
 "use client";
 // Research layer, advisory only: AR(1) forecast table and manifest beside the on-chain products. Read-only.
 import { useQueries } from "@tanstack/react-query";
-import { forecastQuery, manifestQuery, type Fit, type Forecast, type ManifestProduct } from "@/lib/artifacts";
+import { forecastQuery, manifestQuery, productStatus, quoteFor, type Fit, type Forecast, type ManifestProduct } from "@/lib/artifacts";
+import { Provenance } from "@/components/shell/Provenance";
 import { Badge, Card, ErrorState, Skeleton, Stat } from "../planner/_fallback";
 import { ForecastChart } from "./forecast-chart";
 
@@ -16,11 +17,6 @@ function scaled(value: number, units: string): string {
   return `${(value / 10 ** exp).toFixed(exp)} ${m[2]}`;
 }
 const pct = (millionths: number) => `${(millionths / 1e4).toFixed(4)} %`;
-
-function quoteFor(f: Forecast, key: Key): number {
-  const i = f.quotes.products.indexOf(key);
-  return i >= 0 ? f.quotes.p[i] : f.quotes.fuel_research_quote;
-}
 
 function FitSummary({ name, fit }: { name: string; fit: Fit }) {
   return (
@@ -37,12 +33,13 @@ function FitSummary({ name, fit }: { name: string; fit: Fit }) {
 function ProductCard({ p, f, showcase }: { p: ManifestProduct; f: Forecast; showcase: { stat: number; score: number } }) {
   const key = p.key as Key;
   const quote = quoteFor(f, key);
+  const status = productStatus(p);
   return (
     <Card
       title={
         <span className="flex flex-wrap items-center gap-2">
           {p.name}
-          {p.executable ? <Badge tone="good">executable on chain</Badge> : <Badge tone="warn">research product, not executable this weekend</Badge>}
+          <Badge tone={status.tone}>{status.label}</Badge>
         </span>
       }
     >
@@ -54,7 +51,7 @@ function ProductCard({ p, f, showcase }: { p: ManifestProduct; f: Forecast; show
       </div>
       <p className="mt-2 text-xs text-white/50">
         {p.windows} windows {p.first_window}..{p.last_window}
-        {p.index !== null ? `, on-chain product ${p.index}` : ""}
+        {p.index !== null ? `, on-chain product ${p.index}` : ""}. {status.detail}
         {p.note ? `; ${p.note}` : ""}
       </p>
       <div className="mt-4">
@@ -71,14 +68,15 @@ function ProductCard({ p, f, showcase }: { p: ManifestProduct; f: Forecast; show
 export default function ForecastPage() {
   const [m, f] = useQueries({ queries: [manifestQuery, forecastQuery] });
   return (
-    <main className="mx-auto max-w-5xl space-y-4 p-4 sm:p-6">
+    <div className="mx-auto max-w-5xl space-y-4">
       <header>
         <h1 className="text-xl font-semibold">Forecast</h1>
         <p className="mt-1 text-sm text-amber-200/80">{f.data?.label ?? "Forecast (AR(1) baseline, advisory). Settlement uses the realised path only."}</p>
       </header>
+      <Provenance />
       {m.error || f.error ? <ErrorState error={m.error ?? f.error} /> : null}
       {!m.data || !f.data ? (
-        <Skeleton className="h-96" />
+        m.error || f.error ? null : <Skeleton className="h-96" />
       ) : (
         <>
           <Card title="AR(1) fit">
@@ -104,10 +102,13 @@ export default function ForecastPage() {
                 );
               })}
             </ul>
-            <p className="mt-2 text-xs text-white/50">historical showcase, not a validation set</p>
+            <p className="mt-2 text-xs text-white/50">
+              historical showcase, not a validation set. Scores use the caps listed above; an on-chain session scores against the caps in
+              its own terms, which can differ.
+            </p>
           </Card>
         </>
       )}
-    </main>
+    </div>
   );
 }

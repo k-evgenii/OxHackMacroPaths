@@ -64,5 +64,12 @@ export async function fetchJson<S extends z.ZodTypeAny>(path: string, schema: S)
     const e = ApiError.safeParse(body);
     throw new ApiRequestError(e.success ? e.data.error : res.statusText, res.status, e.success ? e.data.code : "internal");
   }
-  return schema.parse(body);
+  const parsed = schema.safeParse(body);
+  if (!parsed.success) {
+    // Name the first mismatching field instead of dumping the raw zod issue array into the page.
+    const i = parsed.error.issues[0];
+    const where = i.path.length ? `${i.path.join(".")}: ` : "";
+    throw new ApiRequestError(`Unexpected data format from ${path} (${where}${i.message}).`, res.status, "internal");
+  }
+  return parsed.data;
 }
