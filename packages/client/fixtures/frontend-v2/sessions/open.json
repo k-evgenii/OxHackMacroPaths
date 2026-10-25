@@ -1,0 +1,65 @@
+{
+  "address": "ApcEnrz7vQgXDSJoHJwQXA8v7pF7FtUxnfrqbigp8gWP",
+  "sessionId": "1792890196",
+  "authority": "EuUN3PSjtV5bp1nY2JoFjPSCGxJjAXPMx7TA2kKSwgmy",
+  "playMint": "AvVf2k9ixDvLjGnjCD4MDGTVBFfrhvzGgzwvptweaPWW",
+  "vaults": [
+    "rkJxRNiRJHz9M6xMJ58mRPF3BdnDchSKZxxmtJA2Y2P",
+    "VDDFXSV5kiggVMTVpYq5hDUN11iAUcx9dbsVQy2JgPY"
+  ],
+  "state": "Open",
+  "datasetId": "328f498b394e988f88f763947e0c656cb0e988321c3f66228c8549946401143e",
+  "commitment": "b5a06c8e2aa10b7fe1339666afb92af7a30cf98e318efde9acdc4a6c5733abef",
+  "terminal": "0000000000000000000000000000000000000000000000000000000000000000",
+  "integrityOk": false,
+  "nObs": 48,
+  "nextIndex": 0,
+  "lastPeriodId": 202412,
+  "terms": {
+    "k": "40000",
+    "dCap": "80000",
+    "aCap": "800000"
+  },
+  "depositDeadline": 1792889792,
+  "replayDeadline": 1792893392,
+  "sideTotals": [
+    "20000000",
+    "10000000",
+    "0",
+    "5000000"
+  ],
+  "matched": [
+    "0",
+    "0"
+  ],
+  "stats": {
+    "peak": null,
+    "maxDecline": "0",
+    "excessAcc": "0"
+  },
+  "scores": [
+    "0",
+    "0"
+  ],
+  "pBudget": [
+    "0",
+    "0",
+    "0",
+    "0"
+  ],
+  "rBudget": [
+    "0",
+    "0",
+    "0",
+    "0"
+  ],
+  "counts": {
+    "positions": 1,
+    "claimed": 0,
+    "covers": 0,
+    "coversClaimed": 0,
+    "sellerProductsOpen": 0
+  },
+  "path": [],
+  "_synthetic": "SYNTHETIC test data for frontend v2 scenarios; not an on-chain read."
+}

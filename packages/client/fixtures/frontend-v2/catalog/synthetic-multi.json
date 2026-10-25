@@ -1,0 +1,95 @@
+{
+  "_synthetic": "SYNTHETIC test data for frontend v2 scenarios; not an on-chain read.",
+  "version": 1,
+  "cluster": "devnet",
+  "defaultSession": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+  "sessions": [
+    {
+      "address": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "presentation": {
+        "label": "Session A \u00b7 2021\u20132024 replay",
+        "mode": "historical_replay",
+        "layout": "v1",
+        "firstPeriodId": 202101,
+        "researchBundleId": null
+      }
+    },
+    {
+      "address": "ApcEnrz7vQgXDSJoHJwQXA8v7pF7FtUxnfrqbigp8gWP",
+      "presentation": {
+        "label": "Synthetic Open",
+        "mode": "historical_replay",
+        "layout": "v1",
+        "firstPeriodId": 202101,
+        "researchBundleId": null
+      }
+    },
+    {
+      "address": "3UKMQHpTS81vkTh9kaWfnJKqC4NKpAFxtUnmCi4MSdVe",
+      "presentation": {
+        "label": "Synthetic Running",
+        "mode": "historical_replay",
+        "layout": "v1",
+        "firstPeriodId": 202101,
+        "researchBundleId": null
+      }
+    },
+    {
+      "address": "C5HjXWwK1ywUCroZKjwTPJ466LgjeSy8fQKXaX1pQTSV",
+      "presentation": {
+        "label": "Synthetic Refunding",
+        "mode": "historical_replay",
+        "layout": "v1",
+        "firstPeriodId": 202101,
+        "researchBundleId": null
+      }
+    },
+    {
+      "address": "6PNvtQ5kUu9JgioxRRUY9rhdyRLMUSm28gCS13X4VE6D",
+      "presentation": {
+        "label": "Synthetic Settled",
+        "mode": "historical_replay",
+        "layout": "v1",
+        "firstPeriodId": 202101,
+        "researchBundleId": null
+      }
+    },
+    {
+      "address": "58miNnXD48ZBz4g1xFED4xtif4PqdqLhVuymQ5u8im4u",
+      "presentation": {
+        "label": "Synthetic Settled",
+        "mode": "historical_replay",
+        "layout": "v1",
+        "firstPeriodId": 202101,
+        "researchBundleId": null
+      }
+    }
+  ],
+  "products": [
+    {
+      "key": "cooling",
+      "name": "Inflation Cooling",
+      "description": "Cover that pays as inflation falls from its peak.",
+      "status": "supported",
+      "productIndex": 0
+    },
+    {
+      "key": "excess",
+      "name": "Excess Inflation",
+      "description": "Cover that pays as inflation stays above the threshold.",
+      "status": "supported",
+      "productIndex": 1
+    },
+    {
+      "key": "fuel",
+      "name": "Fuel",
+      "description": "Research only: gasoline price cover model.",
+      "status": "research",
+      "productIndex": null
+    }
+  ],
+  "research": {
+    "bundleId": "research-74f8198078d806de",
+    "path": "/api/artifacts/bundle"
+  }
+}

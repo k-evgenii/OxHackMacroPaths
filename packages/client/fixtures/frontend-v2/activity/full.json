@@ -1,0 +1,86 @@
+{
+  "_synthetic": "SYNTHETIC test data for frontend v2 scenarios; not an on-chain read.",
+  "items": [
+    {
+      "id": "253iZsdtW3vTMdt9RgDQG6hm3KFkkHFkGCVBaq6wgmtHtpYzZxWyXDB5dLKUZakfBDMSSpCuL7NB7jV6gFfpa86K:0:top:PoolPayout",
+      "signature": "253iZsdtW3vTMdt9RgDQG6hm3KFkkHFkGCVBaq6wgmtHtpYzZxWyXDB5dLKUZakfBDMSSpCuL7NB7jV6gFfpa86K",
+      "instructionIndex": 0,
+      "innerInstructionIndex": null,
+      "session": "6PNvtQ5kUu9JgioxRRUY9rhdyRLMUSm28gCS13X4VE6D",
+      "product": null,
+      "slot": 900,
+      "blockTime": 1792889000,
+      "kind": "PoolPayout",
+      "amount": "26000000",
+      "mint": "AvVf2k9ixDvLjGnjCD4MDGTVBFfrhvzGgzwvptweaPWW"
+    },
+    {
+      "id": "3GNoYeq2hiRjMtCPV1ZFcxN31Pjds7HkMDpVuFx8SPksGp7zF3QJrcpvaaRCEwYjxxZfncLJN3jUmgM5dWqCBgxt:0:top:CoverPayout",
+      "signature": "3GNoYeq2hiRjMtCPV1ZFcxN31Pjds7HkMDpVuFx8SPksGp7zF3QJrcpvaaRCEwYjxxZfncLJN3jUmgM5dWqCBgxt",
+      "instructionIndex": 0,
+      "innerInstructionIndex": null,
+      "session": "6PNvtQ5kUu9JgioxRRUY9rhdyRLMUSm28gCS13X4VE6D",
+      "product": 1,
+      "slot": 899,
+      "blockTime": 1792889000,
+      "kind": "CoverPayout",
+      "amount": "36000000",
+      "mint": "AvVf2k9ixDvLjGnjCD4MDGTVBFfrhvzGgzwvptweaPWW"
+    },
+    {
+      "id": "3r61SAQZWtFEnmdRgtYzgScGScnC6NqDvuYhKhxBwuAshDFCYYzYf3a9K1sE2RqNEfjzhV7N3nJAk65R9h2ng4n6:0:top:CoverBought",
+      "signature": "3r61SAQZWtFEnmdRgtYzgScGScnC6NqDvuYhKhxBwuAshDFCYYzYf3a9K1sE2RqNEfjzhV7N3nJAk65R9h2ng4n6",
+      "instructionIndex": 0,
+      "innerInstructionIndex": null,
+      "session": "6PNvtQ5kUu9JgioxRRUY9rhdyRLMUSm28gCS13X4VE6D",
+      "product": 0,
+      "slot": 500,
+      "blockTime": 1792889000,
+      "kind": "CoverBought",
+      "amount": "-11545560",
+      "mint": "AvVf2k9ixDvLjGnjCD4MDGTVBFfrhvzGgzwvptweaPWW"
+    },
+    {
+      "id": "5PcoMyhsmKzgMWRGkrxj96uZYdUcrKb54RSy5nKqh8ALHAsYUS8g9gJgxw8WTZo5ngaWZo76rYro9iWtpfw7nWiF:0:top:PoolDeposit",
+      "signature": "5PcoMyhsmKzgMWRGkrxj96uZYdUcrKb54RSy5nKqh8ALHAsYUS8g9gJgxw8WTZo5ngaWZo76rYro9iWtpfw7nWiF",
+      "instructionIndex": 0,
+      "innerInstructionIndex": null,
+      "session": "6PNvtQ5kUu9JgioxRRUY9rhdyRLMUSm28gCS13X4VE6D",
+      "product": null,
+      "slot": 400,
+      "blockTime": 1792889000,
+      "kind": "PoolDeposit",
+      "amount": "-30000000",
+      "mint": "AvVf2k9ixDvLjGnjCD4MDGTVBFfrhvzGgzwvptweaPWW"
+    },
+    {
+      "id": "5Y4daCieXLiUcpaNMWHaLyuR1Zj1psr1K8Jd6KhPinD7kcjuhQJu7CWmy6acwCEDzVf93bBgh6EeoCS7XttVZvJ4:0:top:PoolDeposit",
+      "signature": "5Y4daCieXLiUcpaNMWHaLyuR1Zj1psr1K8Jd6KhPinD7kcjuhQJu7CWmy6acwCEDzVf93bBgh6EeoCS7XttVZvJ4",
+      "instructionIndex": 0,
+      "innerInstructionIndex": null,
+      "session": "6PNvtQ5kUu9JgioxRRUY9rhdyRLMUSm28gCS13X4VE6D",
+      "product": 0,
+      "slot": 300,
+      "blockTime": 1792889000,
+      "kind": "PoolDeposit",
+      "amount": "-1000000",
+      "mint": "AvVf2k9ixDvLjGnjCD4MDGTVBFfrhvzGgzwvptweaPWW"
+    },
+    {
+      "id": "5Y4daCieXLiUcpaNMWHaLyuR1Zj1psr1K8Jd6KhPinD7kcjuhQJu7CWmy6acwCEDzVf93bBgh6EeoCS7XttVZvJ4:1:top:CoverBought",
+      "signature": "5Y4daCieXLiUcpaNMWHaLyuR1Zj1psr1K8Jd6KhPinD7kcjuhQJu7CWmy6acwCEDzVf93bBgh6EeoCS7XttVZvJ4",
+      "instructionIndex": 1,
+      "innerInstructionIndex": null,
+      "session": "6PNvtQ5kUu9JgioxRRUY9rhdyRLMUSm28gCS13X4VE6D",
+      "product": 1,
+      "slot": 300,
+      "blockTime": 1792889000,
+      "kind": "CoverBought",
+      "amount": null,
+      "mint": "AvVf2k9ixDvLjGnjCD4MDGTVBFfrhvzGgzwvptweaPWW"
+    }
+  ],
+  "nextBefore": "5PcoMyhsmKzgMWRGkrxj96uZYdUcrKb54RSy5nKqh8ALHAsYUS8g9gJgxw8WTZo5ngaWZo76rYro9iWtpfw7nWiF",
+  "pending": [],
+  "retryCursor": null
+}

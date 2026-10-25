@@ -74,7 +74,7 @@ describe("decode", () => {
       "fixtures/txlogs-B89z.raw.json",
     );
     const events = txs.flatMap(({ logs, ...meta }) => parseEvents(logs, meta));
-    const resp = { events, nextBefore: null };
+    const resp = { events, nextBefore: null, pending: [], retryCursor: null };
     expect(resp).toEqual(json("fixtures/events-B89z.view.json"));
     EventsResponse.parse(resp);
   });
