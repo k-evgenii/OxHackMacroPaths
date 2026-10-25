@@ -11,6 +11,7 @@ import {
   usePendingRecovery,
   walletActivityQuery,
   walletOverviewQuery,
+  type HistoryData,
 } from "@/lib/queries";
 import { healthQuery, positionsQuery, sellerQuery, sessionQuery, sessionsQuery } from "./queries";
 
@@ -57,7 +58,7 @@ export function useWalletActivity(owner: string | null, limit = 10) {
   const fetchPage = useMemo(() => fetchWalletActivityPage(owner ?? "", limit), [owner, limit]);
   const recovery = usePendingRecovery({
     queryKey: options.queryKey,
-    data: owner ? query.data : undefined,
+    data: owner ? (query.data as HistoryData<NonNullable<typeof query.data>["pages"][number]> | undefined) : undefined,
     fetchPage,
     enabled: owner !== null,
   });
@@ -69,7 +70,10 @@ export function useSessionEvents(addr: string, limit = 10) {
   const options = eventsQuery(addr, limit);
   const query = useInfiniteQuery(options);
   const fetchPage = useMemo(() => fetchSessionEventsPage(addr, limit), [addr, limit]);
-  const recovery = usePendingRecovery({ queryKey: options.queryKey, data: query.data, fetchPage });
+  const recovery = usePendingRecovery({ queryKey: options.queryKey,
+    data: query.data as HistoryData<NonNullable<typeof query.data>["pages"][number]> | undefined,
+    fetchPage,
+  });
   return { ...query, recovery };
 }
 

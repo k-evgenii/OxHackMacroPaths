@@ -9,8 +9,8 @@ describe("resolveSelection", () => {
   const r = (pathname: string, query: string | null, cat = catalog as typeof catalog | undefined, st: "pending" | "error" | "success" = "success") =>
     resolveSelection({ pathname, query, catalog: cat, catalogStatus: st });
   it("loading/unavailable without catalog, never inventing a session", () => {
-    expect(r("/", null, undefined, "pending")).toMatchObject({ address: null, status: "loading" });
-    expect(r("/", null, undefined, "error")).toMatchObject({ address: null, status: "unavailable" });
+    expect(resolveSelection({ pathname: "/", query: null, catalog: undefined, catalogStatus: "pending" })).toMatchObject({ address: null, status: "loading" });
+    expect(resolveSelection({ pathname: "/", query: null, catalog: undefined, catalogStatus: "error" })).toMatchObject({ address: null, status: "unavailable" });
   });
   it("defaults, query, path precedence, invalid", () => {
     expect(r("/", null)).toMatchObject({ address: A, status: "ready" });
