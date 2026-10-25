@@ -4,6 +4,7 @@
 // packages/client/fixtures without RPC or Redis. A live request failure is never answered with fixture data.
 import type { z } from "zod";
 import { ApiError } from "@macropaths/client/types";
+import sessionRegistry from "../../config/sessions.json";
 
 export const USE_FIXTURES = process.env.NEXT_PUBLIC_USE_FIXTURES === "1";
 export const CLUSTER = process.env.NEXT_PUBLIC_CLUSTER ?? "devnet";
@@ -11,7 +12,7 @@ export const CLUSTER = process.env.NEXT_PUBLIC_CLUSTER ?? "devnet";
  * Legacy reference-session fallback for pages not yet migrated to the catalog (`useSelectedSession`).
  * New code uses the catalog's `defaultSession`. `||`, not `??`: an empty env line must fall back.
  */
-export const DEFAULT_SESSION = process.env.NEXT_PUBLIC_DEFAULT_SESSION || "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju";
+export const DEFAULT_SESSION = process.env.NEXT_PUBLIC_DEFAULT_SESSION || sessionRegistry.defaultSession;
 
 /** Normalized API/query error. `status` 0 means the request never produced an HTTP response. */
 export class ApiRequestError extends Error {

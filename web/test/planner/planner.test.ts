@@ -32,7 +32,7 @@ describe("planner port vs planner.json", () => {
 
   it("showcase matches showcase.under_recommended", () => {
     const s = showcase(best, art.showcase, q, B, art.prices);
-    for (const [k, v] of Object.entries(art.showcase.under_recommended)) close(s[k as keyof typeof s], v);
+    for (const [k, v] of Object.entries(art.showcase.under_recommended) as [keyof typeof s, number][]) close(s[k], v);
   });
 });
 

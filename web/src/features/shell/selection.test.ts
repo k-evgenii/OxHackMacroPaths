@@ -1,7 +1,8 @@
+import referenceSession from "@macropaths/client/fixtures/session-B89z.view.json";
 import { describe, expect, it } from "vitest";
 import { activeDestination, defaultSelectionHref, destinationHref, resolveSelection, selectHref } from "./selection";
 
-const A = "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju";
+const A = referenceSession.address;
 const R = "3UKMQHpTS81vkTh9kaWfnJKqC4NKpAFxtUnmCi4MSdVe";
 const catalog = { defaultSession: A, sessions: [{ address: A }, { address: R }] };
 
