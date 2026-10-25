@@ -309,7 +309,8 @@ export function CompositionBar({ segments, formatValue = (v) => v.toLocaleString
     <div>
       <div className="mp-composition" role="img" aria-label={title}>
         {segments.map((s, i) =>
-          s.value > 0 ? <div key={s.label} className="mp-composition__seg" style={{ flex: s.value, background: SERIES[i % SERIES.length] }} title={`${s.label}: ${formatValue(s.value)}`} /> : null,
+          // Zero/negative segments are not drawn (no minimum width); the legend below still lists every label + value.
+          s.value > 0 ? <div key={s.label} className="mp-composition__seg" data-segment={s.label} style={{ flex: s.value, minWidth: 0, background: SERIES[i % SERIES.length] }} title={`${s.label}: ${formatValue(s.value)}`} /> : null,
         )}
       </div>
       <ul className="mp-legend" style={{ marginTop: 16 }}>

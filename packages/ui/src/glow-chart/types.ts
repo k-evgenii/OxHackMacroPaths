@@ -17,7 +17,11 @@ export type GlowLineChartProps = {
   title: string;
   summary: string;
   series: GlowSeries[];
-  threshold?: { value: number; label: string };
+  /** bandLabel (optional, caller-formatted): annotation for the shaded above-threshold band. */
+  threshold?: { value: number; label: string; bandLabel?: string };
+  /** Optional progressive reveal: draw only points with x <= that point's x; the rest is hidden, not zeroed.
+   * null/undefined or an unknown id = everything shown. */
+  revealUpToPointId?: string | null;
   xTicks?: Array<{ x: number; label: string }>;
   formatAxisValue: (value: number) => string;
   variant?: "hero" | "comparison" | "sparkline";

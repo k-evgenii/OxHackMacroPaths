@@ -49,7 +49,7 @@ const CSS = `
 export function GlowLineChart(props: GlowLineChartProps) {
   const {
     title, summary, series, threshold, xTicks = [], formatAxisValue, variant = "hero",
-    selectedPointId, onSelectedPointChange, height, className,
+    selectedPointId, onSelectedPointChange, height, className, revealUpToPointId,
   } = props;
   const isSpark = variant === "sparkline";
   const h = height ?? DEFAULT_HEIGHT[variant];
@@ -67,6 +67,10 @@ export function GlowLineChart(props: GlowLineChartProps) {
   }, []);
 
   const visible = (variant === "hero" ? series.slice(0, 1) : variant === "comparison" ? series.slice(0, 2) : series.slice(0, 1));
+  // Progressive reveal: domain stays on the full data (no rescale while revealing); drawn points are cut.
+  const revealX = revealUpToPointId == null ? null
+    : visible.flatMap((s) => s.points).find((p) => p.id === revealUpToPointId)?.x ?? null;
+  const drawn = revealX === null ? visible : visible.map((s) => ({ ...s, points: s.points.filter((p) => p.x <= revealX) }));
 
   const pad = isSpark ? { top: 4, right: 4, bottom: 4, left: 4 } : { top: 18, right: 16, bottom: 30, left: 52 };
   const innerW = Math.max(10, width - pad.left - pad.right);
@@ -78,7 +82,7 @@ export function GlowLineChart(props: GlowLineChartProps) {
     const sx = makeScale(xd, [pad.left, pad.left + innerW]);
     const sy = makeScale(yd, [pad.top + innerH, pad.top]);
     const located: Located[] = [];
-    const lines = visible.map((s, si) => {
+    const lines = drawn.map((s, si) => {
       const segs = segments(s.points).map((seg) => seg.map((p) => ({ x: sx(p.x), y: sy(p.value as number) })));
       for (const p of s.points) if (isObserved(p)) located.push({ seriesId: s.id, point: p, px: sx(p.x), py: sy(p.value) });
       return { s, tone: s.tone ?? (si === 0 ? "primary" : "secondary"), segs };
@@ -86,7 +90,7 @@ export function GlowLineChart(props: GlowLineChartProps) {
     located.sort((a, b) => a.px - b.px || a.py - b.py);
     return { yd, sx, sy, lines, located, ticks: yTicks(yd, 4) };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visible, threshold, xTicks, innerW, innerH, isSpark]);
+  }, [visible, drawn, threshold, xTicks, innerW, innerH, isSpark]);
 
   const selected = selId === null ? null : geo.located.find((l) => l.point.id === selId) ?? null;
   const select = (id: string | null) => {
@@ -145,7 +149,7 @@ export function GlowLineChart(props: GlowLineChartProps) {
       data-variant={variant}
     >
       <style>{CSS}</style>
-      <p id={ids.desc} className="mpg-sr">{summary}</p>
+      <p id={ids.desc} className="mpg-sr">{threshold?.bandLabel ? `${summary} ${threshold.label}: ${threshold.bandLabel}` : summary}</p>
       <svg width={width} height={h} viewBox={`0 0 ${width} ${h}`} aria-hidden="true" focusable="false">
         <defs>
           <linearGradient id={ids.fill} x1="0" y1="0" x2="0" y2="1">
@@ -197,6 +201,11 @@ export function GlowLineChart(props: GlowLineChartProps) {
               {!isSpark ? (
                 <text x={pad.left + innerW} y={(thY as number) - 6} textAnchor="end" fontSize={11} fill={GLOW_COLORS.label}>{threshold.label}</text>
               ) : null}
+              {!isSpark && threshold.bandLabel ? (
+                <text x={pad.left + 4} y={Math.max(pad.top + 12, (thY as number) - 6)} textAnchor="start" fontSize={11} fill={GLOW_COLORS.primary} data-role="band-label">
+                  {threshold.bandLabel}
+                </text>
+              ) : null}
             </g>
           ) : null}
           {geo.lines.map(({ s, tone, segs }) =>
@@ -242,6 +251,7 @@ export function GlowLineChart(props: GlowLineChartProps) {
         <details className="mpg-sr" id={ids.list}>
           <summary>{`${title}: data table`}</summary>
           <table>
+            {threshold?.bandLabel ? <caption>{`${threshold.label}: ${threshold.bandLabel}`}</caption> : null}
             <thead><tr><th>Series</th><th>Observation</th><th>Value</th></tr></thead>
             <tbody>
               {visible.flatMap((s) =>
