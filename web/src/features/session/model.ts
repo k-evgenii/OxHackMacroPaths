@@ -9,6 +9,8 @@ import {
   fmtPpDifference,
   fmtPointMonths,
   summarizeHolding as sharedSummarizeHolding,
+  score as sharedScore,
+  coverPayout as sharedCoverPayout,
   type AmountSummary,
   type HoldingSummary,
   type SessionOverviewResponse,
@@ -128,7 +130,7 @@ export function buildHeadline(overview: Pick<SessionOverviewResponse, "session" 
         key: "cooling",
         name: "Inflation Cooling",
         value: scores ? fmtMillionthsPct(scores[0], 1) : null,
-        statistic: hasPath ? `Largest decline ${fmtPpDifference(s.stats.maxDecline, 2)}` : null,
+        statistic: hasPath ? `Largest decline ${ppMagnitude(s.stats.maxDecline, 2)}` : null,
         note,
       },
       {
@@ -154,7 +156,7 @@ export function peakSummary(session: SessionView): string | null {
 export function buildTerms(session: SessionView): Array<{ label: string; value: string }> {
   return [
     { label: "Threshold", value: fmtPp(session.terms.k, 2) },
-    { label: "Decline cap (Inflation Cooling)", value: fmtPpDifference(session.terms.dCap, 2) },
+    { label: "Decline cap (Inflation Cooling)", value: ppMagnitude(session.terms.dCap, 2) },
     { label: "Excess cap (Excess Inflation)", value: fmtPointMonths(session.terms.aCap, 1) },
   ];
 }
@@ -199,7 +201,13 @@ export function buildChartModel(session: SessionView, range: ChartRange = "all")
     formattedValue: fmtPp(r.value, 2),
   }));
   const ticks = rows.filter((r, idx) => (range === "all" ? r.periodId % 100 === 1 : idx % 3 === 0));
-  const threshold = { value: plotPp(session.terms.k), label: `Threshold ${fmtPp(session.terms.k, 2)}` };
+  const threshold = {
+    value: plotPp(session.terms.k),
+    label:
+      session.path.length > 0
+        ? `${fmtPointMonths(session.stats.excessAcc, 1)} above ${fmtPp(session.terms.k, 2)}`
+        : `Threshold ${fmtPp(session.terms.k, 2)}`,
+  };
   const first = rows[0];
   const last = rows[rows.length - 1];
   const summary =
@@ -363,6 +371,89 @@ export function buildHoldings(
     covers,
     positions,
     unclaimedTotal: summary.unclaimedTotal == null ? null : fmtPlay(summary.unclaimedTotal),
+  };
+}
+
+// ---------------------------------------------------------------------------------------------
+// Plain-language summary, explanations, composition shares and walkthrough
+
+/** Unsigned magnitude in percentage points, e.g. "6.62 pp" (decline is never negative). */
+export const ppMagnitude = (v: string | bigint, digits = 2) => fmtPpDifference(v, digits).replace(/^\+/, "");
+
+/** One sentence from exact recorded statistics; null before readings. */
+export function plainSummary(session: SessionView): string | null {
+  if (session.path.length === 0) return null;
+  const peak = peakSummary(session);
+  const parts: string[] = [];
+  if (peak) parts.push(`Inflation ${peak.replace(/^Peak /, "peaked at ")}`);
+  if (BigInt(session.stats.maxDecline) > 0n) parts.push(`later fell by up to ${ppMagnitude(session.stats.maxDecline)} from an earlier peak`);
+  const first = parts.join(" and ");
+  const second = `Readings accumulated ${fmtPointMonths(session.stats.excessAcc, 1)} above the ${fmtPp(session.terms.k, 2)} threshold`;
+  return `${first ? first + ". " : ""}${second}${session.nextIndex < session.nObs ? " so far" : ""}.`;
+}
+
+/** "Explain this number" text for the three headline figures, from this session's terms. */
+export function explainFigures(overview: Pick<SessionOverviewResponse, "session" | "derived">): {
+  lastReading: string;
+  cooling: string;
+  excess: string;
+} {
+  const s = overview.session;
+  const h = buildHeadline(overview);
+  const last = s.path[s.path.length - 1];
+  const capped = (stat: string, cap: string) => (BigInt(stat) >= BigInt(cap) ? " (capped at 100%)" : "");
+  const result = (v: string | null) => (v ? ` = ${v}` : "; the score is not determined yet");
+  return {
+    lastReading: last
+      ? `CPI year-on-year for ${fmtPeriod(last.periodId)}, the latest of ${s.nextIndex} of ${s.nObs} historical months replayed. It is a historical reading, not today's inflation.`
+      : "No historical month has been replayed yet.",
+    cooling: `Largest decline ${ppMagnitude(s.stats.maxDecline)} ÷ decline cap ${ppMagnitude(s.terms.dCap)}${result(h.scores[0].value)}${capped(s.stats.maxDecline, s.terms.dCap)}.`,
+    excess: `Excess ${fmtPointMonths(s.stats.excessAcc, 1)} ÷ excess cap ${fmtPointMonths(s.terms.aCap, 1)}${result(h.scores[1].value)}${capped(s.stats.excessAcc, s.terms.aCap)}.`,
+  };
+}
+
+/** Basis-point shares of the four pool-contribution sides, bigint-exact (floor; sums ≤ 10000). */
+export function compositionShares(sideTotals: readonly string[]): number[] {
+  const t = sideTotals.map((v) => BigInt(v));
+  const total = t.reduce((a, b) => a + b, 0n);
+  if (total === 0n) return t.map(() => 0);
+  return t.map((v) => Number((v * 10_000n) / total));
+}
+
+export type WalkthroughStep = {
+  step: number;
+  total: number;
+  month: string;
+  caption: string;
+  scores: [string, string];
+  payout: string;
+  final: boolean;
+  label: string;
+};
+
+/** Example maximum payout used by the walkthrough: 1 PLAY per product. */
+const EXAMPLE_UNITS = 1_000_000n;
+
+/**
+ * Step `step` (0-based) of the recorded path: statistics as of that month, the exact contract
+ * scores they imply (shared bigint `score`) and the payout of an example cover (shared `coverPayout`).
+ */
+export function walkthroughStep(session: SessionView, step: number): WalkthroughStep | null {
+  if (session.path.length === 0) return null;
+  const i = Math.max(0, Math.min(step, session.path.length - 1));
+  const row = session.path[i];
+  const sc = [sharedScore(BigInt(row.decline), BigInt(session.terms.dCap)), sharedScore(BigInt(row.excess), BigInt(session.terms.aCap))] as const;
+  const final = i === session.nObs - 1 && session.state === "Settled";
+  const pay = sharedCoverPayout(sc[0], EXAMPLE_UNITS) + sharedCoverPayout(sc[1], EXAMPLE_UNITS);
+  return {
+    step: i,
+    total: session.path.length,
+    month: fmtPeriod(row.periodId),
+    caption: `${fmtPeriod(row.periodId)}: inflation read ${fmtPp(row.value, 2)}. Peak so far ${fmtPp(row.peak, 2)}, largest decline ${ppMagnitude(row.decline)}, excess so far ${fmtPointMonths(row.excess, 1)}.`,
+    scores: [fmtMillionthsPct(sc[0], 1), fmtMillionthsPct(sc[1], 1)],
+    payout: `A cover with 1 PLAY maximum payout on each product would pay ${fmtPlay(pay)} in total.`,
+    final,
+    label: final ? "Final payout" : "Illustration until settlement",
   };
 }
 

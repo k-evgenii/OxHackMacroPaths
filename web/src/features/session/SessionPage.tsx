@@ -1,8 +1,8 @@
 "use client";
-import { useId, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import Link from "next/link";
 import type { SessionOverviewResponse } from "@macropaths/client";
-import { Card, EmptyState, ErrorState, GlowLineChart, Skeleton, StatusPill } from "@macropaths/ui";
+import { Button, Card, EmptyState, ErrorState, GlowLineChart, Skeleton, StatusPill } from "@macropaths/ui";
 import { useSessionOverview, useWalletOverview } from "@/lib/hooks";
 import { useWalletConnection } from "@/features/wallet-connect";
 import {
@@ -14,6 +14,10 @@ import {
   buildTerms,
   buildVault,
   classifyError,
+  compositionShares,
+  explainFigures,
+  plainSummary,
+  walkthroughStep,
   historicalRange,
   offerText,
   peakSummary,
@@ -79,6 +83,7 @@ function SessionContent({ overview }: { overview: SessionOverviewResponse }) {
   const range = historicalRange(overview.presentation, s);
   const progress = replayProgress(s);
   const replay = replayStatus(s);
+  const summary = plainSummary(s);
 
   return (
     <div className={styles.page}>
@@ -92,6 +97,7 @@ function SessionContent({ overview }: { overview: SessionOverviewResponse }) {
         </div>
         <StatusPill tone={pill.tone}>{pill.label}</StatusPill>
       </header>
+      {summary ? <p className={styles.lede}>{summary}</p> : null}
 
       {s.state === "Refunding" ? (
         <div className={styles.notice} role="status">
@@ -131,8 +137,29 @@ function HeroChart({ overview }: { overview: SessionOverviewResponse }) {
   const [range, setRange] = useState<ChartRange>("all");
   const [selected, setSelected] = useState<string | null>(null);
   const years = useMemo(() => availableYears(s), [s]);
-  const chart = useMemo(() => buildChartModel(s, range), [s, range]);
+  const [walk, setWalk] = useState<number | null>(null);
+  const [playing, setPlaying] = useState(false);
+  const reducedMotion = usePrefersReducedMotion();
+  const full = useMemo(() => buildChartModel(s, range), [s, range]);
   const listId = useId();
+  const step = walk == null ? null : walkthroughStep(s, walk);
+  const chart = useMemo(() => {
+    if (walk == null) return full;
+    // Progressive reveal: only the months recorded up to the current step; never beyond the path.
+    const all = buildChartModel(s, "all");
+    return { ...all, series: all.series.map((x) => ({ ...x, points: x.points.slice(0, walk + 1) })) };
+  }, [full, s, walk]);
+  const last = s.path.length - 1;
+
+  useEffect(() => {
+    if (!playing || walk == null) return;
+    if (walk >= last) {
+      setPlaying(false);
+      return;
+    }
+    const t = setTimeout(() => setWalk((w) => (w == null ? w : Math.min(last, w + 1))), 600);
+    return () => clearTimeout(t);
+  }, [playing, walk, last]);
 
   return (
     <Card className={styles.chartCard} title={chart.title} subtitle="Monthly CPI, year on year">
@@ -141,7 +168,7 @@ function HeroChart({ overview }: { overview: SessionOverviewResponse }) {
       ) : (
         <>
           {years.length > 1 ? (
-            <div className={styles.rangeControls} role="group" aria-label="Chart range (display only)">
+            <div className={styles.rangeControls} role="group" aria-label="Chart range">
               {(["all", ...years] as ChartRange[]).map((r) => (
                 <button
                   key={String(r)}
@@ -169,6 +196,44 @@ function HeroChart({ overview }: { overview: SessionOverviewResponse }) {
             selectedPointId={selected}
             onSelectedPointChange={setSelected}
           />
+          <div className={styles.walkthrough} role="group" aria-label="How a cover pays out">
+            {walk == null ? (
+              <Button variant="secondary" onClick={() => { setRange("all"); setSelected(null); setWalk(0); }}>
+                How a cover pays out
+              </Button>
+            ) : (
+              <>
+                <div className={styles.walkControls}>
+                  <Button variant="ghost" onClick={() => setWalk(Math.max(0, walk - 1))} disabled={walk === 0} aria-label="Previous month">
+                    Back
+                  </Button>
+                  {reducedMotion ? null : (
+                    <Button variant="secondary" onClick={() => setPlaying((p) => !p)} disabled={walk >= last && !playing}>
+                      {playing ? "Pause" : "Play"}
+                    </Button>
+                  )}
+                  <Button variant="ghost" onClick={() => setWalk(Math.min(last, walk + 1))} disabled={walk >= last} aria-label="Next month">
+                    Step
+                  </Button>
+                  <Button variant="ghost" onClick={() => { setPlaying(false); setWalk(null); }}>
+                    Close
+                  </Button>
+                </div>
+                {step ? (
+                  <div className={styles.walkCaption} aria-live="polite">
+                    <p>{step.caption}</p>
+                    <p>
+                      Scores so far: Inflation Cooling {step.scores[0]}, Excess Inflation {step.scores[1]}.
+                    </p>
+                    <p>
+                      {step.payout} <span className={styles.rowNote}>{step.label}</span>
+                    </p>
+                    <p className={styles.muted}>Month {step.step + 1} of {step.total}</p>
+                  </div>
+                ) : null}
+              </>
+            )}
+          </div>
           <details className={styles.disclosure}>
             <summary>All readings in view ({chart.observations.length})</summary>
             <ul id={listId} className={styles.obsList}>
@@ -189,6 +254,8 @@ function HeroChart({ overview }: { overview: SessionOverviewResponse }) {
 function ResultSummary({ overview }: { overview: SessionOverviewResponse }) {
   const h = buildHeadline(overview);
   const peak = peakSummary(overview.session);
+  const ex = explainFigures(overview);
+  const explain = [ex.cooling, ex.excess];
   return (
     <Card className={styles.summaryCard} title="Results">
       <dl className={styles.figures}>
@@ -196,13 +263,15 @@ function ResultSummary({ overview }: { overview: SessionOverviewResponse }) {
           <dt>Last replay reading</dt>
           <dd className={styles.figureValue}>{h.lastReading ? h.lastReading.value : "No readings yet"}</dd>
           <dd className={styles.figureNote}>{h.lastReading ? h.lastReading.month : "Waiting for the first month"}</dd>
+          <dd><Explain text={ex.lastReading} /></dd>
         </div>
-        {h.scores.map((sc) => (
+        {h.scores.map((sc, i) => (
           <div className={styles.figure} key={sc.key}>
             <dt>{sc.name} score</dt>
             <dd className={styles.figureValue}>{sc.value ?? "Not determined yet"}</dd>
             {sc.statistic ? <dd className={styles.figureNote}>{sc.statistic}</dd> : null}
             <dd className={styles.figureNote}>{sc.note}</dd>
+            <dd><Explain text={explain[i]} /></dd>
           </div>
         ))}
       </dl>
@@ -210,6 +279,28 @@ function ResultSummary({ overview }: { overview: SessionOverviewResponse }) {
       <p className={styles.footnote}>A score is the payout factor for covers, not a probability or a return.</p>
     </Card>
   );
+}
+
+function Explain({ text }: { text: string }) {
+  return (
+    <details className={styles.explainNum}>
+      <summary>Explain this number</summary>
+      <p>{text}</p>
+    </details>
+  );
+}
+
+function usePrefersReducedMotion(): boolean {
+  const [reduced, setReduced] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return;
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReduced(mq.matches);
+    const on = (e: MediaQueryListEvent) => setReduced(e.matches);
+    mq.addEventListener("change", on);
+    return () => mq.removeEventListener("change", on);
+  }, []);
+  return reduced;
 }
 
 function HoldingList({ cards, emptyText }: { cards: HoldingCard[]; emptyText: string }) {
@@ -234,7 +325,7 @@ function HoldingList({ cards, emptyText }: { cards: HoldingCard[]; emptyText: st
 }
 
 function Holdings({ overview }: { overview: SessionOverviewResponse }) {
-  const { owner } = useWalletConnection();
+  const { owner, connect, status } = useWalletConnection();
   const w = useWalletOverview(owner);
   const model = buildHoldings(overview.session, {
     owner,
@@ -245,7 +336,18 @@ function Holdings({ overview }: { overview: SessionOverviewResponse }) {
 
   let body: React.ReactNode;
   if (model.kind === "disconnected") {
-    body = <EmptyState title="Wallet not connected" description="Connect a wallet to see your covers and pool positions in this session." />;
+    body = (
+      <EmptyState
+        title="Wallet not connected"
+        description="Connect a wallet to see your covers and pool positions in this session."
+        action={
+          <div className={styles.connectRow}>
+            <Button onClick={() => void connect("phantom")} disabled={status === "connecting"}>Connect Phantom</Button>
+            <Button variant="secondary" onClick={() => void connect("solflare")} disabled={status === "connecting"}>Connect Solflare</Button>
+          </div>
+        }
+      />
+    );
   } else if (model.kind === "loading") {
     body = <Skeleton className={styles.skeletonHoldings} label="Loading your holdings" />;
   } else if (model.kind === "error" || model.kind === "unavailable") {
@@ -287,17 +389,23 @@ function Holdings({ overview }: { overview: SessionOverviewResponse }) {
 
 function Vaults({ overview }: { overview: SessionOverviewResponse }) {
   const v = buildVault(overview);
+  const shares = compositionShares(overview.session.sideTotals);
   return (
     <section className={styles.section} aria-labelledby="session-vaults">
       <h2 id="session-vaults" className={styles.sectionTitle}>Pool and vaults</h2>
       <div className={styles.vaultGrid}>
         <Card title="Total deposited" subtitle="All pool contributions in this session" as="div">
           <p className={styles.bigNum}>{v.totalDeposited}</p>
+          <div className={styles.composition} role="img" aria-label={`Pool contributions by side: ${v.segments.map((seg, i) => `${seg.label} ${fmtShare(shares[i])}`).join(", ")}`}>
+            {v.segments.map((seg, i) =>
+              shares[i] > 0 ? <span key={seg.id} className={styles.compSeg} data-i={i} style={{ flexGrow: shares[i] }} /> : null,
+            )}
+          </div>
           <dl className={styles.rows}>
-            {v.segments.map((seg) => (
+            {v.segments.map((seg, i) => (
               <div key={seg.id} className={styles.row}>
-                <dt>{seg.label}</dt>
-                <dd className={styles.num}>{seg.amount}</dd>
+                <dt><span className={styles.swatch} data-i={i} aria-hidden="true" />{seg.label}</dt>
+                <dd className={styles.num}>{seg.amount} · {fmtShare(shares[i])}</dd>
               </div>
             ))}
           </dl>
@@ -361,4 +469,9 @@ function Calculation({ overview }: { overview: SessionOverviewResponse }) {
       </div>
     </details>
   );
+}
+
+/** Basis points -> "23.7%" (display only). */
+function fmtShare(bps: number): string {
+  return `${(bps / 100).toFixed(1)}%`;
 }

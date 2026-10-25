@@ -3,58 +3,95 @@
 ## Identity
 
 - Worker ID and assignment: 12, unified Session page
-- Foundation/checkpoint SHA: 6d2865bf526f0bf980293d9cdcfec547acbfd9f8 (foundation checkpoint not yet merged)
+- Foundation/checkpoint: checkpoint 1 (85a62e8) is merged, on top of foundation 6d2865b.
 - Branch: frontend-v2/12-session-page (commit SHA in the final message)
-- Status: incomplete — code and model tests done; typecheck, browser checks and screenshots blocked on the foundation checkpoint
+- Status: incomplete.
+  - Done: the page code, the curator fixes and the user-approved additions A–C. The model tests pass.
+  - Still to do: tsc is not clean until worker 10's exports and worker 08/09's UI exports land. Screenshots and browser checks are outstanding.
 
 ## Delivered
 
-- `web/src/app/session/[addr]/page.tsx`: server page awaiting `params`, renders `SessionPage`.
-- `web/src/app/session/[addr]/layout.tsx`: page-local pass-through. It has no second shell, provider or header. The old `Prefetch` + `SessionHeader` wiring is removed. The legacy `path`/`results`/`seller`/`activity` routes are untouched and left for Agent 15.
+- `web/src/app/session/[addr]/page.tsx`: a server page that awaits `params` and renders `SessionPage`.
+- `web/src/app/session/[addr]/layout.tsx`: a page-local pass-through.
+  - It adds no second shell, provider or header; the old `Prefetch` and `SessionHeader` wiring is removed.
+  - The legacy `path`, `results`, `seller` and `activity` routes are untouched and left for Agent 15.
 - `web/src/features/session/model.ts`: pure adapters.
-  - Historical range comes from `presentation.firstPeriodId` + `nObs`, never from `lastPeriodId=0`.
-  - State pill and replay status (`not_started` / `in_progress` / `complete_verified` / `complete_mismatch`). An incomplete replay with `integrityOk=false` is treated as normal.
-  - Headline: last reading with its month, and the Cooling and Excess scores. Settled uses `session.scores`, Running/Refunding use `derived.currentScores`, and Open has no scores. Refunding labels say the scores are not used for payouts.
-  - Terms come from the session's own `terms`, never from research caps.
-  - Chart: display coordinates plus exact `fmtPp` strings. The threshold comes from `terms.k`. The year range only crops the display.
-  - Vaults: "Total deposited" comes from `derived.poolDeposited`, with the four More/Less pool-contribution segments. Current vault balances come only from the `vault` ReadSection, and an unavailable read stays separate.
-  - Offer text only; there is no purchase action.
-  - Holdings: filtered by owner and session, using the shared `summarizeHolding`, covers first, with state-aware labels. A null amount is never shown as zero, and claimed holdings are excluded through the shared `unclaimedTotal`.
-  - Safe error classification.
-- `web/src/features/session/SessionPage.tsx`: one page.
-  - Header with title, date range, the devnet/test PLAY context and the state pill.
-  - A Refunding notice and a completed-mismatch alert.
-  - Hero `GlowLineChart` at about 2/3 width, with range buttons (`aria-pressed`) and an accessible observation list.
-  - Result summary with three figures.
-  - Progress line that shows "Replay verified" only when the replay is complete.
-  - Your holdings, with disconnected, loading, error, unavailable, empty and ok states.
-  - Pool and vaults section, and a calculation disclosure.
-  - An invalid address or a 404 shows "Session not found" with a link back.
-- `web/src/features/session/session.module.css`: feature layout using kit `--mp-*` tokens. One column at 375 px, two-column cards at 768 px and a 2:1 hero at 1024 px and up. Controls are at least 44 px with focus outlines.
-- `web/src/features/session/model.test.ts`: 22 vitest model tests.
+  - **Historical range** comes from `presentation.firstPeriodId` plus `nObs`, never from `lastPeriodId=0`.
+  - **Replay status** is not started, in progress, complete and verified, or complete with a mismatch. An incomplete replay with `integrityOk=false` counts as normal.
+  - **Headline scores:**
+    - Settled uses `session.scores`.
+    - Running and Refunding use `derived.currentScores`.
+    - Open shows no score.
+    - Refunding labels say the scores are not used for payouts.
+  - **Terms** come only from `session.terms`. Decline figures are shown unsigned (for example "6.62 pp").
+  - **Chart:** display coordinates plus exact formatted strings. The threshold comes from `terms.k`, and the year range only crops the display.
+  - **Vaults:**
+    - "Total deposited" comes from `derived.poolDeposited`, with four More/Less pool-contribution segments.
+    - Current vault balances come only from the `vault` read.
+  - **Offer:** text only; there is no purchase action.
+  - **Holdings:**
+    - Filtered by owner and session, using the shared `summarizeHolding`, with covers listed first.
+    - Labels depend on the session state.
+    - A null amount never becomes zero, and claimed holdings are left out of the available total.
+- `SessionPage.tsx`: one page.
+  - Header with the state pill, then the hero chart (about 2/3 width) beside a three-figure result summary.
+  - Replay progress line, then holdings, pool and vaults, and a calculation disclosure.
+  - Loading, error and not-found states.
+- `session.module.css`: feature layout using the kit tokens.
+- `model.test.ts`: 26 tests.
 
-No interface changes proposed.
+### Curator fixes
+
+1. **Composition visual:** the four sides now show as a bar with exact shares computed in bigint (`compositionShares`, basis points), plus per-side rows showing the share. I wrote my own bar instead of the kit's `CompositionBar`, which uses floating-point numbers.
+2. **Disconnected wallet:** the empty state now has "Connect Phantom" and "Connect Solflare" buttons that call `useWalletConnection().connect`.
+3. **Range label:** the range group's aria-label is now "Chart range".
+4. **Summary sentence:** a plain-language line under the header, from `plainSummary`. For session A it reads: "Inflation peaked at 9.06 % in Jun 2022 and later fell by up to 6.62 pp from an earlier peak. Readings accumulated 69.1 point-months above the 4.00 % threshold." It adds "so far" while the replay is incomplete.
+
+### User-approved additions
+
+- **(A) "How a cover pays out" walkthrough** in the chart card, driven by `walkthroughStep`.
+  - Controls: Back, Play/Pause and Step buttons, plus Close.
+  - Play never starts on its own and is hidden under prefers-reduced-motion, leaving only the step buttons.
+  - The chart reveals the recorded path up to the current month by slicing the series points. I did this inside my page, so it does not depend on worker 09's progressive-reveal prop; I can switch to that prop when it lands.
+  - Each step has a plain-language caption read out through `aria-live`.
+  - Scores use the shared bigint `score`. The example payout uses the shared `coverPayout` on a cover with 1 PLAY maximum payout per product; for session A the final step pays 1.69 PLAY.
+  - Steps are labelled "Illustration until settlement", except the final month of a Settled session, which is labelled "Final payout".
+- **(B) "Explain this number"** on all three headline figures, using `explainFigures`.
+  - For example: "Largest decline 6.62 pp ÷ decline cap 8.00 pp = 82.7 %." and "Excess 69.1 point-months ÷ excess cap 80.0 point-months = 86.4 %."
+  - The text comes from the session's own terms; it adds "(capped at 100%)" when the cap is reached and says "not determined yet" when there is no score.
+  - It uses a native `<details>` disclosure, which works with the keyboard and screen readers. I can swap in worker 08's popover primitive once it exists; it is not exported yet.
+- **(C) Labelled threshold band:** the threshold label reads, for example, "69.1 point-months above 4.00 %". It falls back to "Threshold 4.00 %" before any readings. It uses the existing `threshold.label` prop.
 
 ## Evidence
 
-- `wsl -d Ubuntu -- bash /mnt/d/Oxhack/fe2/tools/w.sh ../w12/web 'npx vitest run src/features/session'`: 22/22 passed (after `npm ci` in packages/client and web).
-- The tests cover session A (82.7 %/86.4 %, 9.06 % in Jun 2022, 6.62, 69.1, 380.00 PLAY, test terms 4.00 %/8.00/80.0) and a threshold taken from k. They check that range cropping leaves scores unchanged. They also cover Open with no readings, partial Running, Settled, Refunding, completed mismatch, unavailable vault, unavailable seller, disconnected wallet, unrelated owner, unavailable holdings, claimed holdings, and illustration/undetermined labels.
-- The test mocks only `fmtPpDifference`/`fmtPointMonths`, and only while they are absent (it uses the real ones when present). Holdings cases inject a fake summarizer. Production code has no mocks.
-- `npx tsc --noEmit`: all errors in owned files come from missing foundation exports (listed below). Not clean until the checkpoint.
-- Screenshots at 375/768/1440 and browser interaction checks: not done, blocked on the checkpoint and a running app.
+- After checkpoint 1: `npm ci` in `packages/client` and `web` (WSL, nvm), then `npx vitest run src/features/session`: **26/26 passed**. The test substitutions are removed and the real shared helpers are used. Holdings cases inject a fake summarizer, which is test-only.
+- The tests cover:
+  - **Session A:** 82.7 %/86.4 %, 9.06 % in Jun 2022, 6.62, 69.1, 380.00 PLAY, and the test terms.
+  - **Chart:** the threshold and its label come from k; range cropping leaves the scores unchanged.
+  - **States:** Open with no readings, partial Running, Settled, Refunding, completed mismatch.
+  - **Unavailable reads and wallet cases:** vault, seller and holdings unavailable; disconnected wallet; unrelated owner; claimed holding; illustration and undetermined labels.
+  - **New items:** the summary sentence, the explanations, the bigint composition shares, and the walkthrough steps (first step, final scores, final versus illustration labels, clamping, Refunding, Open).
+- **`npx tsc --noEmit`**, errors left in my files:
+  - `@macropaths/ui` does not yet export `Skeleton`, `EmptyState`, `ErrorState` or `GlowLineChart` (workers 08 and 09).
+  - `@/lib/hooks` does not yet export `useSessionOverview` or `useWalletOverview`, and `@/features/wallet-connect` does not exist yet (worker 10).
+  - Every `Button` use fails because `ButtonProps extends ButtonHTMLAttributes` cannot resolve React types from `packages/ui`, which has no `@types/react` reachable from web. This is a shared wiring issue for workers 08 and 15; Card and StatusPill compile.
+- Screenshots and browser checks have not been done; they are blocked until the app runs with those exports.
 
 ## Integration dependencies
 
-The imports follow interfaces.md exactly:
-- `@macropaths/client`: `SessionOverviewResponse`, `WalletOverviewResponse`, `AmountSummary`, `HoldingSummary`, `summarizeHolding`, `fmtPpDifference`, `fmtPointMonths`.
-- `@macropaths/ui`: `Card` (className/subtitle/as), `StatusPill`, `Skeleton`, `EmptyState`, `ErrorState`, `GlowLineChart`. Web currently has no `@macropaths/ui` dependency; worker 15/08 needs to add it.
-- `@/lib/hooks`: `useSessionOverview`, `useWalletOverview` (worker 10).
-- `@/features/wallet-connect`: `useWalletConnection` (worker 10).
-- `classifyError` treats `{status:404}`, `{code:'not_found'}` or a "404/not found" message as not-found. Worker 10's fetchJson error should expose one of these.
-- vitest `include` only matches `*.test.ts`. Component render tests would need worker 15 to add `.tsx` tests and a DOM environment.
+- **Worker 10:** `useSessionOverview`, `useWalletOverview` and `useWalletConnection`. `fetchJson` errors should carry a numeric `status`; `classifyError` already handles `status === 404`.
+- **Workers 08 and 15:**
+  - Export `Skeleton`, `EmptyState` and `ErrorState`.
+  - Fix React type resolution for `packages/ui`.
+  - Optionally provide a popover primitive.
+- **Worker 09:** export `GlowLineChart`. The progressive-reveal prop is optional for me, since the page already slices the points.
+- vitest only picks up `*.test.ts`. Component render tests would need `.tsx` tests and a DOM environment (worker 15).
 
 There are no production stubs and no live-mode fallbacks.
 
 ## Remaining issues
 
-- After the checkpoint merge: run tsc, fix any owned-file errors, then take the screenshots and do the keyboard/focus/reduced-motion checks.
+- After workers 08, 09 and 10 merge:
+  - Get a clean tsc.
+  - Take screenshots at 375, 768 and 1440 px.
+  - Check keyboard and focus, reduced motion and the walkthrough playback in the browser.

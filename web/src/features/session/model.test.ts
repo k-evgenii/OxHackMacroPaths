@@ -1,25 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
-import type { SessionView } from "@macropaths/client";
+import type { SessionOverviewResponse, SessionView } from "@macropaths/client";
 import sessionA from "../../../../packages/client/fixtures/session-B89z.view.json";
 import positionsA from "../../../../packages/client/fixtures/positions-B89z.view.json";
-
-// Until the foundation checkpoint lands, the shared exact helpers may be absent from the client
-// barrel. Use them when present; otherwise substitute minimal test-only stand-ins.
-vi.mock("@macropaths/client", async (importOriginal) => {
-  const actual = (await importOriginal()) as Record<string, unknown>;
-  const fixed = (v: string, scale: number, d: number) => {
-    const n = BigInt(v);
-    const drop = 10n ** BigInt(scale - d);
-    const a = ((n < 0n ? -n : n) + drop / 2n) / drop;
-    const s = a.toString().padStart(d + 1, "0");
-    return (n < 0n ? "-" : "") + s.slice(0, s.length - d) + (d ? "." + s.slice(s.length - d) : "");
-  };
-  return {
-    ...actual,
-    fmtPpDifference: actual.fmtPpDifference ?? ((v: string, d = 2) => `${fixed(v, 4, d)} pp`),
-    fmtPointMonths: actual.fmtPointMonths ?? ((v: string, d = 1) => `${fixed(v, 4, d)} point-months`),
-  };
-});
 
 import {
   addMonths,
@@ -31,6 +13,10 @@ import {
   buildTerms,
   buildVault,
   classifyError,
+  compositionShares,
+  explainFigures,
+  plainSummary,
+  walkthroughStep,
   historicalRange,
   offerText,
   peakSummary,
@@ -54,7 +40,7 @@ function overviewOf(session: SessionView, extra: Partial<{ currentScores: [strin
         ? ({ status: "unavailable", data: null } as const)
         : ({ status: "ok", data: { amounts: ["180000000", "190000000"], total: "370000000" } } as const),
     coverOffer: { status: "ok" as const, data: { seller: null, quote: null, status: "not_configured" as const } },
-  };
+  } as unknown as SessionOverviewResponse;
 }
 
 const partial = (n: number, state: SessionView["state"] = "Running"): SessionView => ({
@@ -101,13 +87,14 @@ describe("chart", () => {
     expect(c.series[0].points).toHaveLength(48);
     expect(c.series[0].points[0]).toMatchObject({ id: "obs-0", x: 0, label: "Jan 2021", formattedValue: "1.40 %" });
     expect(c.threshold.value).toBe(4);
-    expect(c.threshold.label).toBe("Threshold 4.00 %");
+    expect(c.threshold.label).toBe("69.1 point-months above 4.00 %");
     expect(c.xTicks.map((t) => t.label)).toEqual(["2021", "2022", "2023", "2024"]);
   });
 
   it("threshold follows terms.k, not a hardcoded 4%", () => {
     const c = buildChartModel({ ...A, terms: { ...A.terms, k: "30000" } });
-    expect(c.threshold.label).toBe("Threshold 3.00 %");
+    expect(c.threshold.label).toBe("69.1 point-months above 3.00 %");
+    expect(buildChartModel(partial(0, "Open")).threshold.label).toBe("Threshold 4.00 %");
   });
 
   it("range selection crops the display but not scores", () => {
@@ -230,6 +217,45 @@ describe("holdings", () => {
     expect(m.covers[0].rows[2]).toEqual({ label: "Accrued payout illustration", value: "5.00 PLAY", note: "Illustration until settlement" });
     expect(m.positions[0].rows[1]).toEqual({ label: "Not determined yet", value: "Not determined yet" });
     expect(m.unclaimedTotal).toBeNull();
+  });
+});
+
+describe("curation and approved additions", () => {
+  it("plain-language summary from exact statistics", () => {
+    expect(plainSummary(A)).toBe(
+      "Inflation peaked at 9.06 % in Jun 2022 and later fell by up to 6.62 pp from an earlier peak. Readings accumulated 69.1 point-months above the 4.00 % threshold.",
+    );
+    expect(plainSummary(partial(0, "Open"))).toBeNull();
+    expect(plainSummary(partial(20))).toMatch(/so far\.$/);
+  });
+
+  it("explain-this-number uses session terms, never research caps", () => {
+    const e = explainFigures(overviewOf(A));
+    expect(e.cooling).toBe("Largest decline 6.62 pp ÷ decline cap 8.00 pp = 82.7 %.");
+    expect(e.excess).toBe("Excess 69.1 point-months ÷ excess cap 80.0 point-months = 86.4 %.");
+    expect(e.lastReading).toMatch(/Dec 2024.*48 of 48/);
+    expect(explainFigures(overviewOf(partial(0, "Open"))).cooling).toMatch(/not determined yet/);
+  });
+
+  it("composition shares are bigint-exact basis points", () => {
+    expect(compositionShares(A.sideTotals)).toEqual([2368, 2631, 2368, 2631]);
+    expect(compositionShares(["0", "0", "0", "0"])).toEqual([0, 0, 0, 0]);
+  });
+
+  it("walkthrough reveals the recorded path to the final scores", () => {
+    const first = walkthroughStep(A, 0)!;
+    expect(first.month).toBe("Jan 2021");
+    expect(first.label).toBe("Illustration until settlement");
+    const end = walkthroughStep(A, 47)!;
+    expect(end.scores).toEqual(["82.7 %", "86.4 %"]);
+    expect(end.final).toBe(true);
+    expect(end.label).toBe("Final payout");
+    // 827387 + 863980 millionths of 1 PLAY each
+    expect(end.payout).toContain("1.69 PLAY");
+    expect(walkthroughStep(A, 99)!.step).toBe(47);
+    expect(walkthroughStep(partial(20), 19)!.label).toBe("Illustration until settlement");
+    expect(walkthroughStep({ ...A, state: "Refunding" }, 47)!.final).toBe(false);
+    expect(walkthroughStep(partial(0, "Open"), 0)).toBeNull();
   });
 });
 
