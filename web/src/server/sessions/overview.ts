@@ -1,7 +1,6 @@
 // /api/sessions/[addr]/overview: required session data plus independently available vault and offer sections.
 import { PublicKey, type AccountInfo } from "@solana/web3.js";
-import * as client from "@macropaths/client";
-import { quotePda, sellerPda, toEntryQuoteView, toSellerView, type EntryQuoteView, type SellerView, type SessionView } from "@macropaths/client";
+import { calculateAccruedScores, quotePda, sumAmounts, sellerPda, toEntryQuoteView, toSellerView, type EntryQuoteView, type SellerView, type SessionView } from "@macropaths/client";
 import { findRegistered, presentationOf, type Registry } from "./registry";
 import { ownAccount, type SessionRepository } from "./repository";
 
@@ -33,15 +32,8 @@ export function tokenAmount(info: AccountInfo<Buffer> | null, mint: string, auth
   return d.readBigUInt64LE(64);
 }
 
-export const sumAmounts = (values: readonly S[]): S => values.reduce((a, v) => a + BigInt(v), 0n).toString();
-
 type AccruedFn = (session: SessionView) => Pair<S> | null;
-/** Agent 01's shared helper (interfaces.md `calculateAccruedScores`). */
-const sharedAccrued: AccruedFn = (s) => {
-  const fn = (client as unknown as { calculateAccruedScores?: AccruedFn }).calculateAccruedScores;
-  if (!fn) throw new Error("calculateAccruedScores is not available from @macropaths/client");
-  return fn(s);
-};
+const sharedAccrued: AccruedFn = calculateAccruedScores;
 
 /**
  * No score before the first observation; final recorded scores when Settled;

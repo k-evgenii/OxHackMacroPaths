@@ -65,3 +65,16 @@ await sessionRepository.getManyAccounts(keys); // uncached live AccountInfo[]
    - `/api/sessions` is now registry-only with no `getProgramAccounts` and no `SESSION_ALLOWLIST`.
    - A foreign or wrong-discriminator registered account is now an explicit 500 instead of 404.
    The orchestrator or Agent 15 needs to update or retire those cases.
+
+## Checkpoint 1 (integration 85a62e8)
+
+- Merged `frontend-v2/integration`. The local `sumAmounts` is dropped; `overview.ts` now imports `sumAmounts` and `calculateAccruedScores` from `@macropaths/client`. `legacyReader` stays until Agent 02's reader merges.
+- `tsc --noEmit`: clean.
+- `vitest run test/sessions test/api`: 58 passed, 1 skipped, 7 failed. All 19 session tests pass. The 7 failures are the intentional behaviour changes, all in `web/test/api/routes.test.ts`, for worker 15 to retire or update:
+  1. GET /api/sessions > lists session summaries filtered by the Session discriminator
+  2. GET /api/sessions > 502 on RPC failure
+  3. GET /api/sessions > also filters by the Session account size
+  4. GET /api/sessions > with SESSION_ALLOWLIST > returns only the allowlisted sessions
+  5. GET /api/sessions > with SESSION_ALLOWLIST > orders them as listed, ignoring blanks
+  6. GET /api/sessions/[addr] > 404 on an account owned by another program (now an explicit 500)
+  7. GET /api/sessions/[addr] > 404 on a program account with the wrong discriminator (now an explicit 500)
