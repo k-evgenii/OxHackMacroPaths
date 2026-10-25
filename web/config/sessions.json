@@ -1,0 +1,43 @@
+{
+  "version": 1,
+  "cluster": "devnet",
+  "defaultSession": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+  "sessions": [
+    {
+      "address": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "label": "Reference session A",
+      "mode": "historical_replay",
+      "layout": "v1",
+      "programId": "FvT786RtMTtbdXWemA9zgA9rfwhvxFsKY1ypiMMNwMbS",
+      "firstPeriodId": 202101,
+      "nObs": 48,
+      "datasetId": "328f498b394e988f88f763947e0c656cb0e988321c3f66228c8549946401143e",
+      "terms": { "k": "40000", "dCap": "80000", "aCap": "800000" },
+      "researchBundleId": null
+    }
+  ],
+  "products": [
+    {
+      "key": "cooling",
+      "name": "Inflation Cooling",
+      "description": "Pays out as inflation falls from its running peak over the replayed window.",
+      "status": "supported",
+      "productIndex": 0
+    },
+    {
+      "key": "excess",
+      "name": "Excess Inflation",
+      "description": "Pays out as inflation accumulates above the session threshold over the replayed window.",
+      "status": "supported",
+      "productIndex": 1
+    },
+    {
+      "key": "fuel",
+      "name": "Fuel",
+      "description": "Research-only gasoline price product; not available on chain in this release.",
+      "status": "research",
+      "productIndex": null
+    }
+  ],
+  "research": null
+}

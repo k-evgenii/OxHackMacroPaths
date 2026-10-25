@@ -10,6 +10,8 @@
 | Merge of f42704f into integration | `6d2865b` |
 | Foundation commit 1 (schemas, helpers, fixtures, ports) | `5422649` |
 | Foundation commit 2 (deps, UI wiring, harness) = CHECKPOINT 1 | `85a62e8` |
+| Foundation report | `1356a6d` |
+| DOM test env (jsdom, @testing-library/react) = CHECKPOINT 1.1 | see git log |
 
 Branch `frontend-v2/integration`, worktree `D:/Oxhack/fe2/integration`. Nothing pushed.
 
@@ -39,7 +41,8 @@ Branch `frontend-v2/integration`, worktree `D:/Oxhack/fe2/integration`. Nothing 
 | `npx tsc --noEmit` (packages/client) | 0 errors |
 | `npx vitest run` (web) | 14 files; 92 passed, 1 skipped. In one full run `test/lib/identifiers.test.ts` timed out at 5 s (it walks web/src on the slow /mnt/d mount while other files run); run alone it passes 4/4. Not a logic failure, but it can flake on /mnt/d. |
 | `npx tsc --noEmit` (web) | 0 errors |
-| lint / build | see "Lint and build" below |
+| `npx eslint` (web) | 0 problems |
+| `npx next build` (web, prebuild skipped) | compiled, typechecked, generated 7/7 static pages, then failed in "Collecting build traces" with `ENOENT .next/server/app/_not-found/page.js.nft.json` (likely a /mnt/d drvfs filesystem race). Not reproduced on a native FS. Worker 15 should rerun on a Linux-native path or on Windows node. |
 
 ## Artifact overwrite during builds
 
@@ -59,7 +62,7 @@ The research bundle fixture hashes the committed git blobs (`git show HEAD:web/p
 - `@macropaths/ui` `file:../packages/ui` (already in `transpilePackages`).
 - `@anchor-lang/core` 1.0.2 and `@solana/web3.js` 1.99.0 unchanged.
 - `packages/client/package.json` exports gained `./types`, `./format`, `./presentation`.
-- `web/vitest.config.ts` include widened to `*.test.tsx`. Still `environment: "node"`.
+- `web/vitest.config.ts` include widened to `*.test.tsx`. Default is still `environment: "node"`. Checkpoint 1.1 adds dev `jsdom` ^26, `@testing-library/react` ^16, `@testing-library/dom` ^10. Opt in per file with `// @vitest-environment jsdom` (see `web/test/support/dom-environment.test.tsx`).
 
 ## What the foundation provides
 
