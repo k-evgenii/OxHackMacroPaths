@@ -4,7 +4,7 @@ import { MemoryCacheStore } from "@/server/history/store";
 import { parseHistoryQuery } from "@/server/history/query";
 import { normalizeTransaction } from "@/server/history/normalize";
 
-const tick = () => new Promise((r) => setTimeout(r, 0));
+const tick = () => new Promise<void>((r) => setTimeout(r, 0));
 
 describe("history admission", () => {
   it("allows at most two active getTransaction calls and passes other methods through", async () => {

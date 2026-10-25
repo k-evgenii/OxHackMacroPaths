@@ -15,13 +15,14 @@ function sessionsInLogOrder(logs: string[]): (string | null)[] {
   const out: (string | null)[] = [];
   for (const log of logs) {
     if (!log.startsWith(PROGRAM_DATA)) continue;
-    let decoded: { data?: { session?: { toBase58?: () => string } } } | null = null;
+    type Decoded = { data?: { session?: { toBase58?: () => string } } };
+    let decoded: Decoded | null;
     try {
-      decoded = eventCoder.decode(log.slice(PROGRAM_DATA.length)) as typeof decoded;
+      decoded = eventCoder.decode(log.slice(PROGRAM_DATA.length)) as Decoded | null;
     } catch {
       decoded = null;
     }
-    if (!decoded) continue;
+    if (decoded === null) continue;
     const s = decoded.data?.session;
     out.push(typeof s?.toBase58 === "function" ? s.toBase58() : null);
   }
