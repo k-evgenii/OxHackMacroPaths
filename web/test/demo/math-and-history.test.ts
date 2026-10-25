@@ -5,6 +5,9 @@ import {
   FINAL_SCORES,
   X,
   illustrativePayout,
+  amountsThrough,
+  potsThrough,
+  REFERENCE_POTS,
   pathStats,
   toBase,
 } from "../../src/demo/lib/demoData";
@@ -93,5 +96,46 @@ describe("local demo persistence", () => {
     saveName("  David\u0000   Nkpa  ");
     expect(loadName()).toBe("David Nkpa");
     expect([...values.keys()]).toEqual(["macropaths.name.v2"]);
+  });
+  it("keeps multiple same-month entries and canonical combined settlement", () => {
+    const entries = [
+      {
+        id: "a9b166e8-0f10-4ccd-98d2-1026ba69b465",
+        monthIndex: 5,
+        amounts: [10, 0, 0, 0] as [number, number, number, number],
+      },
+      {
+        id: "fe787c1e-6484-4e2b-bc22-1c4b3635ab55",
+        monthIndex: 5,
+        amounts: [5, 0, 10, 0] as [number, number, number, number],
+      },
+    ];
+    const amounts = amountsThrough(entries);
+    expect(amounts).toEqual([15, 0, 10, 0]);
+    expect(amountsThrough(entries, 4)).toEqual([0, 0, 0, 0]);
+    expect(potsThrough(entries, 5)).toEqual([105, 100, 100, 100]);
+    expect(potsThrough(entries, 4)).toEqual(REFERENCE_POTS);
+    const run: Run = {
+      ...example,
+      amounts,
+      put: 25,
+      back: illustrativePayout(amounts, FINAL_SCORES),
+      entries,
+    };
+    const values = storage();
+    saveRuns([run]);
+    expect(loadRuns()).toEqual([run]);
+    values.set(
+      "macropaths.runs.v2",
+      JSON.stringify([
+        { ...run, entries: [{ ...entries[0], monthIndex: 48 }, entries[1]] },
+      ]),
+    );
+    expect(loadRuns()).toEqual([]);
+    values.set(
+      "macropaths.runs.v2",
+      JSON.stringify([{ ...run, entries: [entries[0]] }]),
+    );
+    expect(loadRuns()).toEqual([]);
   });
 });
