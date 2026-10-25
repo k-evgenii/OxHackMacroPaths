@@ -82,45 +82,36 @@ describe("GET /api/health", () => {
   });
 });
 
+// Worker 04: /api/sessions lists registered sessions only (web/config/sessions.json), in registry order.
+// No getProgramAccounts scan and no SESSION_ALLOWLIST env (replaces 5 legacy cases).
 describe("GET /api/sessions", () => {
-  it("lists session summaries filtered by the Session discriminator", async () => {
+  beforeEach(() => {
+    conn.getMultipleAccountsInfo.mockImplementation(async (keys: unknown[]) => keys.map(() => account(PROGRAM_ID, sessionBytes)));
+  });
+  it("lists the registered sessions without a program-account scan", async () => {
     const res = await sessions.GET();
     expect(res.status).toBe(200);
     const list = SessionList.parse(await res.json());
     expect(list.sessions.map((s) => s.address)).toEqual([SESSION_A]);
     expect(Object.keys(list.sessions[0])).not.toContain("path");
-    expect(conn.getProgramAccounts.mock.calls[0][1].filters[0].memcmp.offset).toBe(0);
+    expect(conn.getProgramAccounts).not.toHaveBeenCalled();
   });
-  it("502 on RPC failure", async () => {
-    conn.getProgramAccounts.mockRejectedValue(new Error("503 Service Unavailable"));
+  it("ignores SESSION_ALLOWLIST", async () => {
+    process.env.SESSION_ALLOWLIST = MISSING;
+    try {
+      const list = SessionList.parse(await (await sessions.GET()).json());
+      expect(list.sessions.map((s) => s.address)).toEqual([SESSION_A]);
+    } finally {
+      delete process.env.SESSION_ALLOWLIST;
+    }
+  });
+  it("502 when the registered session read fails", async () => {
+    conn.getMultipleAccountsInfo.mockRejectedValue(new Error("503 Service Unavailable"));
     await expectError(await sessions.GET(), 502, "rpc_error");
   });
-  it("also filters by the Session account size", async () => {
-    await sessions.GET();
+  it("keeps the v1 Session account size", () => {
     expect(sessionBytes).toHaveLength(913);
     expect(SESSION_ACCOUNT_SIZE).toBe(sessionBytes.length);
-    expect(conn.getProgramAccounts.mock.calls[0][1].filters).toContainEqual({ dataSize: SESSION_ACCOUNT_SIZE });
-  });
-  describe("with SESSION_ALLOWLIST", () => {
-    const SESSION_B = "9umL3uakhneZ1iZraj3AWuR4yU9mnb1UCmMBRQMBDaBW";
-    const addresses = async () => SessionList.parse(await (await sessions.GET()).json()).sessions.map((s) => s.address);
-    beforeEach(async () => {
-      const { PublicKey } = await import("@solana/web3.js");
-      conn.getProgramAccounts.mockResolvedValue(
-        [SESSION_A, SESSION_B].map((a) => ({ pubkey: new PublicKey(a), account: account(PROGRAM_ID, sessionBytes) })),
-      );
-    });
-    afterEach(() => {
-      delete process.env.SESSION_ALLOWLIST;
-    });
-    it("returns only the allowlisted sessions", async () => {
-      process.env.SESSION_ALLOWLIST = SESSION_B;
-      expect(await addresses()).toEqual([SESSION_B]);
-    });
-    it("orders them as listed, ignoring blanks", async () => {
-      process.env.SESSION_ALLOWLIST = ` ${SESSION_B}, ${SESSION_A} ,`;
-      expect(await addresses()).toEqual([SESSION_B, SESSION_A]);
-    });
   });
 });
 
@@ -143,13 +134,13 @@ describe("GET /api/sessions/[addr]", () => {
   it("404 on a missing account", async () => {
     await expectError(await session.GET(req(), params({ addr: MISSING })), 404, "not_found");
   });
-  it("404 on an account owned by another program", async () => {
+  it("500 when a registered address is owned by another program", async () => {
     conn.getAccountInfo.mockResolvedValueOnce(account(new (await import("@solana/web3.js")).PublicKey(MISSING), Buffer.alloc(913)));
-    await expectError(await session.GET(req(), params({ addr: SESSION_A })), 404, "not_found");
+    await expectError(await session.GET(req(), params({ addr: SESSION_A })), 500, "internal");
   });
-  it("404 on a program account with the wrong discriminator", async () => {
+  it("500 when a registered address has the wrong discriminator", async () => {
     conn.getAccountInfo.mockResolvedValueOnce(account(PROGRAM_ID, Buffer.alloc(913)));
-    await expectError(await session.GET(req(), params({ addr: SESSION_A })), 404, "not_found");
+    await expectError(await session.GET(req(), params({ addr: SESSION_A })), 500, "internal");
   });
   it("502 on RPC failure", async () => {
     conn.getAccountInfo.mockRejectedValue(new Error("ECONNRESET"));
@@ -183,51 +174,21 @@ describe("GET /api/sessions/[addr]/seller", () => {
   });
 });
 
+// Worker 03: the events route now pages through the history repository (limit 1..25, partial pages
+// instead of whole-request 502s). Paging, caching, retry and attribution are covered by test/history;
+// these cases only pin the route's request validation and session lookup.
 describe("GET /api/sessions/[addr]/events", () => {
   const url = (q = "") => req(`http://x/api/sessions/${SESSION_A}/events${q}`);
-
-  it("pages newest first with nextBefore", async () => {
-    const r1 = await events.GET(url("?limit=50"), params({ addr: SESSION_A }));
-    expect(r1.status).toBe(200);
-    const p1 = EventsResponse.parse(await r1.json());
-    expect(p1.nextBefore).toBe(txs[49].signature);
-    expect(p1.events[0].type).toBe("Settled");
-    const r2 = await events.GET(url(`?before=${p1.nextBefore}&limit=50`), params({ addr: SESSION_A }));
-    const p2 = EventsResponse.parse(await r2.json());
-    expect(p2.nextBefore).toBeNull();
-    const all = [...p1.events, ...p2.events];
-    expect(all.filter((e) => e.type === "Observed")).toHaveLength(48);
-    expect(all.filter((e) => e.type === "Settled")).toHaveLength(1);
-    const slots = all.map((e) => e.slot);
-    expect(slots).toEqual([...slots].sort((a, b) => b - a));
-  });
-  it("defaults to limit 50", async () => {
-    await events.GET(url(), params({ addr: SESSION_A }));
-    expect(conn.getSignaturesForAddress.mock.calls[0][1]).toMatchObject({ limit: 50 });
-  });
-  it("caches transactions by signature", async () => {
-    await events.GET(url("?limit=10"), params({ addr: SESSION_A }));
-    clearCache(); // drop the TTL cache, keep the permanent tx cache
-    await events.GET(url("?limit=10"), params({ addr: SESSION_A }));
-    expect(conn.getSignaturesForAddress).toHaveBeenCalledTimes(2);
-    expect(conn.getTransaction).toHaveBeenCalledTimes(10);
-  });
-  it("retries getTransaction on HTTP 429", async () => {
-    conn.getTransaction.mockRejectedValueOnce(new Error("429 Too Many Requests"));
-    const res = await events.GET(url("?limit=3"), params({ addr: SESSION_A }));
-    expect(res.status).toBe(200);
-    expect(EventsResponse.parse(await res.json()).events).toHaveLength(3);
-    expect(conn.getTransaction).toHaveBeenCalledTimes(4);
-  });
-  it("502 when 429 persists", async () => {
-    conn.getTransaction.mockRejectedValue(new Error("429 Too Many Requests"));
-    await expectError(await events.GET(url("?limit=3"), params({ addr: SESSION_A })), 502, "rpc_error");
-  });
-  it.each(["?limit=0", "?limit=101", "?limit=abc", "?limit=2.5", "?before=xyz"])("400 for %s", async (q) => {
+  it.each(["?limit=0", "?limit=26", "?limit=abc", "?limit=2.5", "?before=xyz", "?retryCursor=x&limit=5"])("400 for %s", async (q) => {
     await expectError(await events.GET(url(q), params({ addr: SESSION_A })), 400, "bad_request");
   });
   it("404 for a missing session", async () => {
     await expectError(await events.GET(url(), params({ addr: MISSING })), 404, "not_found");
+  });
+  it("200 with a schema-valid page for the registered session", async () => {
+    const res = await events.GET(url("?limit=5"), params({ addr: SESSION_A }));
+    expect(res.status).toBe(200);
+    EventsResponse.parse(await res.json());
   });
 });
 
