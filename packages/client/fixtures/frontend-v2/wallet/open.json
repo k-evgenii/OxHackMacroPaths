@@ -1,0 +1,42 @@
+{
+  "_synthetic": "SYNTHETIC test data for frontend v2 scenarios; not an on-chain read.",
+  "owner": "A9oG4Xp5wQq5TspAUPijkMNjWcr4KWMFbeP9KNVL3Kg8",
+  "meta": {
+    "source": "fixture",
+    "fetchedAt": "2026-10-25T00:00:00.000Z"
+  },
+  "balances": [
+    {
+      "mint": "AvVf2k9ixDvLjGnjCD4MDGTVBFfrhvzGgzwvptweaPWW",
+      "read": {
+        "status": "ok",
+        "data": {
+          "amount": "0"
+        }
+      }
+    }
+  ],
+  "holdings": [
+    {
+      "sessionAddress": "ApcEnrz7vQgXDSJoHJwQXA8v7pF7FtUxnfrqbigp8gWP",
+      "read": {
+        "status": "ok",
+        "data": {
+          "position": {
+            "address": "A2ThjCnL65f59L7dpPmkmXb4cTDr9UjJo4kT4D6KRSXL",
+            "owner": "A9oG4Xp5wQq5TspAUPijkMNjWcr4KWMFbeP9KNVL3Kg8",
+            "deposited": [
+              "10000000",
+              "0",
+              "0",
+              "0"
+            ],
+            "claimed": false,
+            "payout": null
+          },
+          "cover": null
+        }
+      }
+    }
+  ]
+}
