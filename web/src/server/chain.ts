@@ -1,8 +1,9 @@
 // Read helpers used by the API routes. All RPC goes through rpc.ts.
 import { PublicKey, type AccountInfo } from "@solana/web3.js";
-import { utils } from "@anchor-lang/core";
+import { BorshAccountsCoder, BorshCoder, utils } from "@anchor-lang/core";
 import {
   ACCOUNT_DISCRIMINATORS,
+  IDL,
   PROGRAM_ID,
   SESSION_FIELD_OFFSET,
   accountKind,
@@ -60,11 +61,17 @@ export async function getSessionView(address: string): Promise<SessionView> {
 
 export type RawAccount = { address: string; data: Uint8Array };
 
+/** Byte length of a Session account (discriminator + fields), from the IDL. */
+export const SESSION_ACCOUNT_SIZE = new BorshAccountsCoder(IDL).size("Session");
+
 export async function listSessionAccounts(): Promise<RawAccount[]> {
   return cached("sessions", 5_000, async () => {
     const accounts = await rpc("getProgramAccounts", (c) =>
       c.getProgramAccounts(PROGRAM_ID, {
-        filters: [{ memcmp: { offset: 0, bytes: utils.bytes.bs58.encode(ACCOUNT_DISCRIMINATORS.Session) } }],
+        filters: [
+          { memcmp: { offset: 0, bytes: utils.bytes.bs58.encode(ACCOUNT_DISCRIMINATORS.Session) } },
+          { dataSize: SESSION_ACCOUNT_SIZE },
+        ],
       }),
     );
     return accounts.map((a) => ({ address: a.pubkey.toBase58(), data: new Uint8Array(a.account.data) }));
@@ -93,7 +100,7 @@ export async function getAccounts(session: SessionView, keys: PublicKey[]): Prom
   );
 }
 
-// Transactions are immutable once confirmed: cache parsed events by signature forever.
+// Transactions are immutable once confirmed: cache parsed events by (session, signature) forever.
 const txEvents = new Map<string, EventView[]>();
 export const TX_CONCURRENCY = 4;
 
@@ -101,8 +108,29 @@ export function clearTxCache(): void {
   txEvents.clear();
 }
 
-async function eventsForSignature(signature: string): Promise<EventView[]> {
-  const hit = txEvents.get(signature);
+const eventCoder = new BorshCoder(IDL).events;
+const PROGRAM_DATA = "Program data: ";
+
+/**
+ * Drop event logs whose `session` field names another session: one transaction can touch several
+ * sessions, and getSignaturesForAddress returns it for each. Logs without a session field are kept.
+ */
+export function logsForSession(logs: string[], session: string): string[] {
+  return logs.filter((log) => {
+    if (!log.startsWith(PROGRAM_DATA)) return true;
+    let field: { toBase58?: () => string } | undefined;
+    try {
+      field = (eventCoder.decode(log.slice(PROGRAM_DATA.length))?.data as { session?: typeof field } | undefined)?.session;
+    } catch {
+      return true; // not one of our events; parseEvents decides
+    }
+    return typeof field?.toBase58 !== "function" || field.toBase58() === session;
+  });
+}
+
+async function eventsForSignature(signature: string, session: string): Promise<EventView[]> {
+  const key = `${session}:${signature}`;
+  const hit = txEvents.get(key);
   if (hit) return hit;
   const tx = await rpc("getTransaction", (c) =>
     c.getTransaction(signature, { maxSupportedTransactionVersion: 0, commitment: "confirmed" }),
@@ -110,9 +138,9 @@ async function eventsForSignature(signature: string): Promise<EventView[]> {
   if (!tx) return []; // not yet visible at "confirmed"; retry on a later request
   const events =
     tx.meta && !tx.meta.err
-      ? parseEvents(tx.meta.logMessages ?? [], { signature, slot: tx.slot, blockTime: tx.blockTime ?? null })
+      ? parseEvents(logsForSession(tx.meta.logMessages ?? [], session), { signature, slot: tx.slot, blockTime: tx.blockTime ?? null })
       : [];
-  txEvents.set(signature, events);
+  txEvents.set(key, events);
   return events;
 }
 
@@ -126,7 +154,7 @@ export async function getSessionEvents(
       c.getSignaturesForAddress(key, { before: opts.before, limit: opts.limit }, "confirmed"),
     ),
   );
-  const perTx = await mapLimit(sigs, TX_CONCURRENCY, (s) => eventsForSignature(s.signature));
+  const perTx = await mapLimit(sigs, TX_CONCURRENCY, (s) => eventsForSignature(s.signature, session.address));
   return {
     events: perTx.flat(),
     nextBefore: sigs.length === opts.limit ? sigs[sigs.length - 1].signature : null,

@@ -2,12 +2,18 @@
 // Exposure planner (research, advisory). Ranks the 21 policies client-side; no wallet, no transactions.
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import type { SessionView } from "@macropaths/client";
 import { plannerQuery, type PlannerArtifact } from "@/lib/artifacts";
+import { DEFAULT_SESSION } from "@/lib/api-client";
+import { useSession } from "@/lib/hooks";
 import { recommend, showcase, type Product, type Result } from "@/lib/planner";
 import { Provenance } from "@/components/shell/Provenance";
+import { RESEARCH_CAP, RESEARCH_ILLUSTRATION, sessionCapText, sessionTermsText } from "@/components/shell/ResearchCaps";
 import { Badge, Card, ErrorState, Num, Skeleton, Stat } from "./_fallback";
 
 const ILLUSTRATION = "illustration until settlement";
+/** Manifest product index the planner's products are scored as on chain; fuel and cash have none. */
+const CHAIN_INDEX: Record<Product, number | null> = { cash: null, excess: 1, fuel: null };
 const NAME: Record<Product, string> = { cash: "Keep cash", excess: "Excess Inflation", fuel: "Fuel Pass-through" };
 const LABEL: Record<Product, string> = {
   excess: "executable on chain",
@@ -42,7 +48,7 @@ function NumberInput({ label, value, onChange }: { label: string; value: number;
   );
 }
 
-function Planner({ art }: { art: PlannerArtifact }) {
+function Planner({ art, session }: { art: PlannerArtifact; session?: SessionView }) {
   const [q, setQ] = useState(art.defaults.q);
   const [B, setB] = useState(art.defaults.B);
   const valid = Number.isFinite(q) && q >= 0 && Number.isFinite(B) && B > 0;
@@ -63,9 +69,9 @@ function Planner({ art }: { art: PlannerArtifact }) {
           <Stat label="Excess Inflation entry price" value={art.prices.excess} hint={ILLUSTRATION} />
           <Stat label="Fuel entry price" value={art.prices.fuel} hint={ILLUSTRATION} />
           <Stat
-            label="Caps"
+            label={`${RESEARCH_CAP}s`}
             value={<span className="text-sm">{CAP_TEXT(art, "excess")}; {CAP_TEXT(art, "fuel")}</span>}
-            hint="manifest caps; an on-chain session scores against its own terms"
+            hint={`manifest caps, research only; ${session ? sessionTermsText(session) : "an on-chain session scores against its own terms"}`}
           />
         </div>
         {!valid ? <p className="mt-2 text-xs text-red-300">Enter gallons ≥ 0 and a budget &gt; 0.</p> : null}
@@ -73,8 +79,8 @@ function Planner({ art }: { art: PlannerArtifact }) {
 
       {best && plan && show ? (
         <>
-          <Recommendation art={art} best={best} n={n} first={first} last={last} />
-          <Card title="Historical showcase 2021-24">
+          <Recommendation art={art} best={best} n={n} first={first} last={last} session={session} />
+          <Card title={`Historical showcase 2021-24 (${RESEARCH_ILLUSTRATION})`}>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-6">
               <Stat label="overrun" value={<Num value={show.overrun} />} />
               <Stat label="stake" value={<Num value={show.stake} />} />
@@ -83,7 +89,9 @@ function Planner({ art }: { art: PlannerArtifact }) {
               <Stat label="shortfall" value={<Num value={show.shortfall} />} />
               <Stat label="cash baseline shortfall" value={<Num value={show.cash_baseline_shortfall} />} />
             </div>
-            <p className="mt-2 text-xs text-white/50">historical showcase, not a validation set; {ILLUSTRATION}</p>
+            <p className="mt-2 text-xs text-white/50">
+              historical showcase, not a validation set; scored against the {RESEARCH_CAP}s above; {ILLUSTRATION}
+            </p>
           </Card>
           <PolicyTable rows={plan.ranked} best={best} />
         </>
@@ -92,15 +100,30 @@ function Planner({ art }: { art: PlannerArtifact }) {
   );
 }
 
-function Recommendation({ art, best, n, first, last }: { art: PlannerArtifact; best: Result; n: number; first?: string; last?: string }) {
+function Recommendation({
+  art,
+  best,
+  n,
+  first,
+  last,
+  session,
+}: {
+  art: PlannerArtifact;
+  best: Result;
+  n: number;
+  first?: string;
+  last?: string;
+  session?: SessionView;
+}) {
   const maxPayout = best.units; // score capped at 1
+  const ownCap = best.product === "cash" ? null : sessionCapText({ index: CHAIN_INDEX[best.product] }, session);
   return (
     <Card title="Recommendation">
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
         <Stat label="product" value={best.product === "cash" ? "keep cash" : <ProductTag p={best.product} />} />
         <Stat label="stake" value={<Num value={best.stake} />} />
         <Stat label="units" value={<Num value={best.units} />} />
-        <Stat label="cap" value={<span className="text-sm">{CAP_TEXT(art, best.product)}</span>} />
+        <Stat label={RESEARCH_CAP} value={<span className="text-sm">{CAP_TEXT(art, best.product)}</span>} hint={ownCap ?? undefined} />
         <Stat label="maximum payout" value={<Num value={maxPayout} />} hint={ILLUSTRATION} />
       </div>
       <p className="mt-3 text-sm">
@@ -170,6 +193,8 @@ function PolicyTable({ rows, best }: { rows: Result[]; best: Result }) {
 
 export default function PlannerPage() {
   const { data, error } = useQuery(plannerQuery);
+  // The reference session gives the on-chain caps to show beside the research p90 caps; optional, never blocking.
+  const session = useSession(DEFAULT_SESSION).data;
   return (
     <div className="mx-auto max-w-5xl space-y-4">
       <header>
@@ -178,7 +203,7 @@ export default function PlannerPage() {
       </header>
       <Provenance />
       {error ? <ErrorState error={error} /> : null}
-      {data ? <Planner art={data} /> : !error ? <Skeleton className="h-96" /> : null}
+      {data ? <Planner art={data} session={session} /> : !error ? <Skeleton className="h-96" /> : null}
     </div>
   );
 }

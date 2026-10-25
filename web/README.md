@@ -1,13 +1,21 @@
 # MacroPaths web
 
 Next.js (app router) frontend for the MacroPaths program on Solana devnet. This pass is read-only.
+`web/` lives on the `evgenii/frontend` branch; `main` does not contain it.
 
 ```bash
-# from the main repo, Node comes from pixi; or put .pixi/envs/default on PATH
-cp .env.example .env.local     # set RPC_URL; NEXT_PUBLIC_USE_FIXTURES=1 works without RPC
-npm install && npm run dev
-npm test && npm run typecheck && npm run build
+pixi install --locked            # repo root: Node comes from pixi (or put .pixi/envs/default on PATH)
+(cd packages/client && npm ci)   # first: web depends on it as file:../packages/client
+cd web && npm ci
+cp .env.example .env.local       # set RPC_URL to a keyed devnet endpoint (Helius/QuickNode); the public one rate-limits
+npm run dev
+npm test && npm run typecheck && npm run lint && npm run build
 ```
+
+`NEXT_PUBLIC_USE_FIXTURES=1` answers every `/api` path from `packages/client/fixtures`, so no RPC is needed.
+The program id comes from the IDL via `@macropaths/client`, the reference session from `NEXT_PUBLIC_DEFAULT_SESSION`
+(fixture session as fallback). Research caps and scores (`public/data`) are a p90 parameterisation, not a session's terms,
+and the UI labels them as such.
 
 ## Ownership (frontend pass 1)
 

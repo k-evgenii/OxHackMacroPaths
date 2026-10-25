@@ -3,15 +3,16 @@
 // With NEXT_PUBLIC_USE_FIXTURES=1 every /api path is answered from packages/client/fixtures, so pages can be
 // built before the API exists. Artifacts (/api/artifacts/<name>) fall back to /data/<name>.json in that mode.
 import type { z } from "zod";
-import { ApiError } from "@macropaths/client";
+import { ApiError, PROGRAM_ID } from "@macropaths/client";
 import sessionFixture from "@macropaths/client/fixtures/session-B89z.view.json";
 import positionsFixture from "@macropaths/client/fixtures/positions-B89z.view.json";
 import eventsFixture from "@macropaths/client/fixtures/events-B89z.view.json";
 
 export const USE_FIXTURES = process.env.NEXT_PUBLIC_USE_FIXTURES === "1";
 export const CLUSTER = process.env.NEXT_PUBLIC_CLUSTER ?? "devnet";
-export const DEFAULT_SESSION =
-  process.env.NEXT_PUBLIC_DEFAULT_SESSION ?? "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju";
+// The reference session (settled session A) is the fixture's address; NEXT_PUBLIC_DEFAULT_SESSION overrides it.
+// `||`, not `??`: an empty NEXT_PUBLIC_DEFAULT_SESSION= line in .env.local must fall back, not point at "".
+export const DEFAULT_SESSION = process.env.NEXT_PUBLIC_DEFAULT_SESSION || sessionFixture.address;
 
 export class ApiRequestError extends Error {
   constructor(
@@ -33,7 +34,7 @@ function fixtureFor(path: string): unknown | undefined {
   const p = url.pathname;
   const s = sessionFixture as { address: string };
   if (p === "/api/health")
-    return { cluster: CLUSTER, slot: 0, programId: "FvT786RtMTtbdXWemA9zgA9rfwhvxFsKY1ypiMMNwMbS", executable: true };
+    return { cluster: CLUSTER, slot: 0, programId: PROGRAM_ID.toBase58(), executable: true };
   if (p === "/api/sessions") {
     const v = sessionFixture as Record<string, unknown>;
     const keys = ["address", "sessionId", "authority", "state", "nObs", "nextIndex", "scores", "sideTotals", "depositDeadline", "replayDeadline"];
