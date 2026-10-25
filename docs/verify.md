@@ -6,6 +6,10 @@ settled numbers on devnet follow from public CPI data and the rules in
 Everything below is integer arithmetic and SHA-256; it runs offline except for
 the CPI download and the one account read.
 
+It checks that the historical replay is reproducible. It cannot check data that
+did not exist when the session was created; that is the live-attestation question
+in [live-mode.md](live-mode.md).
+
 Reference session A: `B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju` on devnet
 (links in [deployments.md](deployments.md)).
 

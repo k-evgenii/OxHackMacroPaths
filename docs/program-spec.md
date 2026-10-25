@@ -230,6 +230,10 @@ Writes: transfer seller_ta→wallet_ta (session signs); `free_cash -= amount`.
 - Vault_i balance ≥ Σ unclaimed pool claims on product i + Σ unclaimed cover claims + unpaid seller remainder, at all times after settle.
 - `Σ side_totals[j] + n_sold_total == vault_0 + vault_1` before any claim.
 - After everyone claimed: vault balance = dust ≥ 0, and `sweep_dust` empties it.
+- Rounding (declared bounds; see `docs/pricing.md`):
+  - `P1 = 2M − P0` is the ceiling of side 1's exact share, so it exceeds that share by less than 1 base unit.
+  - Each pool claim's two floors leave less than 2 base units of dust per position.
+  - The cover premium rounds up and the cover payout rounds down, each by less than 1 base unit, both in the seller's favour.
 
 ### 1.10 Test harness (`programs/macropaths/tests/common/mod.rs`, built by agent 01, used by all)
 
