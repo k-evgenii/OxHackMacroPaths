@@ -60,22 +60,113 @@ export function Badge({ tone = "highlight", children }: { tone?: "highlight" | "
 }
 
 /* Status pill. Source: AERIS "Pending approval" / "Approved" / "Paid".
-   The tones map to SessionState from the IDL plus a per-position "claimed". */
-export type StatusTone = "open" | "running" | "settled" | "refunding" | "claimed";
+   The tones map to SessionState from the IDL plus a per-position "claimed" and
+   "unavailable" (state could not be read; never implies an enabled action).
+   Status is always spoken as text; the dot is decorative. */
+export type StatusTone = "open" | "running" | "settled" | "refunding" | "claimed" | "unavailable";
+
+export const statusLabels: Record<StatusTone, string> = {
+  open: "Open for deposits",
+  running: "Replaying",
+  settled: "Settled",
+  refunding: "Refunding",
+  claimed: "Claimed",
+  unavailable: "Status unavailable",
+};
 
 export function StatusPill({ tone, children }: { tone: StatusTone; children?: ReactNode }) {
-  const fallback: Record<StatusTone, string> = {
-    open: "Open for deposits",
-    running: "Replaying",
-    settled: "Settled",
-    refunding: "Refunding",
-    claimed: "Claimed",
-  };
   return (
-    <span className={cx("mp-pill", `mp-pill--${tone}`)}>
+    <span className={cx("mp-pill", `mp-pill--${tone}`)} data-status={tone}>
       <span className="mp-pill__dot" aria-hidden="true" />
-      {children ?? fallback[tone]}
+      {children ?? statusLabels[tone]}
     </span>
+  );
+}
+
+/* ---------- Data states. Display-only: callers map errors to safe text. ---------- */
+
+export interface SkeletonProps {
+  className?: string;
+  label?: string;
+}
+
+/** One placeholder block. Announced once via its label; give it geometry with className. */
+export function Skeleton({ className, label = "Loading" }: SkeletonProps) {
+  return <span className={cx("mp-skeleton", className)} role="status" aria-label={label} aria-busy="true" />;
+}
+
+export interface EmptyStateProps {
+  title: string;
+  description?: string;
+  action?: ReactNode;
+  className?: string;
+}
+
+/** Data loaded and there is genuinely nothing. Not for unavailable data. */
+export function EmptyState({ title, description, action, className }: EmptyStateProps) {
+  return (
+    <div className={cx("mp-state", "mp-state--empty", className)}>
+      <p className="mp-state__title">{title}</p>
+      {description ? <p className="mp-state__desc">{description}</p> : null}
+      {action ? <div className="mp-state__actions">{action}</div> : null}
+    </div>
+  );
+}
+
+function RetryButton({ onRetry, retrying }: { onRetry: () => void; retrying?: boolean }) {
+  return (
+    <Button
+      variant="secondary"
+      className="mp-state__retry"
+      onClick={retrying ? undefined : onRetry}
+      aria-disabled={retrying ? true : undefined}
+      aria-busy={retrying ? true : undefined}
+    >
+      {retrying ? "Retrying…" : "Retry"}
+    </Button>
+  );
+}
+
+export interface ErrorStateProps {
+  title?: string;
+  description: string;
+  onRetry?: () => void;
+  retrying?: boolean;
+  className?: string;
+}
+
+/** Data could not be loaded. Shows only the caller-supplied safe description. */
+export function ErrorState({ title = "Unable to load", description, onRetry, retrying, className }: ErrorStateProps) {
+  return (
+    <div className={cx("mp-state", "mp-state--error", className)} role="alert">
+      <p className="mp-state__title">{title}</p>
+      <p className="mp-state__desc">{description}</p>
+      {onRetry ? (
+        <div className="mp-state__actions">
+          <RetryButton onRetry={onRetry} retrying={retrying} />
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+export interface PartialDataNoticeProps {
+  description: string;
+  onRetry?: () => void;
+  retrying?: boolean;
+  className?: string;
+}
+
+/** Some data is shown but the set is incomplete. Rendered beside, not instead of, the data. */
+export function PartialDataNotice({ description, onRetry, retrying, className }: PartialDataNoticeProps) {
+  return (
+    <div className={cx("mp-partial", className)} role="status">
+      <p className="mp-partial__text">
+        <strong>Partial data. </strong>
+        {description}
+      </p>
+      {onRetry ? <RetryButton onRetry={onRetry} retrying={retrying} /> : null}
+    </div>
   );
 }
 
