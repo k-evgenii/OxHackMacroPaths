@@ -1,5 +1,8 @@
 # Series pulled by data/fetch.py. Add an entry to fetch a new index.
 # window: months that must be present with no gaps or missing values (validated).
+# strict: any empty value or skipped month outside known_missing fails the fetch.
+# known_missing: months the source leaves empty, each with a reason. They are never
+#   filled or skipped silently; a window that needs one fails.
 
 [[series]]
 id = "CPIAUCNS"
@@ -7,6 +10,16 @@ source = "fred"
 frequency = "monthly"
 units = "Index 1982-1984=100, not seasonally adjusted"
 window = ["2020-01", "2024-12"]
+strict = true
+known_missing = [
+  { month = "2025-10", reason = "BLS collected no October 2025 CPI (2025 lapse in appropriations) and will not publish it; see docs/commitment-chain.md, Data rules" },
+]
+# Declared fallback, NOT applied by fetch.py (the snapshot keeps FRED's empty value).
+# U.S. Treasury TIPS contingency index under 31 CFR 356 App. B, announced 2025-11-26;
+# Treasury will not replace it even if BLS later reports a value.
+fallback = [
+  { month = "2025-10", value = "325.604", source = "https://www.treasurydirect.gov/instit/annceresult/press/preanre/2025/SPL_20251126_1.pdf", rule = "31 CFR 356 Appendix B, I.B.4(iv): last available twelve-month change" },
+]
 
 [[series]]
 id = "UNRATE"

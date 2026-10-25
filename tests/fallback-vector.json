@@ -1,0 +1,38 @@
+{
+  "note": "Declared fallback for a future dataset rule; v1 sessions and tests/vectors.json do not use it.",
+  "snapshot": {
+    "retrieved_at": "2026-10-24T16:25:32Z",
+    "sha256_of_raw": "cfab9b9be4a5d4f06253c4dcc3f7e0b28b1d58837e710dd7cb1fd54a49e7ad7c"
+  },
+  "fallback": {
+    "month": "2025-10",
+    "value": "325.604",
+    "source": "https://www.treasurydirect.gov/instit/annceresult/press/preanre/2025/SPL_20251126_1.pdf",
+    "rule": "31 CFR 356 Appendix B, I.B.4(iv): last available twelve-month change"
+  },
+  "rule_check": {
+    "formula": "CPI_2025-09 * (CPI_2025-09 / CPI_2024-09)^(1/12), rounded to 0.001",
+    "inputs": {
+      "2025-09": "324.800",
+      "2024-09": "315.301"
+    },
+    "value": "325.604"
+  },
+  "x": {
+    "2025-10": {
+      "level": "325.604",
+      "base_2024-10": "315.664",
+      "x": 31489,
+      "uses_fallback": true
+    },
+    "2025-11": {
+      "level": "324.122",
+      "base_2024-11": "315.493",
+      "x": 27350,
+      "uses_fallback": false
+    },
+    "2026-10": {
+      "note": "would use the fallback as its base month; BLS will not publish a 12-month change for October 2026"
+    }
+  }
+}
