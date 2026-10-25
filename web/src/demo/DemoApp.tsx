@@ -42,6 +42,7 @@ type Screen =
   | "history"
   | "explore"
   | "news"
+  | "forecast"
   | StepKey;
 const DEFAULT_AMOUNTS: Amounts = [10, 0, 10, 0];
 const ExploreScreen = dynamic(() => import("./components/ExploreScreen"), {
@@ -66,8 +67,27 @@ const NewsScreen = dynamic(() => import("./components/NewsScreen"), {
   ),
 });
 
-export default function DemoApp() {
-  const [screen, setScreen] = useState<Screen>("home");
+const ForecastScreen = dynamic(() => import("./components/ForecastScreen"), {
+  loading: () => (
+    <div role="status" className="rounded-2xl bg-panel p-8 text-muted">
+      Loading forecast research…
+    </div>
+  ),
+});
+const WalletReadPanel = dynamic(() => import("./components/WalletReadPanel"), {
+  loading: () => (
+    <div role="status" className="rounded-2xl bg-panel p-8 text-muted">
+      Loading wallet lookup…
+    </div>
+  ),
+});
+
+export default function DemoApp({
+  initialScreen = "home",
+}: {
+  initialScreen?: "home" | "forecast";
+}) {
+  const [screen, setScreen] = useState<Screen>(initialScreen);
   const [ready, setReady] = useState(false);
   const [name, setName] = useState("");
   const [query, setQuery] = useState("");
@@ -178,6 +198,7 @@ export default function DemoApp() {
   const nav = [
     { key: "home", label: "Discover" },
     { key: "explore", label: "Explore" },
+    { key: "forecast", label: "Forecast" },
     { key: "news", label: "News" },
     { key: "history", label: "Portfolio" },
     { key: "wallet", label: "Wallet" },
@@ -376,6 +397,7 @@ export default function DemoApp() {
           </div>
         ) : (
           <>
+            {screen === "forecast" ? <ForecastScreen /> : null}
             {screen === "home" ? (
               <Dashboard
                 balance={balance}
@@ -386,6 +408,7 @@ export default function DemoApp() {
                 onQuery={setQuery}
                 onStart={() => (claimed ? startNew() : setScreen(nextStep))}
                 onExplore={() => setScreen("explore")}
+                onForecast={() => setScreen("forecast")}
                 onNews={() => setScreen("news")}
                 onWallet={() => setScreen("wallet")}
                 onSelect={(product, side) => {
@@ -780,11 +803,11 @@ export default function DemoApp() {
                     Everything in one place.
                   </h1>
                   <p className="mt-2 max-w-2xl text-muted">
-                    Your practice balance and position activity, together.
-                    Activity stays on this device; a signing wallet is not
-                    connected.
+                    Your practice portfolio and read-only devnet wallet lookup.
+                    Practice activity stays on this device.
                   </p>
                 </div>
+                <WalletReadPanel />
                 <section className="rounded-3xl bg-night p-7 text-white md:p-9">
                   <div className="flex flex-wrap items-start justify-between gap-5">
                     <div>

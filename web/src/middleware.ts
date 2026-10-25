@@ -10,7 +10,6 @@ export const config = {
   matcher: [
     "/dev/:path*",
     "/session/:path*",
-    "/forecast/:path*",
     "/planner/:path*",
   ],
 };

@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import {
-  SessionView as SessionSchema,
+  SessionOverviewResponse,
+  CatalogResponse,
   type SessionView,
 } from "@macropaths/client";
 import reference from "@macropaths/client/fixtures/session-B89z.view.json";
@@ -30,24 +31,35 @@ export default function Proof() {
     "idle",
   );
   const [error, setError] = useState("");
+  const [source, setSource] = useState<"rpc" | "fixture" | null>(null);
   async function refresh() {
     setStatus("loading");
     try {
-      const result = await fetchJson(
-        `/api/sessions/${SESSION_ADDRESS}`,
-        SessionSchema,
+      const catalog = await fetchJson("/api/catalog", CatalogResponse);
+      if (!catalog.sessions.some((s) => s.address === SESSION_ADDRESS))
+        throw new Error(
+          "The reference session is not in the published catalog.",
+        );
+      const overview = await fetchJson(
+        `/api/sessions/${SESSION_ADDRESS}/overview`,
+        SessionOverviewResponse,
       );
+      const result = overview.session;
       if (
         !result.integrityOk ||
         result.datasetId !== reference.datasetId ||
         result.nextIndex !== 48 ||
         result.state !== "Settled" ||
-        result.scores.some((s, i) => s !== reference.scores[i])
+        result.scores.some((s, i) => s !== reference.scores[i]) ||
+        result.terms.k !== reference.terms.k ||
+        result.terms.dCap !== reference.terms.dCap ||
+        result.terms.aCap !== reference.terms.aCap
       )
         throw new Error(
           "Reference-session verification did not match the recorded result.",
         );
       setSession(result);
+      setSource(overview.meta.source);
       setStatus("ok");
     } catch (e) {
       setSession(null);
@@ -73,7 +85,7 @@ export default function Proof() {
           <div className="flex flex-wrap gap-2">
             <Tag>
               {status === "ok"
-                ? USE_FIXTURES
+                ? source === "fixture"
                   ? "Fixture checked"
                   : "Devnet read verified"
                 : "Recorded devnet evidence"}

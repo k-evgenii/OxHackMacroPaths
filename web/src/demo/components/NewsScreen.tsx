@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { z } from "zod";
-import { fetchJson } from "@/lib/api-client";
 import { Button, Card, Tag } from "./ui";
 
 const NewsSchema = z.object({
@@ -61,7 +60,11 @@ export default function NewsScreen({ compact = false }: { compact?: boolean }) {
     let ignore = false;
     setLoading(true);
     setError("");
-    fetchJson("/api/news", NewsSchema)
+    fetch("/api/news", { headers: { accept: "application/json" } })
+      .then(async (response) => {
+        if (!response.ok) throw new Error("News request failed");
+        return NewsSchema.parse(await response.json());
+      })
       .then((result) => {
         if (!ignore) setData(result);
       })

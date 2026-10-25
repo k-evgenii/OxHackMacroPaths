@@ -57,6 +57,7 @@ type Props = {
   onStart: () => void;
   onSelect: (product: number, side: number) => void;
   onExplore: () => void;
+  onForecast?: () => void;
   onNews: () => void;
   onWallet: () => void;
   query: string;
@@ -80,7 +81,7 @@ export default function Dashboard(p: Props) {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <span className="mp-section-label">Economics / US inflation</span>
             <Tag tone="accent">Path contracts</Tag>
           </div>
@@ -201,7 +202,7 @@ export default function Dashboard(p: Props) {
               key={f}
               onClick={() => setFilter(f)}
               aria-pressed={filter === f}
-              className={`rounded-lg px-3.5 py-2 text-xs font-semibold transition ${filter === f ? "bg-night text-white" : "border border-line bg-panel text-muted hover:border-text/20"}`}
+              className={`min-h-11 rounded-lg px-3.5 py-2 text-xs font-semibold transition ${filter === f ? "bg-night text-white" : "border border-line bg-panel text-muted hover:border-text/20"}`}
             >
               {f}
             </button>
@@ -226,10 +227,10 @@ export default function Dashboard(p: Props) {
             {products.map((product) => (
               <article
                 key={product.key}
-                className="mp-market-card p-5 sm:p-6"
+                className="mp-market-card flex min-w-0 flex-col p-5 sm:p-6"
                 style={{ "--mp-card-accent": product.color } as CSSProperties}
               >
-                <div className="flex items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-center gap-2.5">
                     <span
                       className={`grid h-9 w-9 place-items-center rounded-xl text-lg font-semibold ${product.className}`}
@@ -249,7 +250,7 @@ export default function Dashboard(p: Props) {
                 <h3 className="mt-5 text-xl font-semibold leading-snug tracking-tight">
                   {product.title}
                 </h3>
-                <p className="mt-2 max-w-sm text-sm leading-relaxed text-muted">
+                <p className="mb-auto mt-2 max-w-sm text-sm leading-relaxed text-muted">
                   {product.description}
                 </p>
                 <div className="mt-5 flex items-end justify-between gap-4">
@@ -272,7 +273,7 @@ export default function Dashboard(p: Props) {
                     <p className="mt-1 text-[11px] text-muted">{product.cap}</p>
                   </div>
                 </div>
-                <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-panel-2">
+                <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-panel-2" aria-hidden="true">
                   <div
                     className="grow-bar h-full rounded-full"
                     style={{
@@ -306,6 +307,35 @@ export default function Dashboard(p: Props) {
           </div>
         )}
       </section>
+
+      {p.onForecast ? (
+        <section className="mp-forecast-entry grid gap-5 p-5 sm:p-6 md:grid-cols-[1.5fr_1fr] md:items-center">
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="mp-section-label">The forecast layer</span>
+              <Tag tone="forecast">Model research</Tag>
+            </div>
+            <h2 className="mt-3 text-xl font-semibold tracking-tight">
+              Follow how expectations changed.
+            </h2>
+            <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted">
+              Move through the case study to compare model estimates and
+              uncertainty as each month of inflation becomes known.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={p.onForecast}
+            className="mp-button mp-forecast-action flex items-center justify-between gap-4 px-5 py-4 text-left text-sm"
+          >
+            <span>
+              <span className="block font-semibold">Explore the forecast</span>
+              <span className="mt-1 block text-xs font-normal opacity-80">Estimates, context and uncertainty</span>
+            </span>
+            <span className="text-xl" aria-hidden>↗</span>
+          </button>
+        </section>
+      ) : null}
 
       <section className="mp-card grid gap-5 overflow-hidden p-5 sm:p-6 md:grid-cols-[1.5fr_1fr] md:items-center">
         <div>

@@ -36,6 +36,13 @@
   --down: #bc3450;
   color-scheme: light;
 }
+html {
+  scrollbar-gutter: stable;
+}
+::selection {
+  background: #e8e1ff;
+  color: #30216f;
+}
 html,
 body {
   background: var(--color-ink);
@@ -147,10 +154,13 @@ select:focus-visible {
   display: flex;
   align-items: center;
   gap: 4px;
+  scroll-padding-inline: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: #cdd6de transparent;
 }
 .mp-nav-item {
   position: relative;
-  min-height: 42px;
+  min-height: 44px;
   padding: 10px 15px;
   border-radius: 10px;
   color: #5e6872;
@@ -232,6 +242,21 @@ select:focus-visible {
     radial-gradient(circle at 10% 80%, rgb(111 86 232 / 0.08), transparent 42%),
     #fff;
 }
+.mp-forecast-entry {
+  border: 1px solid #ddd6f7;
+  border-radius: 20px;
+  background:
+    radial-gradient(ellipse at 92% 50%, rgb(111 86 232 / 0.09), transparent 55%),
+    #fff;
+}
+.mp-forecast-action {
+  color: #fff;
+  background: #5844bf;
+  box-shadow: 0 8px 20px -14px rgb(88 68 191 / 0.75);
+}
+.mp-forecast-action:hover {
+  background: #4c38ae;
+}
 .mp-score-cooling {
   color: #5d46c7;
   background: #f0ecff;
@@ -305,9 +330,9 @@ select:focus-visible {
 .mp-chart-slider {
   appearance: none;
   width: 100%;
-  height: 4px;
+  height: 28px;
   border-radius: 9px;
-  background: linear-gradient(90deg, #ff6b2b, #ffaf52);
+  background: linear-gradient(90deg, #ff6b2b, #ffaf52) center / 100% 4px no-repeat;
   outline: none;
   cursor: pointer;
 }
@@ -399,13 +424,14 @@ select:focus-visible {
     justify-content: space-between;
   }
   .mp-nav-item {
-    flex: 1;
-    padding: 10px 8px;
+    flex: 1 0 auto;
+    padding: 10px 11px;
     text-align: center;
     font-size: 13px;
   }
   .mp-card,
-  .mp-market-card {
+  .mp-market-card,
+  .mp-forecast-entry {
     border-radius: 17px;
   }
 }
@@ -440,6 +466,14 @@ select:focus-visible {
   .mp-button:active,
   .mp-market-card:hover,
   .mp-news-card:hover {
+    transform: none;
+  }
+}
+
+@media (hover: none) {
+  .mp-market-card:hover,
+  .mp-news-card:hover,
+  .mp-button:hover {
     transform: none;
   }
 }

@@ -1,18 +1,24 @@
+import { fixtureJson } from "@/server/fixtures";
+// Raw typed session history for developer tooling. Client Market activity uses SessionView.path,
+// not this transaction-heavy route.
 import { EventsResponse } from "@macropaths/client";
-import { badRequest, handle, okJson } from "@/server/errors";
-import { getSessionEvents, getSessionView, parseSignature } from "@/server/chain";
+import { handle, okJson } from "@/server/errors";
+import { sessionRepository } from "@/server/sessions";
+import { getSessionEventsPage, parseHistoryQuery, REQUEST_BUDGET_MS, transactionRepository } from "@/server/history";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export function GET(req: Request, ctx: { params: Promise<{ addr: string }> }): Promise<Response> {
   return handle(async () => {
-    const q = new URL(req.url).searchParams;
-    const before = q.get("before") ? parseSignature(q.get("before")!) : undefined;
-    const rawLimit = q.get("limit") ?? "50";
-    const limit = Number(rawLimit);
-    if (!/^\d{1,3}$/.test(rawLimit) || limit < 1 || limit > 100) throw badRequest("limit must be an integer in 1..100");
-    const session = await getSessionView((await ctx.params).addr);
-    return okJson(EventsResponse, await getSessionEvents(session, { before, limit }));
+    const url = new URL(req.url);
+    const fixture = await fixtureJson(url.pathname + url.search, EventsResponse);
+    if (fixture) return fixture;
+    const deadlineAt = Date.now() + REQUEST_BUDGET_MS;
+    const request = parseHistoryQuery(new URL(req.url).searchParams);
+    // Validates the address and that it is a MacroPaths session (400/404/502 as before).
+    const session = await sessionRepository.get((await ctx.params).addr);
+    const page = await getSessionEventsPage(transactionRepository, session.address, request, { signal: req.signal, deadlineAt });
+    return okJson(EventsResponse, page);
   });
 }

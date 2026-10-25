@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "predev": "node scripts/copy-artifacts.mjs",
+    "predev": "node scripts/artifacts/validate.mjs",
     "dev": "next dev",
-    "prebuild": "node scripts/copy-artifacts.mjs",
+    "prebuild": "node scripts/artifacts/validate.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
@@ -17,10 +17,12 @@
     "@macropaths/client": "file:../packages/client",
     "@solana/web3.js": "1.99.0",
     "@tanstack/react-query": "^5.104.5",
+    "@upstash/redis": "^1.39.0",
     "next": "15.5.28",
-    "react": "19.1.0",
-    "react-dom": "19.1.0",
+    "react": "^19.1.10",
+    "react-dom": "^19.1.10",
     "recharts": "^2.15.4",
+    "server-only": "^0.0.1",
     "zod": "^3.25.76"
   },
   "devDependencies": {

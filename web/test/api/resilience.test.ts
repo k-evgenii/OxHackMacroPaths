@@ -119,24 +119,14 @@ describe("GET /api/health", () => {
   });
 });
 
+// Worker 02: no public-devnet fallback; RPC_URL is required and read via the transport config.
 describe("RPC_URL", () => {
-  const saved = process.env.RPC_URL;
-  afterEach(() => {
-    if (saved === undefined) delete process.env.RPC_URL;
-    else process.env.RPC_URL = saved;
-  });
-  it("falls back to public devnet when RPC_URL is unset or empty", async () => {
-    for (const v of [undefined, ""]) {
-      if (v === undefined) delete process.env.RPC_URL;
-      else process.env.RPC_URL = v;
-      vi.resetModules();
-      const m = await import("@/server/rpc");
-      expect(m.RPC_URL).toBe("https://api.devnet.solana.com");
-    }
-  });
   it("uses RPC_URL when set", async () => {
-    process.env.RPC_URL = "https://example.invalid/rpc";
-    vi.resetModules();
-    expect((await import("@/server/rpc")).RPC_URL).toBe("https://example.invalid/rpc");
+    const { readRpcConfig } = await import("@/server/transport");
+    expect(readRpcConfig({ RPC_URL: "https://example.invalid/rpc" }).url).toBe("https://example.invalid/rpc");
+  });
+  it("rejects an unset or empty RPC_URL instead of falling back", async () => {
+    const { readRpcConfig } = await import("@/server/transport");
+    for (const v of [undefined, "", "  "]) expect(() => readRpcConfig({ RPC_URL: v })).toThrow(/RPC_URL/);
   });
 });

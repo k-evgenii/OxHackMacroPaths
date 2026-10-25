@@ -22,14 +22,18 @@ afterEach(() => {
   vi.resetModules();
 });
 
-describe("identifiers have a single source", () => {
+// Walking web/src on the slow /mnt/d mount can exceed the 5s default.
+describe("identifiers have a single source", { timeout: 60_000 }, () => {
   it("no file under web/src spells the program id or the reference session as a literal", () => {
     expect(filesContaining(idl.address)).toEqual([]);
     expect(filesContaining(session.address)).toEqual([]);
   });
 
-  it("the public devnet RPC endpoint is defined once, in server/rpc.ts", () => {
-    expect(filesContaining("api.devnet.solana.com")).toEqual(["server/rpc.ts"]);
+  it("no committed source hard-codes a public devnet RPC URL (RPC_URL is read lazily by server/transport/config.ts)", () => {
+    // .env.example, docs and tests may mention it; nothing under web/src or web/config may.
+    const CONFIG = path.resolve(__dirname, "../../config");
+    const configHits = readdirSync(CONFIG).filter((n) => readFileSync(path.join(CONFIG, n), "utf8").includes("api.devnet.solana.com"));
+    expect([...filesContaining("api.devnet.solana.com"), ...configHits]).toEqual([]);
   });
 
   it("fixture-mode /api/health reports the IDL program id", async () => {

@@ -118,7 +118,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   useEffect(() => setOpen(false), [pathname]);
 
-  if (pathname === "/") return <>{children}</>;
+  if (pathname === "/" || pathname === "/forecast") return <>{children}</>;
 
   return (
     <div className="flex min-h-screen">

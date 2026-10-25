@@ -56,6 +56,7 @@ beforeEach(() => {
   const sig = (signature: string, slot: number) => ({ signature, slot, blockTime: 1_700_000_000, err: null, memo: null });
   conn.getSignaturesForAddress.mockResolvedValue([sig(SIG_A, 20), sig(SIG_B, 10)]);
   conn.getTransaction.mockImplementation(async (s: string) => ({
+    transaction: { message: { accountKeys: [PROGRAM_ID], instructions: [] } },
     slot: s === SIG_A ? 20 : 10,
     blockTime: 1_700_000_000,
     meta: { err: null, logMessages: txLogs(s === SIG_A ? claimedLog(SESSION_A, OWNER_A) : claimedLog(SESSION_B, OWNER_B)) },

@@ -1,19 +1,20 @@
-// Integrator-owned contract between pages and the API.
+// Worker 10-owned contract between pages and the API.
 // Pages never call fetch directly: they call fetchJson(path, Schema) with a zod schema from @macropaths/client.
-// With NEXT_PUBLIC_USE_FIXTURES=1 every /api path is answered from packages/client/fixtures, so pages can be
-// built before the API exists. Artifacts (/api/artifacts/<name>) fall back to /data/<name>.json in that mode.
+// Fixture mode is explicit only (NEXT_PUBLIC_USE_FIXTURES=1): every client endpoint is answered from
+// packages/client/fixtures without RPC or Redis. A live request failure is never answered with fixture data.
 import type { z } from "zod";
-import { ApiError, PROGRAM_ID } from "@macropaths/client";
-import sessionFixture from "@macropaths/client/fixtures/session-B89z.view.json";
-import positionsFixture from "@macropaths/client/fixtures/positions-B89z.view.json";
-import eventsFixture from "@macropaths/client/fixtures/events-B89z.view.json";
+import { ApiError } from "@macropaths/client/types";
+import sessionRegistry from "../../config/sessions.json";
 
 export const USE_FIXTURES = process.env.NEXT_PUBLIC_USE_FIXTURES === "1";
 export const CLUSTER = process.env.NEXT_PUBLIC_CLUSTER ?? "devnet";
-// The reference session (settled session A) is the fixture's address; NEXT_PUBLIC_DEFAULT_SESSION overrides it.
-// `||`, not `??`: an empty NEXT_PUBLIC_DEFAULT_SESSION= line in .env.local must fall back, not point at "".
-export const DEFAULT_SESSION = process.env.NEXT_PUBLIC_DEFAULT_SESSION || sessionFixture.address;
+/**
+ * Legacy reference-session fallback for pages not yet migrated to the catalog (`useSelectedSession`).
+ * New code uses the catalog's `defaultSession`. `||`, not `??`: an empty env line must fall back.
+ */
+export const DEFAULT_SESSION = process.env.NEXT_PUBLIC_DEFAULT_SESSION || sessionRegistry.defaultSession;
 
+/** Normalized API/query error. `status` 0 means the request never produced an HTTP response. */
 export class ApiRequestError extends Error {
   constructor(
     message: string,
@@ -21,6 +22,7 @@ export class ApiRequestError extends Error {
     readonly code: string,
   ) {
     super(message);
+    this.name = "ApiRequestError";
   }
 }
 
@@ -29,48 +31,82 @@ export function explorerUrl(kind: "address" | "tx", id: string): string {
   return `https://explorer.solana.com/${kind}/${id}?cluster=${CLUSTER}`;
 }
 
-function fixtureFor(path: string): unknown | undefined {
-  const url = new URL(path, "http://fixture");
-  const p = url.pathname;
-  const s = sessionFixture as { address: string };
-  if (p === "/api/health")
-    return { cluster: CLUSTER, slot: 0, programId: PROGRAM_ID.toBase58(), executable: true };
-  if (p === "/api/sessions") {
-    const v = sessionFixture as Record<string, unknown>;
-    const keys = ["address", "sessionId", "authority", "state", "nObs", "nextIndex", "scores", "sideTotals", "depositDeadline", "replayDeadline"];
-    return { sessions: [Object.fromEntries(keys.map((k) => [k, v[k]]))] };
-  }
-  const m = p.match(/^\/api\/sessions\/([^/]+)(\/(positions|seller|events))?$/);
-  if (m) {
-    if (m[1] !== s.address) return { __status: 404, error: "fixture has only session A", code: "not_found" };
-    if (!m[3]) return sessionFixture;
-    if (m[3] === "positions") return positionsFixture;
-    if (m[3] === "seller") return { seller: null, quote: null };
-    if (m[3] === "events") return eventsFixture;
-  }
-  return undefined;
-}
+export type FetchJsonOptions = { signal?: AbortSignal };
 
-export async function fetchJson<S extends z.ZodTypeAny>(path: string, schema: S): Promise<z.infer<S>> {
-  if (USE_FIXTURES) {
-    const f = fixtureFor(path) as { __status?: number; error?: string; code?: string } | undefined;
-    if (f?.__status) throw new ApiRequestError(f.error ?? "error", f.__status, f.code ?? "internal");
-    if (f !== undefined) return schema.parse(f);
-    const art = path.match(/^\/api\/artifacts\/(\w+)/);
-    if (art) path = `/data/${art[1]}.json`;
-  }
-  const res = await fetch(path, { headers: { accept: "application/json" } });
-  const body: unknown = await res.json().catch(() => null);
-  if (!res.ok) {
-    const e = ApiError.safeParse(body);
-    throw new ApiRequestError(e.success ? e.data.error : res.statusText, res.status, e.success ? e.data.code : "internal");
-  }
+function validate<S extends z.ZodTypeAny>(path: string, schema: S, body: unknown, status: number): z.infer<S> {
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
     // Name the first mismatching field instead of dumping the raw zod issue array into the page.
     const i = parsed.error.issues[0];
-    const where = i.path.length ? `${i.path.join(".")}: ` : "";
-    throw new ApiRequestError(`Unexpected data format from ${path} (${where}${i.message}).`, res.status, "internal");
+    const where = i && i.path.length ? `${i.path.join(".")}: ` : "";
+    throw new ApiRequestError(
+      `Unexpected data format from ${path.split("?")[0]} (${where}${i?.message ?? "invalid"}).`,
+      status,
+      "internal",
+    );
   }
   return parsed.data;
+}
+
+function errorFromBody(body: unknown, status: number, fallback: string): ApiRequestError {
+  const e = ApiError.safeParse(body);
+  return new ApiRequestError(e.success ? e.data.error : fallback || "Request failed", status, e.success ? e.data.code : "internal");
+}
+
+const NO_FIXTURE: unique symbol = Symbol("no-fixture");
+
+async function fetchFixture<S extends z.ZodTypeAny>(
+  path: string,
+  schema: S,
+  signal?: AbortSignal,
+): Promise<z.infer<S> | typeof NO_FIXTURE> {
+  // Dynamic import keeps fixture JSON out of live-mode bundles.
+  const { fixtureResponse } = await import("@/lib/queries/fixture-router");
+  signal?.throwIfAborted();
+  const r = fixtureResponse(path);
+  if (!r) return NO_FIXTURE;
+  if (r.status >= 400) throw errorFromBody(r.body, r.status, "Fixture error");
+  return validate(path, schema, r.body, r.status);
+}
+
+/**
+ * GET an application API path and validate the body with the shared schema.
+ * Cancellation: `options.signal` is passed through to fetch (TanStack Query supplies it).
+ */
+export async function fetchJson<S extends z.ZodTypeAny>(
+  path: string,
+  schema: S,
+  options?: FetchJsonOptions,
+): Promise<z.infer<S>> {
+  const signal = options?.signal;
+  if (USE_FIXTURES) {
+    const f = await fetchFixture(path, schema, signal);
+    if (f !== NO_FIXTURE) return f;
+    // Legacy research artifacts are static files in fixture mode.
+    const art = path.match(/^\/api\/artifacts\/(manifest|forecast|planner)\b/);
+    if (art) path = `/data/${art[1]}.json`;
+    else throw new ApiRequestError(`No fixture for ${path.split("?")[0]}`, 404, "not_found");
+  }
+  let res: Response;
+  try {
+    res = await fetch(path, { headers: { accept: "application/json" }, signal });
+  } catch (err) {
+    if (signal?.aborted || (err as { name?: string } | null)?.name === "AbortError") throw err;
+    throw new ApiRequestError("The application API could not be reached.", 0, "network");
+  }
+  const body: unknown = await res.json().catch(() => null);
+  if (!res.ok) throw errorFromBody(body, res.status, res.statusText);
+  return validate(path, schema, body, res.status);
+}
+
+/** Safe, user-facing description of a query error (never a raw Error dump or provider URL). */
+export function describeError(err: unknown): string {
+  if (err instanceof ApiRequestError) {
+    if (err.status === 0) return "The application API could not be reached. Check your connection and retry.";
+    if (err.status === 404) return "This item was not found.";
+    if (err.status === 400) return "The request was not accepted.";
+    if (err.status === 502) return "Chain data is temporarily unavailable. Retry shortly.";
+    if (err.message.startsWith("Unexpected data format")) return "The response had an unexpected format.";
+  }
+  return "Something went wrong while loading data.";
 }
