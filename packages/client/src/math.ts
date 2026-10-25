@@ -1,6 +1,6 @@
 // Bigint-exact ports of programs/macropaths/src/math.rs. Every division floors
 // (operands are non-negative wherever a division happens).
-import { ONE } from "./constants";
+import { ONE } from "./scalars"; // browser-safe: not ./constants (web3.js + IDL)
 import type { PathRow } from "./types";
 
 /** The YYYYMM period `back` months before `last`. */
