@@ -3,7 +3,7 @@
 // implementation. No filesystem access here; callers pass the exact file bytes.
 //
 // Identity: each file is hashed with SHA-256 over its exact UTF-8 bytes. The bundle id is
-//   "rb1-" + first 16 hex chars of SHA-256("manifest:<h>\nforecast:<h>\nplanner:<h>\n").
+//   (LF-normalized, see contentHash) "rb1-" + first 16 hex chars of SHA-256("manifest:<h>\nforecast:<h>\nplanner:<h>\n").
 // The identity file (bundle-identity.json) is never part of the hashed input.
 import { createHash } from "node:crypto";
 import { z } from "zod";
@@ -68,6 +68,10 @@ const RawPlanner = z
   .passthrough();
 
 export const sha256 = (text) => createHash("sha256").update(text, "utf8").digest("hex");
+
+/** File hash: SHA-256 of the UTF-8 bytes with CRLF normalized to LF (the committed form, see public/data/.gitattributes),
+ *  so a Windows checkout with core.autocrlf produces the same identity. */
+export const contentHash = (text) => sha256(text.replace(/\r\n/g, "\n"));
 
 /** @param {{manifest:string,forecast:string,planner:string}} hashes */
 export function bundleIdOf(hashes) {
@@ -183,7 +187,7 @@ export function buildBundle(texts, opts = {}) {
     researchOnly: !prod[k].executable,
   }));
 
-  const hashes = { manifest: sha256(texts.manifest), forecast: sha256(texts.forecast), planner: sha256(texts.planner) };
+  const hashes = { manifest: contentHash(texts.manifest), forecast: contentHash(texts.forecast), planner: contentHash(texts.planner) };
   return {
     id: bundleIdOf(hashes),
     schemaVersion: SCHEMA_VERSION,

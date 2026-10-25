@@ -13,7 +13,7 @@
 
 ## Bundle identity
 
-`rb1-0b7cc96ef9810f17` (schema v1). Each file: SHA-256 of exact bytes. Id = `rb1-` + first 16 hex of
+`rb1-8635e8d7fee555a8` (schema v1). Each file: SHA-256 of its bytes with CRLF normalized to LF (committed form; Windows autocrlf checkouts give the same id). Id = `rb1-` + first 16 hex of
 SHA-256(`manifest:<h>\nforecast:<h>\nplanner:<h>\n`). The identity file is not hashed. Same id in
 `/data/bundle-identity.json`, `/api/artifacts/bundle` (`id`, header), and `PUBLISHED_BUNDLE_ID`.
 
