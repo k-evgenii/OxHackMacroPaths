@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useQueries } from "@tanstack/react-query";
-import { fmtMillionthsPct, fmtPlay, fmtPp, type SessionView } from "@macropaths/client";
+import { fmtMillionthsPct, fmtPeriod, fmtPlay, fmtPp, type SessionView } from "@macropaths/client";
 import {
   Button,
   Card,
@@ -83,7 +83,7 @@ function DisconnectedHome() {
           <li>Test PLAY</li>
         </ul>
         <h1 id="dash-heading" className={styles.heading}>
-          Explore contracts on the path of inflation.
+          Cover that pays when inflation runs hot — or cools.
         </h1>
         <p className={styles.lede}>
           Each session replays a historical run of US CPI readings on Solana devnet. Connect a wallet to read your
@@ -166,7 +166,7 @@ function SessionPreviewBody({ address }: { address: string }) {
     id: `${r.i}`,
     x: r.i,
     value: ppCoordinate(r.value),
-    label: String(r.periodId),
+    label: fmtPeriod(r.periodId),
     formattedValue: fmtPp(r.value),
   }));
 
@@ -204,7 +204,7 @@ function SessionPreviewBody({ address }: { address: string }) {
             title="Historical CPI path"
             summary={reading ? `Replay of ${points.length} monthly readings, last ${fmtPp(reading.value)} in ${reading.month}.` : ""}
             series={[{ id: "cpi", label: "CPI year-on-year", points }]}
-            formatAxisValue={(v) => `${v.toFixed(1)} %`}
+            formatAxisValue={(v: number) => `${v.toFixed(1)} %`}
             className={styles.spark}
           />
         ) : null}
@@ -237,12 +237,12 @@ function ProductScores({ session }: { session: SessionView }) {
                       id: `${i}`,
                       x: i,
                       value: Number(BigInt(s.score)) / 1e6,
-                      label: String(s.periodId),
+                      label: fmtPeriod(s.periodId),
                       formattedValue: fmtMillionthsPct(s.score, 1),
                     })),
                   },
                 ]}
-                formatAxisValue={(v) => `${Math.round(v * 100)} %`}
+                formatAxisValue={(v: number) => `${Math.round(v * 100)} %`}
                 className={styles.miniSpark}
               />
             ) : null}
@@ -320,6 +320,7 @@ function ConnectedHome({ owner }: { owner: string }) {
       ) : null}
 
       <SessionPreview />
+      <p className={styles.note}>{TX_UNAVAILABLE}</p>
       <RecentActivity owner={owner} cluster={catalog.data?.cluster ?? "devnet"} labelFor={(a) => sessionLabel(catalog.data, a)} />
     </>
   );
@@ -329,7 +330,7 @@ function AccountSummary({ owner, cluster }: { owner: string; cluster: string | n
   const [copied, setCopied] = useState(false);
   return (
     <section className={styles.account} aria-label="Connected wallet">
-      <h1 className={styles.headingSmall}>Your home</h1>
+      <h1 className={styles.headingSmall}>Your covers and positions</h1>
       <div className={styles.accountMeta}>
         <button
           type="button"
@@ -386,7 +387,7 @@ function Claimable({ holdings, loading, multi }: { holdings: HoldingsModel; load
           ))}
         </ul>
       )}
-      <p className={styles.note}>Running illustrations are not included. {TX_UNAVAILABLE}</p>
+      <p className={styles.note}>Running illustrations are not included. Claiming is not available in this release.</p>
     </Card>
   );
 }

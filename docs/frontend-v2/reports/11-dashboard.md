@@ -5,7 +5,7 @@
 - Worker ID and assignment: 11 — Dashboard
 - Foundation/checkpoint SHA: 6d2865bf526f0bf980293d9cdcfec547acbfd9f8 (foundation checkpoint not yet merged; `frontend-v2/integration` still at this SHA when work was committed)
 - Branch and commit SHA(s): `frontend-v2/11-dashboard`, see commit "Dashboard: disconnected intro, connected home, holdings and activity adapters"
-- Status: incomplete — code and tests written against interfaces.md; not compiled or run because the shared exports do not yet exist
+- Status: incomplete — merged checkpoint 1 (85a62e8); unit tests pass; tsc blocked on worker 10/08 exports
 
 ## Delivered
 
@@ -21,6 +21,16 @@ Behaviour:
 - No transaction controls; a text explanation states deposits/purchases/claims/faucet are unavailable.
 
 ## Evidence
+
+Checkpoint 1 (85a62e8) merged. `npm ci` (WSL) ok. `npx vitest run src/features/dashboard`: 12/12 passed.
+`npx tsc --noEmit` remaining errors in owned files, all from missing producer exports:
+- `@macropaths/ui`: Skeleton, EmptyState, ErrorState, PartialDataNotice, GlowSparkline, GlowPoint (worker 08/09).
+- `@/lib/hooks` useCatalog/useSessionOverview/useWalletOverview/useWalletActivity; `@/lib/queries`; `@/features/wallet-connect`; `@/features/shell` (worker 10).
+- Cascading implicit-any errors (useQueries results) and a Button prop error at the Connect button; recheck once the above land.
+Curator rewording applied: heading "Cover that pays when inflation runs hot — or cools.", connected heading "Your covers and positions", sparkline labels use fmtPeriod months, claim card has a one-line note with the full transactions-unavailable note shown once on the page.
+Screenshots not taken: the page cannot build until worker 10's hooks/wallet/shell merge.
+
+Earlier notes:
 
 - Not run: `vitest`, `tsc`, browser screenshots (375/768/1440). Blocked by integration dependency — foundation exports listed below are absent at 6d2865b, and `web/node_modules` is not installed in this worktree.
 - `model.test.ts` covers: multi-mint balances with partial failure, mixed cover/pool Settled, unrelated owner, holdings read failure, claimed, Refunding, Running, Open undetermined, multi-mint claimable, preview text, score paths, activity signing/bounding/Explorer URL. Note: `vitest.config.ts` includes `src/**/*.test.ts`, node environment; no component-render tests (no DOM test library in the current lock).
