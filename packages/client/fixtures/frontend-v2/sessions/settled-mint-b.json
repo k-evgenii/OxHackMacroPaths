@@ -1,0 +1,450 @@
+{
+  "address": "58miNnXD48ZBz4g1xFED4xtif4PqdqLhVuymQ5u8im4u",
+  "sessionId": "1792890206",
+  "authority": "EuUN3PSjtV5bp1nY2JoFjPSCGxJjAXPMx7TA2kKSwgmy",
+  "playMint": "EhyWq4yRkAkiV4r52xBJkg3uHnSJEPdoAY52yTF8Zgz",
+  "vaults": [
+    "AsgyU6krGYYNfLJpyjuioKTToxhKojRztj2ZGehYted",
+    "9DJYCVcq9qiBcP7Q3zdRryUtxw6jdZXpgNbKEGFjERiK"
+  ],
+  "state": "Settled",
+  "datasetId": "328f498b394e988f88f763947e0c656cb0e988321c3f66228c8549946401143e",
+  "commitment": "b5a06c8e2aa10b7fe1339666afb92af7a30cf98e318efde9acdc4a6c5733abef",
+  "terminal": "b5a06c8e2aa10b7fe1339666afb92af7a30cf98e318efde9acdc4a6c5733abef",
+  "integrityOk": true,
+  "nObs": 48,
+  "nextIndex": 48,
+  "lastPeriodId": 202412,
+  "terms": {
+    "k": "40000",
+    "dCap": "80000",
+    "aCap": "800000"
+  },
+  "depositDeadline": 1792889792,
+  "replayDeadline": 1792893392,
+  "sideTotals": [
+    "90000000",
+    "100000000",
+    "90000000",
+    "100000000"
+  ],
+  "matched": [
+    "90000000",
+    "90000000"
+  ],
+  "stats": {
+    "peak": "90597",
+    "maxDecline": "66191",
+    "excessAcc": "691184"
+  },
+  "scores": [
+    "827387",
+    "863980"
+  ],
+  "pBudget": [
+    "148929660",
+    "31070340",
+    "155516400",
+    "24483600"
+  ],
+  "rBudget": [
+    "0",
+    "10000000",
+    "0",
+    "10000000"
+  ],
+  "counts": {
+    "positions": 1,
+    "claimed": 0,
+    "covers": 0,
+    "coversClaimed": 0,
+    "sellerProductsOpen": 0
+  },
+  "path": [
+    {
+      "i": 0,
+      "periodId": 202101,
+      "value": "13997",
+      "peak": "13997",
+      "decline": "0",
+      "excess": "0"
+    },
+    {
+      "i": 1,
+      "periodId": 202102,
+      "value": "16762",
+      "peak": "16762",
+      "decline": "0",
+      "excess": "0"
+    },
+    {
+      "i": 2,
+      "periodId": 202103,
+      "value": "26197",
+      "peak": "26197",
+      "decline": "0",
+      "excess": "0"
+    },
+    {
+      "i": 3,
+      "periodId": 202104,
+      "value": "41596",
+      "peak": "41596",
+      "decline": "0",
+      "excess": "1596"
+    },
+    {
+      "i": 4,
+      "periodId": 202105,
+      "value": "49927",
+      "peak": "49927",
+      "decline": "0",
+      "excess": "11523"
+    },
+    {
+      "i": 5,
+      "periodId": 202106,
+      "value": "53914",
+      "peak": "53914",
+      "decline": "0",
+      "excess": "25437"
+    },
+    {
+      "i": 6,
+      "periodId": 202107,
+      "value": "53654",
+      "peak": "53914",
+      "decline": "260",
+      "excess": "39091"
+    },
+    {
+      "i": 7,
+      "periodId": 202108,
+      "value": "52512",
+      "peak": "53914",
+      "decline": "1402",
+      "excess": "51603"
+    },
+    {
+      "i": 8,
+      "periodId": 202109,
+      "value": "53903",
+      "peak": "53914",
+      "decline": "1402",
+      "excess": "65506"
+    },
+    {
+      "i": 9,
+      "periodId": 202110,
+      "value": "62218",
+      "peak": "62218",
+      "decline": "1402",
+      "excess": "87724"
+    },
+    {
+      "i": 10,
+      "periodId": 202111,
+      "value": "68090",
+      "peak": "68090",
+      "decline": "1402",
+      "excess": "115814"
+    },
+    {
+      "i": 11,
+      "periodId": 202112,
+      "value": "70364",
+      "peak": "70364",
+      "decline": "1402",
+      "excess": "146178"
+    },
+    {
+      "i": 12,
+      "periodId": 202201,
+      "value": "74798",
+      "peak": "74798",
+      "decline": "1402",
+      "excess": "180976"
+    },
+    {
+      "i": 13,
+      "periodId": 202202,
+      "value": "78710",
+      "peak": "78710",
+      "decline": "1402",
+      "excess": "219686"
+    },
+    {
+      "i": 14,
+      "periodId": 202203,
+      "value": "85424",
+      "peak": "85424",
+      "decline": "1402",
+      "excess": "265110"
+    },
+    {
+      "i": 15,
+      "periodId": 202204,
+      "value": "82586",
+      "peak": "85424",
+      "decline": "2838",
+      "excess": "307696"
+    },
+    {
+      "i": 16,
+      "periodId": 202205,
+      "value": "85815",
+      "peak": "85815",
+      "decline": "2838",
+      "excess": "353511"
+    },
+    {
+      "i": 17,
+      "periodId": 202206,
+      "value": "90597",
+      "peak": "90597",
+      "decline": "2838",
+      "excess": "404108"
+    },
+    {
+      "i": 18,
+      "periodId": 202207,
+      "value": "85248",
+      "peak": "90597",
+      "decline": "5349",
+      "excess": "449356"
+    },
+    {
+      "i": 19,
+      "periodId": 202208,
+      "value": "82626",
+      "peak": "90597",
+      "decline": "7971",
+      "excess": "491982"
+    },
+    {
+      "i": 20,
+      "periodId": 202209,
+      "value": "82016",
+      "peak": "90597",
+      "decline": "8581",
+      "excess": "533998"
+    },
+    {
+      "i": 21,
+      "periodId": 202210,
+      "value": "77454",
+      "peak": "90597",
+      "decline": "13143",
+      "excess": "571452"
+    },
+    {
+      "i": 22,
+      "periodId": 202211,
+      "value": "71103",
+      "peak": "90597",
+      "decline": "19494",
+      "excess": "602555"
+    },
+    {
+      "i": 23,
+      "periodId": 202212,
+      "value": "64544",
+      "peak": "90597",
+      "decline": "26053",
+      "excess": "627099"
+    },
+    {
+      "i": 24,
+      "periodId": 202301,
+      "value": "64101",
+      "peak": "90597",
+      "decline": "26496",
+      "excess": "651200"
+    },
+    {
+      "i": 25,
+      "periodId": 202302,
+      "value": "60356",
+      "peak": "90597",
+      "decline": "30241",
+      "excess": "671556"
+    },
+    {
+      "i": 26,
+      "periodId": 202303,
+      "value": "49849",
+      "peak": "90597",
+      "decline": "40748",
+      "excess": "681405"
+    },
+    {
+      "i": 27,
+      "periodId": 202304,
+      "value": "49303",
+      "peak": "90597",
+      "decline": "41294",
+      "excess": "690708"
+    },
+    {
+      "i": 28,
+      "periodId": 202305,
+      "value": "40476",
+      "peak": "90597",
+      "decline": "50121",
+      "excess": "691184"
+    },
+    {
+      "i": 29,
+      "periodId": 202306,
+      "value": "29691",
+      "peak": "90597",
+      "decline": "60906",
+      "excess": "691184"
+    },
+    {
+      "i": 30,
+      "periodId": 202307,
+      "value": "31777",
+      "peak": "90597",
+      "decline": "60906",
+      "excess": "691184"
+    },
+    {
+      "i": 31,
+      "periodId": 202308,
+      "value": "36651",
+      "peak": "90597",
+      "decline": "60906",
+      "excess": "691184"
+    },
+    {
+      "i": 32,
+      "periodId": 202309,
+      "value": "36996",
+      "peak": "90597",
+      "decline": "60906",
+      "excess": "691184"
+    },
+    {
+      "i": 33,
+      "periodId": 202310,
+      "value": "32411",
+      "peak": "90597",
+      "decline": "60906",
+      "excess": "691184"
+    },
+    {
+      "i": 34,
+      "periodId": 202311,
+      "value": "31372",
+      "peak": "90597",
+      "decline": "60906",
+      "excess": "691184"
+    },
+    {
+      "i": 35,
+      "periodId": 202312,
+      "value": "33521",
+      "peak": "90597",
+      "decline": "60906",
+      "excess": "691184"
+    },
+    {
+      "i": 36,
+      "periodId": 202401,
+      "value": "30908",
+      "peak": "90597",
+      "decline": "60906",
+      "excess": "691184"
+    },
+    {
+      "i": 37,
+      "periodId": 202402,
+      "value": "31531",
+      "peak": "90597",
+      "decline": "60906",
+      "excess": "691184"
+    },
+    {
+      "i": 38,
+      "periodId": 202403,
+      "value": "34773",
+      "peak": "90597",
+      "decline": "60906",
+      "excess": "691184"
+    },
+    {
+      "i": 39,
+      "periodId": 202404,
+      "value": "33573",
+      "peak": "90597",
+      "decline": "60906",
+      "excess": "691184"
+    },
+    {
+      "i": 40,
+      "periodId": 202405,
+      "value": "32690",
+      "peak": "90597",
+      "decline": "60906",
+      "excess": "691184"
+    },
+    {
+      "i": 41,
+      "periodId": 202406,
+      "value": "29713",
+      "peak": "90597",
+      "decline": "60906",
+      "excess": "691184"
+    },
+    {
+      "i": 42,
+      "periodId": 202407,
+      "value": "28947",
+      "peak": "90597",
+      "decline": "61650",
+      "excess": "691184"
+    },
+    {
+      "i": 43,
+      "periodId": 202408,
+      "value": "25307",
+      "peak": "90597",
+      "decline": "65290",
+      "excess": "691184"
+    },
+    {
+      "i": 44,
+      "periodId": 202409,
+      "value": "24406",
+      "peak": "90597",
+      "decline": "66191",
+      "excess": "691184"
+    },
+    {
+      "i": 45,
+      "periodId": 202410,
+      "value": "25979",
+      "peak": "90597",
+      "decline": "66191",
+      "excess": "691184"
+    },
+    {
+      "i": 46,
+      "periodId": 202411,
+      "value": "27493",
+      "peak": "90597",
+      "decline": "66191",
+      "excess": "691184"
+    },
+    {
+      "i": 47,
+      "periodId": 202412,
+      "value": "28880",
+      "peak": "90597",
+      "decline": "66191",
+      "excess": "691184"
+    }
+  ],
+  "_synthetic": "SYNTHETIC test data for frontend v2 scenarios; not an on-chain read."
+}
