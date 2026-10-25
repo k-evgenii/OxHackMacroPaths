@@ -29,7 +29,7 @@ The matched pool is therefore a **two-view instrument**: two people who disagree
   - `V0` and `σ0` are the AR(1) forecast's mean and standard deviation of the score at the origin.
   - The policy is the one recorded in `web/public/data/manifest.json` (`price_convention`) and `forecast.json` (`quotes.formula`) on `evgenii/frontend`.
   - Those files give quotes of `p = [384852, 57153]` (Cooling, Excess) with pre-2021 p90 caps.
-  - The script that writes those numbers (`forecast/ar1.py`) is not yet on a shared branch.
+  - The script that writes those numbers is `forecast/ar1.py` on `evgenii/integration`; `pixi run forecast` there regenerates `table.json` byte-identical, including the fuel research quote 108466 (0.108466).
 - **What the quote is and isn't:** it is a policy the seller declares. It is not a forecast, and it is not a validated price. The forecast is advisory; settlement uses only the realised path.
 
 ## What the history does and does not show
