@@ -75,15 +75,23 @@ function eventData(name: string, d: Raw): EventView["data"] | null {
   }
 }
 
-/** Parse Observed / Settled / Claimed / CoverBought from a transaction's log messages. */
+/**
+ * Parse Observed / Settled / Claimed / CoverBought from a transaction's log messages.
+ * Each event carries the `session` from its emitted data and `eventIndex`: its position among all
+ * parsed MacroPaths events of the transaction, in log order. Callers filter by session afterwards,
+ * so indices stay stable regardless of the filter.
+ */
 export function parseEvents(
   logs: string[],
   meta: { signature: string; slot: number; blockTime: number | null },
 ): EventView[] {
   const out: EventView[] = [];
+  let eventIndex = 0;
   for (const ev of eventParser.parseLogs(logs)) {
-    const data = eventData(ev.name, ev.data as Raw);
-    if (data) out.push({ type: ev.name, ...meta, data } as EventView);
+    const index = eventIndex++;
+    const raw = ev.data as Raw;
+    const data = eventData(ev.name, raw);
+    if (data) out.push({ type: ev.name, ...meta, session: b58(raw.session), eventIndex: index, data } as EventView);
   }
   return out;
 }
