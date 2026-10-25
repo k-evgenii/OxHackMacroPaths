@@ -85,3 +85,12 @@ Attribution invariants:
 - `npx tsc --noEmit`: two errors remain in my files, both because workers 03 and 04 are not merged yet:
   - `src/server/wallet/activity.ts(69,14)`: TS2307 cannot find `@/server/history`
   - `src/server/wallet/activity.ts(70,14)`: TS2307 cannot find `@/server/sessions`
+
+## Contract amendment 1
+
+- I merged the integration branch.
+- When `HistoryTransaction.parentageResolved === false`, every recognized action in that transaction now gets `amount: null`. Its kind and product are kept.
+- Unresolved individual parents still produce null, as before.
+- New tests check that `false` gives null and that `true` or an absent field attributes normally.
+- `vitest test/wallet-history`: 3 files, 38 tests passed.
+- `tsc`: still only the two errors for `@/server/history` and `@/server/sessions` in `activity.ts`.

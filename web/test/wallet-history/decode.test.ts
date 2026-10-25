@@ -70,6 +70,18 @@ describe("deposit", () => {
   });
 });
 
+describe("parentageResolved (amendment 1)", () => {
+  const ixs = () => [depositIx({ ix: 0 }, [5n, 0n, 0n, 0n]), transferIx({ ix: 0, inner: 0 }, OWNER_TA, VAULT0, WALLET, 5n)];
+  it("false keeps the recognized action but makes its amount null", () => {
+    const [item] = decodeWalletActivity(tx(ixs(), { parentageResolved: false }), WALLET, open);
+    expect(item).toMatchObject({ kind: "PoolDeposit", product: 0, amount: null });
+  });
+  it("true or absent attributes normally", () => {
+    expect(decodeWalletActivity(tx(ixs(), { parentageResolved: true }), WALLET, open)[0].amount).toBe("-5");
+    expect(decodeWalletActivity(tx(ixs()), WALLET, open)[0].amount).toBe("-5");
+  });
+});
+
 describe("buy_cover", () => {
   it("reports buyer premium only, not units or seller funding", () => {
     const t = tx(

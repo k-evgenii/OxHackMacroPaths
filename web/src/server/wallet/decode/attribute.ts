@@ -108,7 +108,8 @@ export function decodeWalletActivity(
     const touchesUnresolved = (unresolvedByTop.get(node.instructionIndex) ?? []).some(
       (t) => t.source === ownerTa || t.destination === ownerTa,
     );
-    const ambiguous = touchesUnresolved || reconciled.get(ownerTa) === false;
+    // Amendment 1: parentageResolved === false means no transfer can be tied to an invocation subtree.
+    const ambiguous = tx.parentageResolved === false || touchesUnresolved || reconciled.get(ownerTa) === false;
 
     const ctx: Ctx = { session, wallet, ownerTa, legs, events, sameKindCount: (pred) => actions.filter((a) => pred(a)).length };
     const result = attribute(action, node, ctx);
