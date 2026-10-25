@@ -33,6 +33,8 @@ pixi run npm --prefix keeper run env:check   # prints set/not set, RPC host, kee
 - `src/run.ts`: part 1 creates the PLAY mint (6 decimals), calls `create_session` with everything from
   `data/cpi-yoy-replay.json`, writes `data/session.json`, and checks every Session field it set. Part 2
   seeds the four sides from the keeper (`--seed 90,100,90,100` by default, `--seed none` to skip).
+  When `data/session.json` already exists and `--session-id` is not given, it refuses rather than
+  replacing the file (`--force` overrides). Tests: `npx tsx --test keeper/src/run.test.ts`.
 - `src/program.ts`: generic IDL instruction builder (accounts matched by IDL name), account decoding,
   PLAY formatting, `data/session.json` helpers. Tests: `npx tsx --test keeper/src/program.test.ts`.
 - `src/replay.ts`: `npm run replay` posts the 48 observations in order, at least 2 s apart, each only after
@@ -42,9 +44,11 @@ pixi run npm --prefix keeper run env:check   # prints set/not set, RPC host, kee
 - `src/ops.ts` and `src/admin.ts`: `npm run admin -- <seed|lock|settle|status|expire|sweep|claim|seller>` for the session in
   `data/session.json`. Every command reads the session first and sends nothing if that step is already
   done. `sweep` takes `--treasury <pubkey>` and creates that wallet's PLAY account when it is missing.
-  `claim` takes `--keypair <file>` and prints that wallet's PLAY balance before and after. `status` also
+  `claim` prints that wallet's PLAY balance before and after; it claims the keeper's own position
+  (`KEEPER_KEYPAIR` from `.env`) unless `--keypair <file>` names another owner. `status` also
   prints `scores`, `p_budget`, `r_budget`, `claimed_count/position_count`, the four side totals, and both
-  vault balances in PLAY. `seller` is `fund`, `quote`, `buy`, `settle`, and `withdraw` (`src/seller.ts`).
+  vault balances in PLAY. `seller` is `fund`, `quote`, `buy`, `claim-cover`, `settle`, and `withdraw`
+  (`src/seller.ts`). Tests: `npx tsx --test keeper/src/seller.test.ts`.
 
 ## Local smoke test (no devnet)
 
@@ -88,8 +92,10 @@ DOTENV_PATH=/tmp/keeper-local/local.env pixi run npm --prefix keeper run admin -
 ```
 
 Options: `--session-id`, `--mint`, `--deposit-window`, `--replay-window`, `--idl`, `--replay`,
-`--out`, `--seed`. If you re-run with an existing `--session-id`, nothing is sent: it re-checks the session against
-`data/session.json`. It exits 1 if any read-back field differs.
+`--out`, `--seed`, `--force`. If you re-run with an existing `--session-id`, nothing is sent: it re-checks the session against
+`data/session.json`. It exits 1 if any read-back field differs. Without `--session-id` the id is the cluster
+time, so a re-run would make a new session and overwrite `data/session.json`, the only record of the old one;
+the command refuses when that file exists unless you pass `--session-id`, another `--out`, or `--force`.
 
 ## Demo run
 
@@ -122,7 +128,7 @@ DOTENV_PATH=/tmp/keeper-local/local.env pixi run npm --prefix keeper run replay 
 DOTENV_PATH=/tmp/keeper-local/local.env pixi run npm --prefix keeper run admin -- settle
 # scores       0.827387, 0.863980  (cooling, excess)
 
-DOTENV_PATH=/tmp/keeper-local/local.env pixi run npm --prefix keeper run admin -- claim --keypair "$KEEPER_KEYPAIR"
+DOTENV_PATH=/tmp/keeper-local/local.env pixi run npm --prefix keeper run admin -- claim
 # claim: PLAY before 0
 # claim: PLAY after 380
 
@@ -134,7 +140,7 @@ DOTENV_PATH=/tmp/keeper-local/local.env pixi run npm --prefix keeper run admin -
 # vaults       0, 0 PLAY
 ```
 
-`claim` pays the seeder (the keeper, who deposited `90,100,90,100`). One position holds every side, so the payout is the whole deposit and both vaults are already 0; `sweep` reads that and sends nothing. A second `sweep` prints the same line. `status` repeats `scores`, `p_budget`, `r_budget`, the four side totals in PLAY, `claimed_count/position_count`, and the two vault balances.
+`claim` pays the seeder (the keeper, who deposited `90,100,90,100`); with no `--keypair` it uses `KEEPER_KEYPAIR` from the env file, so nothing depends on a shell variable being exported. One position holds every side, so the payout is the whole deposit and both vaults are already 0; `sweep` reads that and sends nothing. A second `sweep` prints the same line. `status` repeats `scores`, `p_budget`, `r_budget`, the four side totals in PLAY, `claimed_count/position_count`, and the two vault balances.
 
 The field count in `read-back: all 20 fields match` is what `session:create` prints for this program. The `511496` byte line is this build of `target/deploy/macropaths.so`. `npm --prefix keeper` runs the script with `keeper/` as the working directory, so the demo passes the `.so` as `$(pwd)/target/deploy/macropaths.so` from the repo root.
 
@@ -153,9 +159,13 @@ DOTENV_PATH=/tmp/keeper-local/local.env pixi run npm --prefix keeper run admin -
 # buy: product 0 10 PLAY
 ```
 
-After that session has been settled:
+After that session has been settled, the buyer claims, then the seller settles and withdraws:
 
 ```bash
+DOTENV_PATH=/tmp/keeper-local/local.env pixi run npm --prefix keeper run admin -- seller claim-cover --keypair /tmp/buyer.json
+# claim cover: payout 8.27387 PLAY
+# claim cover: cover_claimed_count/cover_count 1/1
+
 DOTENV_PATH=/tmp/keeper-local/local.env pixi run npm --prefix keeper run admin -- seller settle --product 0
 # seller settle: product 0
 
@@ -164,3 +174,16 @@ DOTENV_PATH=/tmp/keeper-local/local.env pixi run npm --prefix keeper run admin -
 ```
 
 `fund` tops free_cash up to the amount and mints any PLAY the keeper is short. `buy` creates the buyer's PLAY account when it is missing. A second `quote` with the same prices prints `quote: already 500000 500000` and sends nothing.
+
+`claim-cover` sends `claim_cover` signed by the buyer (`--keypair`), with the keeper paying the fee. Settled pays `floor(score * units)` per product (`0.827387 * 10` above); Refunding returns the premium. It prints the buyer's PLAY before and after, the payout, and `cover_claimed_count/cover_count`. `sweep` refuses while those two differ, so run `claim-cover` for every buyer before `sweep`. A second run prints `claim cover: cover already claimed` and sends nothing.
+
+## Devnet demo runbook
+
+Same commands as the local demo, against devnet, with `.env` at the repo root (`RPC_URL` a keyed Helius or QuickNode devnet URL, `KEEPER_KEYPAIR` a funded devnet wallet; `pixi run npm --prefix keeper run env:check` first). Drop `DOTENV_PATH=...` from the commands. What differs from the local run:
+
+1. **Pick the session id yourself**: `session:create -- --session-id <n> --deposit-window 1200`. With an explicit id a re-run after a wallet, RPC, or confirmation hiccup re-checks the same session instead of creating a second one, and `data/session.json` is never silently replaced. 1200 s leaves room for the seller steps below; the default 600 s is tight on devnet.
+2. **Seller steps go before `lock`**, inside the deposit window: `seller fund`, `seller quote`, `seller buy` (the buyer keypair needs no SOL: the keeper pays the fees, creates the buyer PLAY account and mints the shortfall).
+3. **`admin -- lock` before the window ends.** An Open session past `deposit_deadline` can only be expired (`admin -- expire`), after which `claim` refunds deposits and `seller claim-cover` refunds premiums.
+4. **Replay takes at least 96 s**: 48 rows at the keeper's 2 s floor, plus one confirmation per row, so plan on a few minutes on devnet. It resumes from `Session.next_index` if it is interrupted.
+5. **`admin -- settle`, then `admin -- claim`** (the keeper's position). **If a cover was bought, also `seller claim-cover --keypair <buyer>`**, otherwise `sweep` refuses with `cover_claimed_count/cover_count 0/1`. Then `seller settle --product <0|1>`, `seller withdraw`, and `sweep --treasury <pubkey>`.
+6. `admin -- status` at any point; it only reads.

@@ -1,10 +1,11 @@
 /**
- * Seller extension callers: fund, quote, buy, settle, withdraw.
+ * Seller extension callers: fund, quote, buy, claim-cover, settle, withdraw.
  * Each one reads the on-chain accounts first and sends nothing when that step is already done.
  * The keeper is the session authority and the seller wallet. A buyer's keypair is separate.
  */
 import { readFileSync } from "node:fs";
 import { Keypair, PublicKey, SystemProgram, type TransactionInstruction } from "@solana/web3.js";
+import type { Idl } from "@anchor-lang/core";
 import {
   createAssociatedTokenAccountIdempotentInstruction,
   createMintToInstruction,
@@ -228,6 +229,73 @@ export async function buyCover(ctx: Ctx, product: 0 | 1, units: bigint, buyer: K
   );
   console.log(`buy: product ${product} ${play(units)} PLAY`);
   return sendInstructions(ctx, "buy_cover", ixs, [ctx.keeper, buyer]);
+}
+
+/** claim_cover for `owner`'s cover PDA `["cover", session, owner]`, accounts in IDL order. */
+export function claimCoverIx(
+  idl: Idl,
+  session: PublicKey,
+  owner: PublicKey,
+  ownerTa: PublicKey,
+  vaults: [PublicKey, PublicKey],
+): TransactionInstruction {
+  return instruction(idl, "claim_cover", {}, {
+    owner,
+    session,
+    cover: coverAddress(new PublicKey(idl.address), session, owner),
+    owner_ta: ownerTa,
+    vault_0: vaults[0],
+    vault_1: vaults[1],
+    token_program: TOKEN_PROGRAM_ID,
+  });
+}
+
+/**
+ * claim_cover for `owner`'s cover. Already claimed means the step is done, so this sends nothing.
+ * Prints the owner's PLAY balance before and after (the payout) and cover_claimed_count/cover_count,
+ * which sweep needs equal. Creates the owner's PLAY account when it is missing. The keeper pays the
+ * fee; `owner` signs.
+ */
+export async function claimCover(ctx: Ctx, owner: Keypair): Promise<string | null> {
+  const s = await fetchSession(ctx);
+  const state = enumName(s.state);
+  if (state !== "settled" && state !== "refunding") {
+    throw new Error(`cannot claim cover: session is ${state}`);
+  }
+  const cover = coverAddress(programId(ctx), ctx.session, owner.publicKey);
+  const c = await fetchDecoded(ctx.connection, ctx.idl, "Cover", cover);
+  if (!c) throw new Error(`no cover for ${owner.publicKey.toBase58()}`);
+  const counters = (x: Record<string, any>) => `cover_claimed_count/cover_count ${x.cover_claimed_count}/${x.cover_count}`;
+
+  const mint = new PublicKey(ctx.file.mint);
+  const ata = getAssociatedTokenAddressSync(mint, owner.publicKey);
+  const before = await tokenAmount(ctx.connection, ata);
+  console.log(`claim cover: PLAY before ${play(before)}`);
+  if (c.claimed) {
+    console.log("claim cover: cover already claimed");
+    console.log(`claim cover: PLAY after ${play(before)}`);
+    console.log(`claim cover: ${counters(s)}`);
+    return null;
+  }
+  const units = (c.units as unknown[]).map(big);
+  console.log(`claim cover: units ${units.map(play).join(", ")} PLAY, session ${state}`);
+  const sig = await sendInstructions(
+    ctx,
+    "claim_cover",
+    [
+      createAssociatedTokenAccountIdempotentInstruction(ctx.keeper.publicKey, ata, owner.publicKey, mint),
+      claimCoverIx(ctx.idl, ctx.session, owner.publicKey, ata, [
+        new PublicKey(ctx.file.vaults[0]),
+        new PublicKey(ctx.file.vaults[1]),
+      ]),
+    ],
+    [ctx.keeper, owner],
+  );
+  const after = await tokenAmount(ctx.connection, ata);
+  console.log(`claim cover: PLAY after ${play(after)}`);
+  console.log(`claim cover: payout ${play(after - before)} PLAY`);
+  console.log(`claim cover: ${counters(await fetchSession(ctx))}`);
+  return sig;
 }
 
 /** seller_settle. Sends nothing when that product is already settled. */
