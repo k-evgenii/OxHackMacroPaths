@@ -13,7 +13,7 @@ import {
   type CoverView,
   type PositionView,
   type SessionView,
-  type WalletOverviewResponse,
+  WalletOverviewResponse,
 } from "@macropaths/client";
 import type { CacheStore, SessionRepository } from "@/server/contracts";
 import { parsePubkey } from "@/server/chain";
@@ -230,9 +230,14 @@ const defaultTokenAccounts = (owner: PublicKey, mint: PublicKey) =>
 export async function getWalletOverview(owner: string): Promise<WalletOverviewResponse> {
   parsePubkey(owner, "owner"); // typed 400 before any repository or fixture access
   if (process.env.NEXT_PUBLIC_USE_FIXTURES === "1") {
-    // TODO(checkpoint): bind to the foundation's frontend-v2 wallet fixtures once published.
-    const { walletOverviewFixtures } = await import("@macropaths/client/fixtures/frontend-v2");
-    return fixtureWalletOverview(owner, walletOverviewFixtures as WalletOverviewResponse[]);
+    // Synthetic foundation fixtures: the A-owned wallet and the empty owner. Any other owner gets
+    // an empty state over the same registered mints/sessions (never the fixture owner's holdings).
+    const [a, empty] = await Promise.all([
+      import("@macropaths/client/fixtures/frontend-v2/wallet/a-owned.json"),
+      import("@macropaths/client/fixtures/frontend-v2/wallet/empty-owner.json"),
+    ]);
+    const fixtures = [a.default, empty.default].map((f) => WalletOverviewResponse.parse(f));
+    return fixtureWalletOverview(owner, fixtures);
   }
   const { sessionRepository } = await import("@/server/sessions");
   return readWalletOverview(owner, {
