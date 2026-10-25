@@ -39,12 +39,12 @@ Optional access line, if time allows: **"Access at small size for anyone with a 
    - The forecast is advisory and settlement uses only the realised path.
    - The quote is a declared policy, `p = clamp(V0 + 0.5·σ0, 0.05, 0.95)`.
    - The backtest's positive seller results come from a forecast that runs high, on about 14 independent periods.
-   - The 11-origin walk-forward cannot validate a 10% tail (`forecast/walkforward.md` on the research PR).
+   - The 11-origin walk-forward cannot validate a 10% tail (`forecast/walkforward.md`).
 4. **"Nobody settles a path on chain."**
    - We have not checked every protocol.
    - Say "we are not aware of a contract that settles on the path of a macro series on chain", and name the precedents we do know: weather degree-day futures settle on accumulated excess, and on-chain CPI feeds publish the level (`docs/live-mode.md`).
 5. **"Fuel, diesel and loan-rate cover are live", or "the caps were set before 2021".**
    - Only the CPI session runs (`docs/products.md`).
-   - The demo caps 8 pp and 80 pp-months were chosen after seeing 2021–24. The declared pre-2021 rule gives 7.697 pp and 188.18 pp-months, under which Excess pays 0.367.
+   - The demo caps 8 pp and 80 pp-months were chosen after seeing 2021–24. The declared pre-2021 rule gives 7.697 pp and 188.31 pp-months, under which Excess pays 0.367.
 
 Wording rules from the repo stay in force: "forecast", "position" and "cover". Never "fair value", "bet", "option" or "insurance".

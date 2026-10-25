@@ -1,0 +1,1819 @@
+{
+  "version": 1,
+  "purpose": "Evidence for the 'twin windows' comparison: how close 2013-03..2017-02 is to the on-chain 2021-01..2024-12 window, and what pays differently.",
+  "provenance": {
+    "snapshot": {
+      "path": "data/snapshots/CPIAUCNS.json",
+      "series_id": "CPIAUCNS",
+      "source_url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=CPIAUCNS",
+      "retrieved_at": "2026-10-24T16:25:32Z",
+      "sha256_of_raw": "cfab9b9be4a5d4f06253c4dcc3f7e0b28b1d58837e710dd7cb1fd54a49e7ad7c",
+      "file_sha256": "8caae39af6be41fe2d129abdd898d4033752b794418cba1765155fe3c304f266"
+    },
+    "input_levels": {
+      "first_month": "1913-01",
+      "last_month": "2026-09",
+      "sha256": "122725acf871c914d4074f2ba41587269d6c416ecb76a05956540293cccba7e3",
+      "note": "sha256 over the lines 'YYYY-MM=level' (empty for a missing value) of the whole snapshot; a re-fetch with identical levels keeps the committed snapshot entry above",
+      "missing_levels": [
+        "2025-10"
+      ]
+    },
+    "make_vectors": {
+      "path": "tests/make_vectors.py",
+      "git_commit": "108afbf29395e6809ce8b78e3fc33339e32e4d03",
+      "sha256": "7d746ea50f8784c96db6531a230cef40f3540c8227c53974992490ff0de47879"
+    },
+    "vectors": {
+      "path": "tests/vectors.json",
+      "dataset_id": "328f498b394e988f88f763947e0c656cb0e988321c3f66228c8549946401143e",
+      "sha256_of_raw": "cfab9b9be4a5d4f06253c4dcc3f7e0b28b1d58837e710dd7cb1fd54a49e7ad7c",
+      "reference_levels_x_M_D_A_scores_match": true
+    },
+    "generator": "tests/twin_check.py",
+    "command": "pixi run python tests/twin_check.py"
+  },
+  "parameters": {
+    "K": 40000,
+    "Dcap": 80000,
+    "Acap": 800000,
+    "one": 1000000,
+    "N": 48
+  },
+  "units": {
+    "x": "1e-4 percentage points (32500 = 3.25%)",
+    "D": "1e-4 percentage points",
+    "A": "1e-4 pp-months",
+    "scores": "millionths",
+    "pp_exact": "exact YoY in percentage points as a reduced fraction, unrounded"
+  },
+  "method": {
+    "x": "x_t = floor(10^6 * (P_t - P_{t-12}) / P_{t-12}) from make_vectors.yoy; a window is x_0..x_47 and needs levels P_{-12}..P_47 (60 months)",
+    "endpoints": "x_start = x_0 (first month of the window), x_end = x_47 (last month)",
+    "distance": "Chebyshev = max(|x_start - x_start_ref|, |x_end - x_end_ref|) on the contract's floored x; L1 = |dx_start| + |dx_end|; l2_squared = dx_start^2 + dx_end^2 (rank-equivalent to L2)",
+    "primary_metric": "chebyshev",
+    "reference": "2021-01..2024-12 (on-chain session A)",
+    "candidate_set": "every 48-month window with all 60 levels present, excluding windows whose 48 observation months overlap the reference's: |start - 2021-01| < 48 months, i.e. starts 2017-02..2024-12 (the reference itself is among them)",
+    "tie_rule": "ordinal rank sorts by (distance, start month), so ties go to the earlier start; competition rank is 1 + the number of strictly closer candidates (ties share it)",
+    "dedup_rule": "greedy over the (distance, start month) order: keep a window unless its observation months overlap an already kept one (|start - kept start| < 48); the de-duplicated rank is the position among kept windows",
+    "scores": "score_cooling = floor(10^6 * min(D, Dcap) / Dcap); score_excess = floor(10^6 * min(A, Acap) / Acap), K = 40000",
+    "wording_threshold": "'within 0.15 pp' is tested as |gap| <= 0.15 pp on both endpoints (the strict < variant is recorded too); contract values use the floored x, exact values use fractions.Fraction"
+  },
+  "level_precision": {
+    "first_month_with_more_than_one_significant_decimal": "2007-01",
+    "all_earlier_levels_have_at_most_one_significant_decimal": true,
+    "note": "FRED stores every level with three decimals; before that month the last two are always 0"
+  },
+  "candidates": {
+    "start_months_in_snapshot_range": 1306,
+    "complete_windows": 1294,
+    "excluded_overlapping_reference": 57,
+    "excluded_overlapping_reference_with_missing_level": 12,
+    "candidates": 1237
+  },
+  "windows": [
+    {
+      "id": "reference",
+      "role": "reference",
+      "start": "2021-01",
+      "end": "2024-12",
+      "level_months": [
+        "2020-01",
+        "2024-12"
+      ],
+      "max_significant_decimals_in_levels": 3,
+      "endpoints": {
+        "start": {
+          "month": "2021-01",
+          "level": "261.582",
+          "level_12_months_earlier": "257.971",
+          "x": 13997,
+          "x_pp": "1.3997",
+          "yoy_pp_exact": "361100/257971",
+          "yoy_pp_exact_6dp": "1.399770",
+          "yoy_step_per_level_tick_pp_4dp": "0.0004"
+        },
+        "end": {
+          "month": "2024-12",
+          "level": "315.605",
+          "level_12_months_earlier": "306.746",
+          "x": 28880,
+          "x_pp": "2.8880",
+          "yoy_pp_exact": "442950/153373",
+          "yoy_pp_exact_6dp": "2.888057",
+          "yoy_step_per_level_tick_pp_4dp": "0.0003"
+        }
+      },
+      "M": 90597,
+      "D": 66191,
+      "A": 691184,
+      "score_cooling": 827387,
+      "score_excess": 863980,
+      "series": [
+        {
+          "t": 0,
+          "date": "2021-01",
+          "x": 13997,
+          "M": 13997,
+          "D": 0,
+          "A": 0
+        },
+        {
+          "t": 1,
+          "date": "2021-02",
+          "x": 16762,
+          "M": 16762,
+          "D": 0,
+          "A": 0
+        },
+        {
+          "t": 2,
+          "date": "2021-03",
+          "x": 26197,
+          "M": 26197,
+          "D": 0,
+          "A": 0
+        },
+        {
+          "t": 3,
+          "date": "2021-04",
+          "x": 41596,
+          "M": 41596,
+          "D": 0,
+          "A": 1596
+        },
+        {
+          "t": 4,
+          "date": "2021-05",
+          "x": 49927,
+          "M": 49927,
+          "D": 0,
+          "A": 11523
+        },
+        {
+          "t": 5,
+          "date": "2021-06",
+          "x": 53914,
+          "M": 53914,
+          "D": 0,
+          "A": 25437
+        },
+        {
+          "t": 6,
+          "date": "2021-07",
+          "x": 53654,
+          "M": 53914,
+          "D": 260,
+          "A": 39091
+        },
+        {
+          "t": 7,
+          "date": "2021-08",
+          "x": 52512,
+          "M": 53914,
+          "D": 1402,
+          "A": 51603
+        },
+        {
+          "t": 8,
+          "date": "2021-09",
+          "x": 53903,
+          "M": 53914,
+          "D": 1402,
+          "A": 65506
+        },
+        {
+          "t": 9,
+          "date": "2021-10",
+          "x": 62218,
+          "M": 62218,
+          "D": 1402,
+          "A": 87724
+        },
+        {
+          "t": 10,
+          "date": "2021-11",
+          "x": 68090,
+          "M": 68090,
+          "D": 1402,
+          "A": 115814
+        },
+        {
+          "t": 11,
+          "date": "2021-12",
+          "x": 70364,
+          "M": 70364,
+          "D": 1402,
+          "A": 146178
+        },
+        {
+          "t": 12,
+          "date": "2022-01",
+          "x": 74798,
+          "M": 74798,
+          "D": 1402,
+          "A": 180976
+        },
+        {
+          "t": 13,
+          "date": "2022-02",
+          "x": 78710,
+          "M": 78710,
+          "D": 1402,
+          "A": 219686
+        },
+        {
+          "t": 14,
+          "date": "2022-03",
+          "x": 85424,
+          "M": 85424,
+          "D": 1402,
+          "A": 265110
+        },
+        {
+          "t": 15,
+          "date": "2022-04",
+          "x": 82586,
+          "M": 85424,
+          "D": 2838,
+          "A": 307696
+        },
+        {
+          "t": 16,
+          "date": "2022-05",
+          "x": 85815,
+          "M": 85815,
+          "D": 2838,
+          "A": 353511
+        },
+        {
+          "t": 17,
+          "date": "2022-06",
+          "x": 90597,
+          "M": 90597,
+          "D": 2838,
+          "A": 404108
+        },
+        {
+          "t": 18,
+          "date": "2022-07",
+          "x": 85248,
+          "M": 90597,
+          "D": 5349,
+          "A": 449356
+        },
+        {
+          "t": 19,
+          "date": "2022-08",
+          "x": 82626,
+          "M": 90597,
+          "D": 7971,
+          "A": 491982
+        },
+        {
+          "t": 20,
+          "date": "2022-09",
+          "x": 82016,
+          "M": 90597,
+          "D": 8581,
+          "A": 533998
+        },
+        {
+          "t": 21,
+          "date": "2022-10",
+          "x": 77454,
+          "M": 90597,
+          "D": 13143,
+          "A": 571452
+        },
+        {
+          "t": 22,
+          "date": "2022-11",
+          "x": 71103,
+          "M": 90597,
+          "D": 19494,
+          "A": 602555
+        },
+        {
+          "t": 23,
+          "date": "2022-12",
+          "x": 64544,
+          "M": 90597,
+          "D": 26053,
+          "A": 627099
+        },
+        {
+          "t": 24,
+          "date": "2023-01",
+          "x": 64101,
+          "M": 90597,
+          "D": 26496,
+          "A": 651200
+        },
+        {
+          "t": 25,
+          "date": "2023-02",
+          "x": 60356,
+          "M": 90597,
+          "D": 30241,
+          "A": 671556
+        },
+        {
+          "t": 26,
+          "date": "2023-03",
+          "x": 49849,
+          "M": 90597,
+          "D": 40748,
+          "A": 681405
+        },
+        {
+          "t": 27,
+          "date": "2023-04",
+          "x": 49303,
+          "M": 90597,
+          "D": 41294,
+          "A": 690708
+        },
+        {
+          "t": 28,
+          "date": "2023-05",
+          "x": 40476,
+          "M": 90597,
+          "D": 50121,
+          "A": 691184
+        },
+        {
+          "t": 29,
+          "date": "2023-06",
+          "x": 29691,
+          "M": 90597,
+          "D": 60906,
+          "A": 691184
+        },
+        {
+          "t": 30,
+          "date": "2023-07",
+          "x": 31777,
+          "M": 90597,
+          "D": 60906,
+          "A": 691184
+        },
+        {
+          "t": 31,
+          "date": "2023-08",
+          "x": 36651,
+          "M": 90597,
+          "D": 60906,
+          "A": 691184
+        },
+        {
+          "t": 32,
+          "date": "2023-09",
+          "x": 36996,
+          "M": 90597,
+          "D": 60906,
+          "A": 691184
+        },
+        {
+          "t": 33,
+          "date": "2023-10",
+          "x": 32411,
+          "M": 90597,
+          "D": 60906,
+          "A": 691184
+        },
+        {
+          "t": 34,
+          "date": "2023-11",
+          "x": 31372,
+          "M": 90597,
+          "D": 60906,
+          "A": 691184
+        },
+        {
+          "t": 35,
+          "date": "2023-12",
+          "x": 33521,
+          "M": 90597,
+          "D": 60906,
+          "A": 691184
+        },
+        {
+          "t": 36,
+          "date": "2024-01",
+          "x": 30908,
+          "M": 90597,
+          "D": 60906,
+          "A": 691184
+        },
+        {
+          "t": 37,
+          "date": "2024-02",
+          "x": 31531,
+          "M": 90597,
+          "D": 60906,
+          "A": 691184
+        },
+        {
+          "t": 38,
+          "date": "2024-03",
+          "x": 34773,
+          "M": 90597,
+          "D": 60906,
+          "A": 691184
+        },
+        {
+          "t": 39,
+          "date": "2024-04",
+          "x": 33573,
+          "M": 90597,
+          "D": 60906,
+          "A": 691184
+        },
+        {
+          "t": 40,
+          "date": "2024-05",
+          "x": 32690,
+          "M": 90597,
+          "D": 60906,
+          "A": 691184
+        },
+        {
+          "t": 41,
+          "date": "2024-06",
+          "x": 29713,
+          "M": 90597,
+          "D": 60906,
+          "A": 691184
+        },
+        {
+          "t": 42,
+          "date": "2024-07",
+          "x": 28947,
+          "M": 90597,
+          "D": 61650,
+          "A": 691184
+        },
+        {
+          "t": 43,
+          "date": "2024-08",
+          "x": 25307,
+          "M": 90597,
+          "D": 65290,
+          "A": 691184
+        },
+        {
+          "t": 44,
+          "date": "2024-09",
+          "x": 24406,
+          "M": 90597,
+          "D": 66191,
+          "A": 691184
+        },
+        {
+          "t": 45,
+          "date": "2024-10",
+          "x": 25979,
+          "M": 90597,
+          "D": 66191,
+          "A": 691184
+        },
+        {
+          "t": 46,
+          "date": "2024-11",
+          "x": 27493,
+          "M": 90597,
+          "D": 66191,
+          "A": 691184
+        },
+        {
+          "t": 47,
+          "date": "2024-12",
+          "x": 28880,
+          "M": 90597,
+          "D": 66191,
+          "A": 691184
+        }
+      ],
+      "distance_to_reference": {
+        "chebyshev": 0,
+        "l1": 0,
+        "l2_squared": 0
+      },
+      "ranks": null
+    },
+    {
+      "id": "twin_2013_03",
+      "role": "comparison",
+      "start": "2013-03",
+      "end": "2017-02",
+      "level_months": [
+        "2012-03",
+        "2017-02"
+      ],
+      "max_significant_decimals_in_levels": 3,
+      "endpoints": {
+        "start": {
+          "month": "2013-03",
+          "level": "232.773",
+          "level_12_months_earlier": "229.392",
+          "x": 14738,
+          "x_pp": "1.4738",
+          "yoy_pp_exact": "28175/19116",
+          "yoy_pp_exact_6dp": "1.473896",
+          "yoy_step_per_level_tick_pp_4dp": "0.0004",
+          "delta_to_reference": {
+            "x": 741,
+            "pp": "0.0741",
+            "pp_exact": "365545325/4931373636",
+            "pp_exact_6dp": "0.074126"
+          }
+        },
+        "end": {
+          "month": "2017-02",
+          "level": "243.603",
+          "level_12_months_earlier": "237.111",
+          "x": 27379,
+          "x_pp": "2.7379",
+          "yoy_pp_exact": "216400/79037",
+          "yoy_pp_exact_6dp": "2.737958",
+          "yoy_step_per_level_tick_pp_4dp": "0.0004",
+          "delta_to_reference": {
+            "x": -1501,
+            "pp": "-0.1501",
+            "pp_exact": "-1819521950/12122141801",
+            "pp_exact_6dp": "-0.150099"
+          }
+        }
+      },
+      "M": 27379,
+      "D": 23267,
+      "A": 0,
+      "score_cooling": 290837,
+      "score_excess": 0,
+      "series": [
+        {
+          "t": 0,
+          "date": "2013-03",
+          "x": 14738,
+          "M": 14738,
+          "D": 0,
+          "A": 0
+        },
+        {
+          "t": 1,
+          "date": "2013-04",
+          "x": 10630,
+          "M": 14738,
+          "D": 4108,
+          "A": 0
+        },
+        {
+          "t": 2,
+          "date": "2013-05",
+          "x": 13619,
+          "M": 14738,
+          "D": 4108,
+          "A": 0
+        },
+        {
+          "t": 3,
+          "date": "2013-06",
+          "x": 17544,
+          "M": 17544,
+          "D": 4108,
+          "A": 0
+        },
+        {
+          "t": 4,
+          "date": "2013-07",
+          "x": 19606,
+          "M": 19606,
+          "D": 4108,
+          "A": 0
+        },
+        {
+          "t": 5,
+          "date": "2013-08",
+          "x": 15183,
+          "M": 19606,
+          "D": 4423,
+          "A": 0
+        },
+        {
+          "t": 6,
+          "date": "2013-09",
+          "x": 11849,
+          "M": 19606,
+          "D": 7757,
+          "A": 0
+        },
+        {
+          "t": 7,
+          "date": "2013-10",
+          "x": 9636,
+          "M": 19606,
+          "D": 9970,
+          "A": 0
+        },
+        {
+          "t": 8,
+          "date": "2013-11",
+          "x": 12370,
+          "M": 19606,
+          "D": 9970,
+          "A": 0
+        },
+        {
+          "t": 9,
+          "date": "2013-12",
+          "x": 15017,
+          "M": 19606,
+          "D": 9970,
+          "A": 0
+        },
+        {
+          "t": 10,
+          "date": "2014-01",
+          "x": 15789,
+          "M": 19606,
+          "D": 9970,
+          "A": 0
+        },
+        {
+          "t": 11,
+          "date": "2014-02",
+          "x": 11263,
+          "M": 19606,
+          "D": 9970,
+          "A": 0
+        },
+        {
+          "t": 12,
+          "date": "2014-03",
+          "x": 15122,
+          "M": 19606,
+          "D": 9970,
+          "A": 0
+        },
+        {
+          "t": 13,
+          "date": "2014-04",
+          "x": 19528,
+          "M": 19606,
+          "D": 9970,
+          "A": 0
+        },
+        {
+          "t": 14,
+          "date": "2014-05",
+          "x": 21271,
+          "M": 21271,
+          "D": 9970,
+          "A": 0
+        },
+        {
+          "t": 15,
+          "date": "2014-06",
+          "x": 20723,
+          "M": 21271,
+          "D": 9970,
+          "A": 0
+        },
+        {
+          "t": 16,
+          "date": "2014-07",
+          "x": 19923,
+          "M": 21271,
+          "D": 9970,
+          "A": 0
+        },
+        {
+          "t": 17,
+          "date": "2014-08",
+          "x": 16996,
+          "M": 21271,
+          "D": 9970,
+          "A": 0
+        },
+        {
+          "t": 18,
+          "date": "2014-09",
+          "x": 16579,
+          "M": 21271,
+          "D": 9970,
+          "A": 0
+        },
+        {
+          "t": 19,
+          "date": "2014-10",
+          "x": 16643,
+          "M": 21271,
+          "D": 9970,
+          "A": 0
+        },
+        {
+          "t": 20,
+          "date": "2014-11",
+          "x": 13223,
+          "M": 21271,
+          "D": 9970,
+          "A": 0
+        },
+        {
+          "t": 21,
+          "date": "2014-12",
+          "x": 7564,
+          "M": 21271,
+          "D": 13707,
+          "A": 0
+        },
+        {
+          "t": 22,
+          "date": "2015-01",
+          "x": -894,
+          "M": 21271,
+          "D": 22165,
+          "A": 0
+        },
+        {
+          "t": 23,
+          "date": "2015-02",
+          "x": -252,
+          "M": 21271,
+          "D": 22165,
+          "A": 0
+        },
+        {
+          "t": 24,
+          "date": "2015-03",
+          "x": -737,
+          "M": 21271,
+          "D": 22165,
+          "A": 0
+        },
+        {
+          "t": 25,
+          "date": "2015-04",
+          "x": -1996,
+          "M": 21271,
+          "D": 23267,
+          "A": 0
+        },
+        {
+          "t": 26,
+          "date": "2015-05",
+          "x": -400,
+          "M": 21271,
+          "D": 23267,
+          "A": 0
+        },
+        {
+          "t": 27,
+          "date": "2015-06",
+          "x": 1237,
+          "M": 21271,
+          "D": 23267,
+          "A": 0
+        },
+        {
+          "t": 28,
+          "date": "2015-07",
+          "x": 1695,
+          "M": 21271,
+          "D": 23267,
+          "A": 0
+        },
+        {
+          "t": 29,
+          "date": "2015-08",
+          "x": 1950,
+          "M": 21271,
+          "D": 23267,
+          "A": 0
+        },
+        {
+          "t": 30,
+          "date": "2015-09",
+          "x": -362,
+          "M": 21271,
+          "D": 23267,
+          "A": 0
+        },
+        {
+          "t": 31,
+          "date": "2015-10",
+          "x": 1705,
+          "M": 21271,
+          "D": 23267,
+          "A": 0
+        },
+        {
+          "t": 32,
+          "date": "2015-11",
+          "x": 5017,
+          "M": 21271,
+          "D": 23267,
+          "A": 0
+        },
+        {
+          "t": 33,
+          "date": "2015-12",
+          "x": 7295,
+          "M": 21271,
+          "D": 23267,
+          "A": 0
+        },
+        {
+          "t": 34,
+          "date": "2016-01",
+          "x": 13730,
+          "M": 21271,
+          "D": 23267,
+          "A": 0
+        },
+        {
+          "t": 35,
+          "date": "2016-02",
+          "x": 10177,
+          "M": 21271,
+          "D": 23267,
+          "A": 0
+        },
+        {
+          "t": 36,
+          "date": "2016-03",
+          "x": 8525,
+          "M": 21271,
+          "D": 23267,
+          "A": 0
+        },
+        {
+          "t": 37,
+          "date": "2016-04",
+          "x": 11251,
+          "M": 21271,
+          "D": 23267,
+          "A": 0
+        },
+        {
+          "t": 38,
+          "date": "2016-05",
+          "x": 10193,
+          "M": 21271,
+          "D": 23267,
+          "A": 0
+        },
+        {
+          "t": 39,
+          "date": "2016-06",
+          "x": 9973,
+          "M": 21271,
+          "D": 23267,
+          "A": 0
+        },
+        {
+          "t": 40,
+          "date": "2016-07",
+          "x": 8271,
+          "M": 21271,
+          "D": 23267,
+          "A": 0
+        },
+        {
+          "t": 41,
+          "date": "2016-08",
+          "x": 10628,
+          "M": 21271,
+          "D": 23267,
+          "A": 0
+        },
+        {
+          "t": 42,
+          "date": "2016-09",
+          "x": 14637,
+          "M": 21271,
+          "D": 23267,
+          "A": 0
+        },
+        {
+          "t": 43,
+          "date": "2016-10",
+          "x": 16359,
+          "M": 21271,
+          "D": 23267,
+          "A": 0
+        },
+        {
+          "t": 44,
+          "date": "2016-11",
+          "x": 16925,
+          "M": 21271,
+          "D": 23267,
+          "A": 0
+        },
+        {
+          "t": 45,
+          "date": "2016-12",
+          "x": 20746,
+          "M": 21271,
+          "D": 23267,
+          "A": 0
+        },
+        {
+          "t": 46,
+          "date": "2017-01",
+          "x": 25000,
+          "M": 25000,
+          "D": 23267,
+          "A": 0
+        },
+        {
+          "t": 47,
+          "date": "2017-02",
+          "x": 27379,
+          "M": 27379,
+          "D": 23267,
+          "A": 0
+        }
+      ],
+      "distance_to_reference": {
+        "chebyshev": 1501,
+        "l1": 2242,
+        "l2_squared": 2802082
+      },
+      "ranks": {
+        "chebyshev": {
+          "ordinal": 9,
+          "competition": 9,
+          "tied_with": [],
+          "dedup": 2,
+          "dedup_blocked_by": null,
+          "dedup_if_ties_go_to_later_start": 2,
+          "ordinal_if_overlapping_windows_were_candidates": 11
+        },
+        "l1": {
+          "ordinal": 9,
+          "competition": 9,
+          "tied_with": [],
+          "dedup": 2,
+          "dedup_blocked_by": null,
+          "dedup_if_ties_go_to_later_start": 2,
+          "ordinal_if_overlapping_windows_were_candidates": 11
+        },
+        "l2_squared": {
+          "ordinal": 9,
+          "competition": 9,
+          "tied_with": [],
+          "dedup": 2,
+          "dedup_blocked_by": null,
+          "dedup_if_ties_go_to_later_start": 2,
+          "ordinal_if_overlapping_windows_were_candidates": 11
+        }
+      }
+    },
+    {
+      "id": "closest_1962_05",
+      "role": "closest_match",
+      "start": "1962-05",
+      "end": "1966-04",
+      "level_months": [
+        "1961-05",
+        "1966-04"
+      ],
+      "max_significant_decimals_in_levels": 1,
+      "endpoints": {
+        "start": {
+          "month": "1962-05",
+          "level": "30.200",
+          "level_12_months_earlier": "29.800",
+          "x": 13422,
+          "x_pp": "1.3422",
+          "yoy_pp_exact": "200/149",
+          "yoy_pp_exact_6dp": "1.342282",
+          "yoy_step_per_level_tick_pp_4dp": "0.3356",
+          "delta_to_reference": {
+            "x": -575,
+            "pp": "-0.0575",
+            "pp_exact": "-2209700/38437679",
+            "pp_exact_6dp": "-0.057488"
+          }
+        },
+        "end": {
+          "month": "1966-04",
+          "level": "32.300",
+          "level_12_months_earlier": "31.400",
+          "x": 28662,
+          "x_pp": "2.8662",
+          "yoy_pp_exact": "450/157",
+          "yoy_pp_exact_6dp": "2.866242",
+          "yoy_step_per_level_tick_pp_4dp": "0.3185",
+          "delta_to_reference": {
+            "x": -218,
+            "pp": "-0.0218",
+            "pp_exact": "-525300/24079561",
+            "pp_exact_6dp": "-0.021815"
+          }
+        }
+      },
+      "M": 28662,
+      "D": 6739,
+      "A": 0,
+      "score_cooling": 84237,
+      "score_excess": 0,
+      "series": [
+        {
+          "t": 0,
+          "date": "1962-05",
+          "x": 13422,
+          "M": 13422,
+          "D": 0,
+          "A": 0
+        },
+        {
+          "t": 1,
+          "date": "1962-06",
+          "x": 13422,
+          "M": 13422,
+          "D": 0,
+          "A": 0
+        },
+        {
+          "t": 2,
+          "date": "1962-07",
+          "x": 10000,
+          "M": 13422,
+          "D": 3422,
+          "A": 0
+        },
+        {
+          "t": 3,
+          "date": "1962-08",
+          "x": 13377,
+          "M": 13422,
+          "D": 3422,
+          "A": 0
+        },
+        {
+          "t": 4,
+          "date": "1962-09",
+          "x": 13333,
+          "M": 13422,
+          "D": 3422,
+          "A": 0
+        },
+        {
+          "t": 5,
+          "date": "1962-10",
+          "x": 13333,
+          "M": 13422,
+          "D": 3422,
+          "A": 0
+        },
+        {
+          "t": 6,
+          "date": "1962-11",
+          "x": 13333,
+          "M": 13422,
+          "D": 3422,
+          "A": 0
+        },
+        {
+          "t": 7,
+          "date": "1962-12",
+          "x": 13333,
+          "M": 13422,
+          "D": 3422,
+          "A": 0
+        },
+        {
+          "t": 8,
+          "date": "1963-01",
+          "x": 13333,
+          "M": 13422,
+          "D": 3422,
+          "A": 0
+        },
+        {
+          "t": 9,
+          "date": "1963-02",
+          "x": 9966,
+          "M": 13422,
+          "D": 3456,
+          "A": 0
+        },
+        {
+          "t": 10,
+          "date": "1963-03",
+          "x": 13289,
+          "M": 13422,
+          "D": 3456,
+          "A": 0
+        },
+        {
+          "t": 11,
+          "date": "1963-04",
+          "x": 9933,
+          "M": 13422,
+          "D": 3489,
+          "A": 0
+        },
+        {
+          "t": 12,
+          "date": "1963-05",
+          "x": 9933,
+          "M": 13422,
+          "D": 3489,
+          "A": 0
+        },
+        {
+          "t": 13,
+          "date": "1963-06",
+          "x": 13245,
+          "M": 13422,
+          "D": 3489,
+          "A": 0
+        },
+        {
+          "t": 14,
+          "date": "1963-07",
+          "x": 13201,
+          "M": 13422,
+          "D": 3489,
+          "A": 0
+        },
+        {
+          "t": 15,
+          "date": "1963-08",
+          "x": 13201,
+          "M": 13422,
+          "D": 3489,
+          "A": 0
+        },
+        {
+          "t": 16,
+          "date": "1963-09",
+          "x": 9868,
+          "M": 13422,
+          "D": 3554,
+          "A": 0
+        },
+        {
+          "t": 17,
+          "date": "1963-10",
+          "x": 13157,
+          "M": 13422,
+          "D": 3554,
+          "A": 0
+        },
+        {
+          "t": 18,
+          "date": "1963-11",
+          "x": 13157,
+          "M": 13422,
+          "D": 3554,
+          "A": 0
+        },
+        {
+          "t": 19,
+          "date": "1963-12",
+          "x": 16447,
+          "M": 16447,
+          "D": 3554,
+          "A": 0
+        },
+        {
+          "t": 20,
+          "date": "1964-01",
+          "x": 16447,
+          "M": 16447,
+          "D": 3554,
+          "A": 0
+        },
+        {
+          "t": 21,
+          "date": "1964-02",
+          "x": 16447,
+          "M": 16447,
+          "D": 3554,
+          "A": 0
+        },
+        {
+          "t": 22,
+          "date": "1964-03",
+          "x": 13114,
+          "M": 16447,
+          "D": 3554,
+          "A": 0
+        },
+        {
+          "t": 23,
+          "date": "1964-04",
+          "x": 13114,
+          "M": 16447,
+          "D": 3554,
+          "A": 0
+        },
+        {
+          "t": 24,
+          "date": "1964-05",
+          "x": 13114,
+          "M": 16447,
+          "D": 3554,
+          "A": 0
+        },
+        {
+          "t": 25,
+          "date": "1964-06",
+          "x": 13071,
+          "M": 16447,
+          "D": 3554,
+          "A": 0
+        },
+        {
+          "t": 26,
+          "date": "1964-07",
+          "x": 13029,
+          "M": 16447,
+          "D": 3554,
+          "A": 0
+        },
+        {
+          "t": 27,
+          "date": "1964-08",
+          "x": 9771,
+          "M": 16447,
+          "D": 6676,
+          "A": 0
+        },
+        {
+          "t": 28,
+          "date": "1964-09",
+          "x": 13029,
+          "M": 16447,
+          "D": 6676,
+          "A": 0
+        },
+        {
+          "t": 29,
+          "date": "1964-10",
+          "x": 9740,
+          "M": 16447,
+          "D": 6707,
+          "A": 0
+        },
+        {
+          "t": 30,
+          "date": "1964-11",
+          "x": 12987,
+          "M": 16447,
+          "D": 6707,
+          "A": 0
+        },
+        {
+          "t": 31,
+          "date": "1964-12",
+          "x": 9708,
+          "M": 16447,
+          "D": 6739,
+          "A": 0
+        },
+        {
+          "t": 32,
+          "date": "1965-01",
+          "x": 9708,
+          "M": 16447,
+          "D": 6739,
+          "A": 0
+        },
+        {
+          "t": 33,
+          "date": "1965-02",
+          "x": 9708,
+          "M": 16447,
+          "D": 6739,
+          "A": 0
+        },
+        {
+          "t": 34,
+          "date": "1965-03",
+          "x": 12944,
+          "M": 16447,
+          "D": 6739,
+          "A": 0
+        },
+        {
+          "t": 35,
+          "date": "1965-04",
+          "x": 16181,
+          "M": 16447,
+          "D": 6739,
+          "A": 0
+        },
+        {
+          "t": 36,
+          "date": "1965-05",
+          "x": 16181,
+          "M": 16447,
+          "D": 6739,
+          "A": 0
+        },
+        {
+          "t": 37,
+          "date": "1965-06",
+          "x": 19354,
+          "M": 19354,
+          "D": 6739,
+          "A": 0
+        },
+        {
+          "t": 38,
+          "date": "1965-07",
+          "x": 16077,
+          "M": 19354,
+          "D": 6739,
+          "A": 0
+        },
+        {
+          "t": 39,
+          "date": "1965-08",
+          "x": 19354,
+          "M": 19354,
+          "D": 6739,
+          "A": 0
+        },
+        {
+          "t": 40,
+          "date": "1965-09",
+          "x": 16077,
+          "M": 19354,
+          "D": 6739,
+          "A": 0
+        },
+        {
+          "t": 41,
+          "date": "1965-10",
+          "x": 19292,
+          "M": 19354,
+          "D": 6739,
+          "A": 0
+        },
+        {
+          "t": 42,
+          "date": "1965-11",
+          "x": 16025,
+          "M": 19354,
+          "D": 6739,
+          "A": 0
+        },
+        {
+          "t": 43,
+          "date": "1965-12",
+          "x": 19230,
+          "M": 19354,
+          "D": 6739,
+          "A": 0
+        },
+        {
+          "t": 44,
+          "date": "1966-01",
+          "x": 19230,
+          "M": 19354,
+          "D": 6739,
+          "A": 0
+        },
+        {
+          "t": 45,
+          "date": "1966-02",
+          "x": 25641,
+          "M": 25641,
+          "D": 6739,
+          "A": 0
+        },
+        {
+          "t": 46,
+          "date": "1966-03",
+          "x": 25559,
+          "M": 25641,
+          "D": 6739,
+          "A": 0
+        },
+        {
+          "t": 47,
+          "date": "1966-04",
+          "x": 28662,
+          "M": 28662,
+          "D": 6739,
+          "A": 0
+        }
+      ],
+      "distance_to_reference": {
+        "chebyshev": 575,
+        "l1": 793,
+        "l2_squared": 378149
+      },
+      "ranks": {
+        "chebyshev": {
+          "ordinal": 1,
+          "competition": 1,
+          "tied_with": [
+            "1962-06"
+          ],
+          "dedup": 1,
+          "dedup_blocked_by": null,
+          "dedup_if_ties_go_to_later_start": null,
+          "ordinal_if_overlapping_windows_were_candidates": 1
+        },
+        "l1": {
+          "ordinal": 1,
+          "competition": 1,
+          "tied_with": [
+            "1962-06"
+          ],
+          "dedup": 1,
+          "dedup_blocked_by": null,
+          "dedup_if_ties_go_to_later_start": null,
+          "ordinal_if_overlapping_windows_were_candidates": 1
+        },
+        "l2_squared": {
+          "ordinal": 1,
+          "competition": 1,
+          "tied_with": [
+            "1962-06"
+          ],
+          "dedup": 1,
+          "dedup_blocked_by": null,
+          "dedup_if_ties_go_to_later_start": null,
+          "ordinal_if_overlapping_windows_were_candidates": 1
+        }
+      }
+    }
+  ],
+  "closest_match": {
+    "start": "1962-05",
+    "chebyshev": 575,
+    "tied_for_closest": [
+      "1962-05",
+      "1962-06"
+    ],
+    "same_endpoints_as_closest": [
+      "1962-05",
+      "1962-06"
+    ]
+  },
+  "top_starts": {
+    "chebyshev": [
+      "1962-05",
+      "1962-06",
+      "1962-08",
+      "1963-03",
+      "1963-06",
+      "1963-07",
+      "1963-08",
+      "1963-10",
+      "2013-03",
+      "1963-12",
+      "1964-01",
+      "2014-09"
+    ],
+    "l1": [
+      "1962-05",
+      "1962-06",
+      "1962-08",
+      "1963-03",
+      "1963-06",
+      "1963-07",
+      "1963-08",
+      "1963-10",
+      "2013-03",
+      "1954-01",
+      "2014-08",
+      "1962-04"
+    ],
+    "l2_squared": [
+      "1962-05",
+      "1962-06",
+      "1962-08",
+      "1963-03",
+      "1963-06",
+      "1963-07",
+      "1963-08",
+      "1963-10",
+      "2013-03",
+      "1954-01",
+      "1964-01",
+      "1963-12"
+    ]
+  },
+  "top_by_chebyshev": [
+    {
+      "start": "1962-05",
+      "end": "1966-04",
+      "x_start": 13422,
+      "x_end": 28662,
+      "dx_start": -575,
+      "dx_end": -218,
+      "chebyshev": 575,
+      "l1": 793,
+      "l2_squared": 378149,
+      "D": 6739,
+      "A": 0,
+      "score_cooling": 84237,
+      "score_excess": 0,
+      "kept_in_dedup_chebyshev": true
+    },
+    {
+      "start": "1962-06",
+      "end": "1966-05",
+      "x_start": 13422,
+      "x_end": 28662,
+      "dx_start": -575,
+      "dx_end": -218,
+      "chebyshev": 575,
+      "l1": 793,
+      "l2_squared": 378149,
+      "D": 6739,
+      "A": 0,
+      "score_cooling": 84237,
+      "score_excess": 0,
+      "kept_in_dedup_chebyshev": false
+    },
+    {
+      "start": "1962-08",
+      "end": "1966-07",
+      "x_start": 13377,
+      "x_end": 28481,
+      "dx_start": -620,
+      "dx_end": -399,
+      "chebyshev": 620,
+      "l1": 1019,
+      "l2_squared": 543601,
+      "D": 6739,
+      "A": 0,
+      "score_cooling": 84237,
+      "score_excess": 0,
+      "kept_in_dedup_chebyshev": false
+    },
+    {
+      "start": "1963-03",
+      "end": "1967-02",
+      "x_start": 13289,
+      "x_end": 28125,
+      "dx_start": -708,
+      "dx_end": -755,
+      "chebyshev": 755,
+      "l1": 1463,
+      "l2_squared": 1071289,
+      "D": 9729,
+      "A": 0,
+      "score_cooling": 121612,
+      "score_excess": 0,
+      "kept_in_dedup_chebyshev": false
+    },
+    {
+      "start": "1963-06",
+      "end": "1967-05",
+      "x_start": 13245,
+      "x_end": 27863,
+      "dx_start": -752,
+      "dx_end": -1017,
+      "chebyshev": 1017,
+      "l1": 1769,
+      "l2_squared": 1599793,
+      "D": 13087,
+      "A": 0,
+      "score_cooling": 163587,
+      "score_excess": 0,
+      "kept_in_dedup_chebyshev": false
+    },
+    {
+      "start": "1963-07",
+      "end": "1967-06",
+      "x_start": 13201,
+      "x_end": 27777,
+      "dx_start": -796,
+      "dx_end": -1103,
+      "chebyshev": 1103,
+      "l1": 1899,
+      "l2_squared": 1850225,
+      "D": 13087,
+      "A": 0,
+      "score_cooling": 163587,
+      "score_excess": 0,
+      "kept_in_dedup_chebyshev": false
+    },
+    {
+      "start": "1963-08",
+      "end": "1967-07",
+      "x_start": 13201,
+      "x_end": 27692,
+      "dx_start": -796,
+      "dx_end": -1188,
+      "chebyshev": 1188,
+      "l1": 1984,
+      "l2_squared": 2044960,
+      "D": 13087,
+      "A": 0,
+      "score_cooling": 163587,
+      "score_excess": 0,
+      "kept_in_dedup_chebyshev": false
+    },
+    {
+      "start": "1963-10",
+      "end": "1967-09",
+      "x_start": 13157,
+      "x_end": 27522,
+      "dx_start": -840,
+      "dx_end": -1358,
+      "chebyshev": 1358,
+      "l1": 2198,
+      "l2_squared": 2549764,
+      "D": 13390,
+      "A": 0,
+      "score_cooling": 167375,
+      "score_excess": 0,
+      "kept_in_dedup_chebyshev": false
+    },
+    {
+      "start": "2013-03",
+      "end": "2017-02",
+      "x_start": 14738,
+      "x_end": 27379,
+      "dx_start": 741,
+      "dx_end": -1501,
+      "chebyshev": 1501,
+      "l1": 2242,
+      "l2_squared": 2802082,
+      "D": 23267,
+      "A": 0,
+      "score_cooling": 290837,
+      "score_excess": 0,
+      "kept_in_dedup_chebyshev": true
+    },
+    {
+      "start": "1963-12",
+      "end": "1967-11",
+      "x_start": 16447,
+      "x_end": 27355,
+      "dx_start": 2450,
+      "dx_end": -1525,
+      "chebyshev": 2450,
+      "l1": 3975,
+      "l2_squared": 8328125,
+      "D": 13538,
+      "A": 0,
+      "score_cooling": 169225,
+      "score_excess": 0,
+      "kept_in_dedup_chebyshev": false
+    },
+    {
+      "start": "1964-01",
+      "end": "1967-12",
+      "x_start": 16447,
+      "x_end": 30395,
+      "dx_start": 2450,
+      "dx_end": 1515,
+      "chebyshev": 2450,
+      "l1": 3965,
+      "l2_squared": 8297725,
+      "D": 13538,
+      "A": 0,
+      "score_cooling": 169225,
+      "score_excess": 0,
+      "kept_in_dedup_chebyshev": false
+    },
+    {
+      "start": "2014-09",
+      "end": "2018-08",
+      "x_start": 16579,
+      "x_end": 26991,
+      "dx_start": 2582,
+      "dx_end": -1889,
+      "chebyshev": 2582,
+      "l1": 4471,
+      "l2_squared": 10235045,
+      "D": 18639,
+      "A": 0,
+      "score_cooling": 232987,
+      "score_excess": 0,
+      "kept_in_dedup_chebyshev": false
+    },
+    {
+      "start": "1954-01",
+      "end": "1957-12",
+      "x_start": 11278,
+      "x_end": 28985,
+      "dx_start": -2719,
+      "dx_end": 105,
+      "chebyshev": 2719,
+      "l1": 2824,
+      "l2_squared": 7403986,
+      "D": 22529,
+      "A": 0,
+      "score_cooling": 281612,
+      "score_excess": 0,
+      "kept_in_dedup_chebyshev": true
+    },
+    {
+      "start": "1999-02",
+      "end": "2003-01",
+      "x_start": 16059,
+      "x_end": 25974,
+      "dx_start": 2062,
+      "dx_end": -2906,
+      "chebyshev": 2906,
+      "l1": 4968,
+      "l2_squared": 12696680,
+      "D": 26901,
+      "A": 0,
+      "score_cooling": 336262,
+      "score_excess": 0,
+      "kept_in_dedup_chebyshev": true
+    },
+    {
+      "start": "2014-08",
+      "end": "2018-07",
+      "x_start": 16996,
+      "x_end": 29495,
+      "dx_start": 2999,
+      "dx_end": 615,
+      "chebyshev": 2999,
+      "l1": 3614,
+      "l2_squared": 9372226,
+      "D": 18992,
+      "A": 0,
+      "score_cooling": 237400,
+      "score_excess": 0,
+      "kept_in_dedup_chebyshev": false
+    }
+  ],
+  "dedup_chebyshev": [
+    {
+      "rank": 1,
+      "start": "1962-05",
+      "chebyshev": 575
+    },
+    {
+      "rank": 2,
+      "start": "2013-03",
+      "chebyshev": 1501
+    },
+    {
+      "rank": 3,
+      "start": "1954-01",
+      "chebyshev": 2719
+    },
+    {
+      "rank": 4,
+      "start": "1999-02",
+      "chebyshev": 2906
+    },
+    {
+      "rank": 5,
+      "start": "1941-01",
+      "chebyshev": 5892
+    },
+    {
+      "rank": 6,
+      "start": "2003-10",
+      "chebyshev": 6411
+    },
+    {
+      "rank": 7,
+      "start": "1933-12",
+      "chebyshev": 6834
+    },
+    {
+      "rank": 8,
+      "start": "2008-11",
+      "chebyshev": 7257
+    }
+  ],
+  "wording": {
+    "threshold_pp": "0.15",
+    "comparison": "2013-03..2017-02 against 2021-01..2024-12",
+    "within_0_15_pp_inclusive": {
+      "contract_floored": false,
+      "exact_unrounded": false
+    },
+    "within_0_15_pp_strict": {
+      "contract_floored": false,
+      "exact_unrounded": false
+    },
+    "start_gap_pp_4dp": {
+      "contract_floored": "0.0741",
+      "exact_unrounded": "0.0741"
+    },
+    "end_gap_pp_4dp": {
+      "contract_floored": "0.1501",
+      "exact_unrounded": "0.1501"
+    },
+    "max_endpoint_gap_pp_4dp": {
+      "contract_floored": "0.1501",
+      "exact_unrounded": "0.1501"
+    },
+    "max_endpoint_gap_pp_exact": "1819521950/12122141801",
+    "smallest_two_decimal_bound_pp": "0.16",
+    "qualified_statement": "Both endpoints are within 0.16 pp: the start is 0.0741 pp apart and the end is 0.1501 pp apart on the contract values; 'within 0.15 pp' does not hold, so the windows have similar endpoints, not identical ones."
+  }
+}

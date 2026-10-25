@@ -46,6 +46,7 @@ jupyterlab = "*"
 
 [feature.notebook.tasks]
 jupyter = "jupyter lab"
+research = { cmd = "python build_notebook.py && python -m nbconvert --to notebook --execute --inplace --ExecutePreprocessor.timeout=900 macro_paths.ipynb", cwd = "research" }
 
 [environments]
 notebook = ["notebook"]
