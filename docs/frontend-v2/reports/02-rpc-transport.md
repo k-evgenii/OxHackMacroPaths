@@ -32,3 +32,16 @@
 - Port types now re-exported from shared `web/src/server/contracts.ts` (no local copies).
 - `npx vitest run test/rpc`: 19/19 pass. `tsc --noEmit`: no errors in owned files; remaining errors are in other owners' tests (implicit any in test/api, artifacts, charts, contract, planner, ui; `resilience.test.ts` references the removed `RPC_URL` export).
 - `test/api/*` fail at collection on the integration base (`@anchor-lang/core` mock: "Cannot find module './nodewallet'"), independent of this transport; even with `RPC_URL` set they do not load. Owner: coordinator/15.
+
+## Checkpoint 2 (merged frontend-v2/integration f1ff519)
+- Added `web/test/rpc/setup-env.ts` (sets placeholder `RPC_URL=https://example.invalid/rpc` if unset). Requires worker 15 to apply this patch to `web/vitest.config.ts`:
+  ```diff
+  -  test: { include: [...], environment: "node" },
+  +  test: { include: [...], environment: "node", setupFiles: ["./test/rpc/setup-env.ts"] },
+  ```
+- `test/rpc`: 19/19 pass.
+- `test/api/*` (all 4 files) with RPC_URL set: they still fail at **collection**, before any test or transport code runs, with `Cannot find module './nodewallet'` raised by the `@anchor-lang/core` resolution inside the `vi.mock` factories. This is **pre-existing / unrelated to removing RPC_URL**. No test/api failure is currently attributable to the transport, because none of them load.
+- Edits that will be needed once test/api loads (owners of those tests):
+  1. `test/api/resilience.test.ts` `describe("RPC_URL")` (lines ~122-142): delete the "falls back to public devnet" case; replace the "uses RPC_URL when set" case with `import("@/server/transport").then(m => m.readRpcConfig({RPC_URL:"https://example.invalid/rpc"}).url)`, or assert that `rpc()` without RPC_URL rejects with `{kind:"config"}`.
+  2. Assertions on `1 + retryConfig.attempts` calls remain valid (attempts is now 3).
+  3. Their 429 fakes throw `Error("429 Too Many Requests")` and are still classified as rate-limited via the message fallback. `retryConfig.baseMs = 1` still shortens backoff.
