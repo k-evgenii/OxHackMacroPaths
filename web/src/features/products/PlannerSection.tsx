@@ -40,7 +40,17 @@ export function PlannerSection({ art }: { art: PlannerArtifact }) {
         {view.status === "invalid" ? (
           <p className={s.error} role="alert">{view.error} No recommendation is shown until the inputs are valid.</p>
         ) : (
-          <p className={s.sentence}>{view.sentence}</p>
+          <>
+            <p className={s.sentence}>{view.sentence}</p>
+            {view.best.product === "fuel" ? (
+              <p className={s.muted}>
+                <span className={s.pill}>Research only</span> Fuel Research is a research illustration, not executable in this
+                release: there is no on-chain Fuel product to buy.
+              </p>
+            ) : view.best.product === "excess" ? (
+              <p className={s.muted}>Research result, not a purchase instruction. Buying is not available in this release.</p>
+            ) : null}
+          </>
         )}
       </div>
 
@@ -58,7 +68,7 @@ export function PlannerSection({ art }: { art: PlannerArtifact }) {
           </div>
           <div className={s.headline}>
             <div className={s.figure}>
-              <span className={s.muted}>Historical tail shortfall (TailLoss95)</span>
+              <span className={s.muted}>Worst-5% average shortfall (historical)</span>
               <span className={s.quote}>{usd(view.best.tail_loss_95)}</span>
               <span className={s.muted}>{view.tailNote}</span>
             </div>
@@ -89,12 +99,12 @@ export function PlannerSection({ art }: { art: PlannerArtifact }) {
             <summary>See all comparisons</summary>
             <div className={s.tableWrap}>
               <table className={s.table}>
-                <caption className={s.muted}>All 21 options, ranked by historical TailLoss95 (illustrative USD)</caption>
+                <caption className={s.muted}>All 21 allocations, ranked by historical worst-5% average shortfall (illustrative USD)</caption>
                 <thead>
                   <tr>
-                    <th scope="col">Option</th>
+                    <th scope="col">Choice</th>
                     <th scope="col">Allocation</th>
-                    <th scope="col">TailLoss95</th>
+                    <th scope="col">Worst-5% average shortfall</th>
                     <th scope="col">Mean shortfall</th>
                     <th scope="col">Max shortfall</th>
                     <th scope="col">Cap reached</th>

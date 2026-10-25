@@ -17,6 +17,7 @@ describe("planView default bundle", () => {
     expect(v.best.stake).toBeCloseTo(40, 9);
     expect(v.sentence).toContain("Fuel Research");
     expect(v.sentence).toContain("USD 40.00");
+    expect(v.sentence).not.toMatch(/buy|purchase/i);
   });
 
   it("showcase residual vs cash agrees with the artifact", () => {

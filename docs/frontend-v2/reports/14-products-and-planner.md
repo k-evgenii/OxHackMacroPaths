@@ -24,6 +24,13 @@
 
 Imports coded to interfaces.md: `useCatalog`, `useSessionOverview`, `useResearchBundle` from `@/lib/hooks`; `useSelectedSession` from `@/features/shell`; `GlowLineChart`, `ErrorState`, `Skeleton` from `@macropaths/ui`; `fmtQuotePlay` from `@macropaths/client`. `PlannerArtifact` type from `@/lib/artifacts` (should re-export the client schema). Requests to 15: `useSelectedSession` likely uses search params, so the products route may need a Suspense boundary; vitest include covers only `.test.ts` (no component tests). No stubs or mock fallbacks in production code.
 
+## Checkpoint 1 (85a62e8)
+
+- Merged cleanly; planner.ts additions kept. `fmtQuotePlay` now resolves from the client. Tests: 20/20 pass.
+- Fuel recommendation now carries a "Research only" pill and "not executable in this release" copy; Excess says "research result, not a purchase instruction". No action control exists for any recommendation.
+- Vocabulary: TailLoss95 -> "Worst-5% average shortfall", Option(s) -> Choice / allocations, "Seller has no free cash" -> "No seller funds available". Grep for bet/option/insurance/fair value in owned UI files: no hits.
+- `tsc`: all errors in owned files are missing exports from unmerged workers: `GlowLineChart`, `ErrorState`, `Skeleton` (`@macropaths/ui`, workers 08/09/15), `useCatalog`, `useSessionOverview`, `useResearchBundle` (`@/lib/hooks`, worker 10), `@/features/shell` (worker 10), plus implicit-any errors that follow from them. No stubs added.
+
 ## Remaining issues
 
 After the checkpoint merge: typecheck, fix any signature drift, capture screenshots (Fuel-recommended and cash-recommended states), verify the chart axis labelling in GlowLineChart (x = allocation, not date). Legacy `/planner` route left intact for Agent 15.

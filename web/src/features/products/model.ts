@@ -92,8 +92,8 @@ export function offerView(section: CoverOfferSection | undefined, productIndex: 
     return {
       ...base,
       state: "unfunded",
-      title: "Seller has no free cash",
-      description: "A quote exists but the seller has no free cash to back new cover.",
+      title: "No seller funds available",
+      description: "A quote exists but no seller funds are available to back new cover.",
     };
   return {
     ...base,
@@ -170,7 +170,7 @@ export function planView(art: PlannerArtifact, { gallons, budget }: PlanInputs):
     }));
 
   const summary =
-    `Historical TailLoss95 by allocation. Cash only: ${usd(cash.tail_loss_95)}. ` +
+    `Historical worst-5% average shortfall by allocation. Cash only: ${usd(cash.tail_loss_95)}. ` +
     series
       .map((s) => {
         const last = s.points[s.points.length - 1];
@@ -203,9 +203,9 @@ export function planView(art: PlannerArtifact, { gallons, budget }: PlanInputs):
 export const capBindingText = (r: Result) => (r.product === "cash" ? "n/a" : pct(r.cap_binding_freq));
 
 export const METHODOLOGY = [
-  "Each of the 21 options (cash, or 10% to 100% of the budget in Excess Inflation or Fuel Research) is replayed over every historical 48-month window.",
-  "Shortfall is the fuel overrun not covered by remaining cash plus the modelled payout. TailLoss95 is the mean of the worst 5% of windows.",
-  "Ranking: smaller TailLoss95, then smaller allocation, then cash before Excess Inflation before Fuel Research.",
+  "Each of the 21 allocations (cash, or 10% to 100% of the budget in Excess Inflation or Fuel Research) is replayed over every historical 48-month window.",
+  "Shortfall is the fuel overrun not covered by remaining cash plus the modelled payout. The worst-5% average shortfall is the mean of the worst 5% of windows.",
+  "Ranking: smaller worst-5% average shortfall, then smaller allocation, then cash before Excess Inflation before Fuel Research.",
   "The windows overlap, so they are not independent future trials and the result is not a calibrated probability.",
   "Payouts are capped: a large overrun can still leave part of the bill uncovered. Excess Inflation follows CPI, not gasoline, so it can miss a fuel-specific spike (basis mismatch).",
   "Prices and caps are research references from the model bundle, not a live seller quote and not any on-chain session's terms.",
