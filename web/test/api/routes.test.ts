@@ -1,7 +1,7 @@
 import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   ApiError,
   EventsResponse,
@@ -12,7 +12,7 @@ import {
   SessionList,
   SessionView,
 } from "@macropaths/client";
-import { SESSION_A, makeFakeConnection, txs } from "./fakes";
+import { SESSION_A, makeFakeConnection, sessionBytes, txs } from "./fakes";
 
 const fake = vi.hoisted(() => ({ conn: undefined as unknown }));
 
@@ -35,7 +35,7 @@ vi.mock("@macropaths/client", async (orig) => {
 });
 
 import { clearCache, retryConfig } from "@/server/rpc";
-import { clearTxCache } from "@/server/chain";
+import { SESSION_ACCOUNT_SIZE, clearTxCache } from "@/server/chain";
 import * as health from "@/app/api/health/route";
 import * as sessions from "@/app/api/sessions/route";
 import * as session from "@/app/api/sessions/[addr]/route";
@@ -94,6 +94,33 @@ describe("GET /api/sessions", () => {
   it("502 on RPC failure", async () => {
     conn.getProgramAccounts.mockRejectedValue(new Error("503 Service Unavailable"));
     await expectError(await sessions.GET(), 502, "rpc_error");
+  });
+  it("also filters by the Session account size", async () => {
+    await sessions.GET();
+    expect(sessionBytes).toHaveLength(913);
+    expect(SESSION_ACCOUNT_SIZE).toBe(sessionBytes.length);
+    expect(conn.getProgramAccounts.mock.calls[0][1].filters).toContainEqual({ dataSize: SESSION_ACCOUNT_SIZE });
+  });
+  describe("with SESSION_ALLOWLIST", () => {
+    const SESSION_B = "9umL3uakhneZ1iZraj3AWuR4yU9mnb1UCmMBRQMBDaBW";
+    const addresses = async () => SessionList.parse(await (await sessions.GET()).json()).sessions.map((s) => s.address);
+    beforeEach(async () => {
+      const { PublicKey } = await import("@solana/web3.js");
+      conn.getProgramAccounts.mockResolvedValue(
+        [SESSION_A, SESSION_B].map((a) => ({ pubkey: new PublicKey(a), account: account(PROGRAM_ID, sessionBytes) })),
+      );
+    });
+    afterEach(() => {
+      delete process.env.SESSION_ALLOWLIST;
+    });
+    it("returns only the allowlisted sessions", async () => {
+      process.env.SESSION_ALLOWLIST = SESSION_B;
+      expect(await addresses()).toEqual([SESSION_B]);
+    });
+    it("orders them as listed, ignoring blanks", async () => {
+      process.env.SESSION_ALLOWLIST = ` ${SESSION_B}, ${SESSION_A} ,`;
+      expect(await addresses()).toEqual([SESSION_B, SESSION_A]);
+    });
   });
 });
 
