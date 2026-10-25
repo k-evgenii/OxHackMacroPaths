@@ -368,6 +368,9 @@ def method_block(n_paths: int, seed: int) -> dict:
             "caps_B": "only windows that start >= 1960-01 and ended <= t0 - 1",
             "climatology": "only windows (from 1914-01) that ended <= t0 - 1",
             "guards": "evaluate_origin raises if a fit, a climatology window or a cap window reaches t0 or later",
+            "release_timing": "as in backtest.py, the forecast at t0 uses CPI for t0 - 1, which BLS publishes in the "
+                              "middle of month t0; the release lag is not otherwise modelled, and the values are "
+                              "FRED's current ones, not first-release vintages",
         },
         "models": {
             "ar1": "exactly the primary specification of forecast/backtest.py: OLS y_{t+1} = a + b y_t + e on "
@@ -755,6 +758,7 @@ def render_markdown(r: dict) -> str:
     w(f"- **Origins.** {o['declared_choice']} {o['plan_note']}")
     w(f"- **No look-ahead.** Fits: {mt['no_look_ahead']['fits']}. Pre-origin caps use {mt['no_look_ahead']['caps_B']}. "
       f"Climatology uses {mt['no_look_ahead']['climatology']}. {mt['no_look_ahead']['guards']}.")
+    w(f"- **Release timing.** {mt['no_look_ahead']['release_timing'][0].upper()}{mt['no_look_ahead']['release_timing'][1:]}.")
     for m in MODELS:
         w(f"- **{MODEL_NAMES[m]}.** {mt['models'][m]}.")
     w(f"- **Simulation.** {mt['simulation']['n_paths']} paths, {mt['simulation']['horizon']} months, base seed "

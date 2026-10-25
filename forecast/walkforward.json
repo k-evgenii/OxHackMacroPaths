@@ -37,7 +37,8 @@
    "fits": "every fit uses observations dated up to t0 - 1 (bt.fit_ar1 calls macrolib.fit_ou(until = t0 - 1), which includes `until`); the AO sigma_delta uses the same sample",
    "caps_B": "only windows that start >= 1960-01 and ended <= t0 - 1",
    "climatology": "only windows (from 1914-01) that ended <= t0 - 1",
-   "guards": "evaluate_origin raises if a fit, a climatology window or a cap window reaches t0 or later"
+   "guards": "evaluate_origin raises if a fit, a climatology window or a cap window reaches t0 or later",
+   "release_timing": "as in backtest.py, the forecast at t0 uses CPI for t0 - 1, which BLS publishes in the middle of month t0; the release lag is not otherwise modelled, and the values are FRED's current ones, not first-release vintages"
   },
   "models": {
    "ar1": "exactly the primary specification of forecast/backtest.py: OLS y_{t+1} = a + b y_t + e on 1914-01..t0-1, Gaussian innovations with the fitted residual sd (ddof = 2), 48 months from x0 = y_(t0-1)",
@@ -108,7 +109,7 @@
   "seed": 20261025,
   "n_paths": 10000,
   "code_sha256": {
-   "forecast/walkforward.py": "2f5fffb337276a47e9bf7d51a3de27488200b60e26a243a4a844b9377c761625",
+   "forecast/walkforward.py": "f942ec53c4591a2e3c9c8d337fc7d2e533274bd097428abf6e60e1ea24d5b289",
    "forecast/backtest.py": "70e24114f81c4b91147f1b5a9862cd7b370ea3b6388d7423a80232c4c130fc67",
    "research/macrolib.py": "4df837603f1b48b21c7f0504cdfbcadc04c6429bf099a969086f27aee1a65715",
    "tests/make_vectors.py": "38f196d34c3dc36be5fd6083a1a2a92650e83c09afe98751fd9c642c0b1d6020"
