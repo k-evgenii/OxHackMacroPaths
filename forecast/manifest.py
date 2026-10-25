@@ -22,6 +22,8 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "tests"))
 sys.path.insert(0, str(ROOT / "data"))
 import presentation  # noqa: E402
+sys.path.insert(0, str(ROOT / "forecast"))
+from ar1lib import QUOTE_FORMULA  # noqa: E402
 from make_vectors import (K, N_OBS, ONE, FIRST_PERIOD_ID, SERIES_ID, SOURCE_URL, TRANSFORM_ID,  # noqa: E402
                           WINDOW_END, WINDOW_START, frac_digits, next_month, run_recursions, score,
                           to_scaled_int, yoy)
@@ -135,7 +137,7 @@ def main() -> int:
                      f"starting >= {TRAIN_START} (or the row's first month) and ending <= {TRAIN_END}; "
                      f"index ceil(q*n)-1 of the ascending sort; integer by construction"),
         "quantile_method": "nearest-rank",
-        "price_convention": "seller entry quote p = clamp(V0 + 0.5*sigma0, 0.05, 0.95) from forecast/table.json; "
+        "price_convention": f"seller entry quote p = {QUOTE_FORMULA} from forecast/table.json; "
                             "the matched pool's implicit 0.5 is not used for the demo",
         "products": [
             {"index": 0, "key": "cooling", "name": "Inflation Cooling", "stat": "max_decline",

@@ -15,6 +15,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "forecast"))
 sys.path.insert(0, str(ROOT / "tests"))
 sys.path.insert(0, str(ROOT / "research"))
+from ar1lib import QUOTE_FORMULA  # noqa: E402
 from manifest import FUEL_K, FUEL_SCALE, TRAIN_END, WINDOW, cpi_display_row, excess, fuel_display_row  # noqa: E402
 from make_vectors import K, run_recursions, score  # noqa: E402
 from planner import Policy, Scenario, recommend, showcase  # noqa: E402
@@ -62,6 +63,11 @@ def main() -> int:
     fa = excess([fx[m] for m in win], FUEL_K)
     show = Scenario("2021-01", score(a, caps["excess"]) / ONE, score(fa, caps["fuel"]) / ONE, fa / FUEL_SCALE)
 
+    r0 = table["rows"][0]
+    expected = {k: {"expected_score": r0[k]["V"], "sigma": r0[k]["sigma"], "rw_benchmark_score": r0[k]["V_rw"],
+                    "historical_mean_score": sum(getattr(s, f"{k}_score") for s in scen) / len(scen),
+                    "note": "expected_score is the AR(1) forecast at session start; historical_mean_score is the empirical mean over the scenario windows"}
+                for k in ("excess", "fuel")}
     best, ranked = recommend(scen, DEFAULTS["q"], DEFAULTS["B"], prices)
     table_rows = [{"product": r.policy.product, "stake": r.policy.stake, "units": r.units,
                    "tail_loss_95": r.tail_loss_95, "mean_shortfall": r.mean_shortfall,
@@ -74,13 +80,14 @@ def main() -> int:
                    "fuel": "research product, not executable this weekend",
                    "cash": "keep the budget as a cash reserve"},
         "prices": {"excess": prices["excess"], "fuel": prices["fuel"],
-                   "source": "forecast/table.json quotes: clamp(V0 + 0.5*sigma0, 0.05, 0.95)",
+                   "source": f"forecast/table.json quotes: {QUOTE_FORMULA}",
                    "note": "the matched pool's implicit 0.5 is not used"},
         "caps": caps, "thresholds": {"excess_k_1e4pp": K, "fuel_k_1e4usd": FUEL_K},
         "objective": "TailLoss95 = mean of the largest ceil(0.05*N) shortfalls U_k = max(L_k - (B - c) - H_k, 0); "
                      "ties -> lower stake, then cash, excess, fuel",
         "scenario_note": f"{len(scen)} overlapping 48-month windows {scen[0].start}..{scen[-1].start} (ending <= {TRAIN_END}); "
                          "an empirical decision score, not independent episodes or a calibrated probability",
+        "products": expected,
         "defaults": DEFAULTS,
         "scenarios": [{"start": s.start, "excess_score": s.excess_score, "fuel_score": s.fuel_score,
                        "fuel_overrun_per_gallon": s.fuel_overrun_per_gallon} for s in scen],

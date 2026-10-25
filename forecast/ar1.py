@@ -19,18 +19,19 @@ import numpy as np
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "forecast"))
 sys.path.insert(0, str(ROOT / "tests"))
-from ar1lib import clamp_quote, fit_ar1, roll_cooling, roll_excess, score_millionths, simulate  # noqa: E402
+from ar1lib import QUOTE_FORMULA, QUOTE_KAPPA, RW_LABEL, clamp_quote, fit_ar1, forecast_from, random_walk_v  # noqa: E402
 from manifest import FUEL_ID, FUEL_K, TRAIN_END, TRAIN_START, cpi_display_row, fuel_display_row  # noqa: E402
 from make_vectors import K, N_OBS, SERIES_ID, run_recursions  # noqa: E402
 
 MANIFEST = ROOT / "forecast" / "manifest.json"
 OUT = ROOT / "forecast" / "table.json"
+COND = ROOT / "forecast" / "conditional.json"
 N_PATHS = 10_000
 SEED = 2026
-KAPPA = 0.5
+KAPPA = QUOTE_KAPPA
 
 
-def forecast_product(row: list[tuple[str, int]], fit, stat: str, k: int | None, cap: int,
+def forecast_product(name: str, row: list[tuple[str, int]], fit, stat: str, k: int | None, cap: int,
                      rng: np.random.Generator) -> list[dict]:
     show = [x for m, x in row if "2021-01" <= m <= "2024-12"]
     assert len(show) == N_OBS
@@ -39,14 +40,11 @@ def forecast_product(row: list[tuple[str, int]], fit, stat: str, k: int | None, 
     for t in range(N_OBS + 1):
         st = run_recursions(show[:t], k if k is not None else K) if t else {"M": None, "D": 0, "A": 0}
         x0 = show[t - 1] if t else x_prev
-        if t < N_OBS:
-            paths = simulate(fit, x0, N_OBS - t, N_PATHS, rng)
-            stat_vals = roll_cooling(paths, st["M"], st["D"]) if stat == "max_decline" else roll_excess(paths, st["A"], k)
-        else:
-            stat_vals = np.array([st["D"] if stat == "max_decline" else st["A"]])
-        sc = score_millionths(stat_vals, cap) / 1e6
-        v, s = float(sc.mean()), float(sc.std())
-        out.append({"t": t, "V": v, "sigma": s, "se": s / np.sqrt(len(sc)), "p_cap": float((sc >= 1).mean()),
+        state = {"x": x0, "M": st["M"], "D": st["D"], "A": st["A"]}
+        f = forecast_from(state, name, N_OBS - t, fit=fit, stat=stat, k=k, cap=cap, rng=rng, n_paths=N_PATHS)
+        v, s = f["V"], f["sigma"]
+        rw = random_walk_v(state, N_OBS - t, stat=stat, k=k, cap=cap)
+        out.append({"t": t, "V": v, "V_rw": rw, "sigma": s, "se": f["se"], "p_cap": f["p_cap"],
                     "accrued_floor": min((st["D"] if stat == "max_decline" else st["A"]) / cap, 1.0) if t else 0.0})
     return out
 
@@ -62,7 +60,7 @@ def main() -> int:
     per = {}
     for key, p in prods.items():
         fit = fits["fuel" if key == "fuel" else "cpi"]
-        per[key] = forecast_product(rows[key], fit, p["stat"], p["k"], p["cap"], rng)
+        per[key] = forecast_product(key, rows[key], fit, p["stat"], p["k"], p["cap"], rng)
 
     periods = [m for m, _ in cpi if "2021-01" <= m <= "2024-12"]
     table_rows = []
@@ -77,11 +75,18 @@ def main() -> int:
         "fit": {"cpi": fits["cpi"].as_dict(), "fuel": fits["fuel"].as_dict()},
         "caps": {k: prods[k]["cap"] for k in prods},
         "quotes": {"p": quotes, "kappa": KAPPA, "products": ["cooling", "excess"],
-                   "formula": "floor((V0 + kappa*sigma0) * 1e6) clamped to [50000, 950000]",
+                   "formula": QUOTE_FORMULA,
                    "fuel_research_quote": clamp_quote(per["fuel"][0]["V"], per["fuel"][0]["sigma"], KAPPA)},
+        "benchmark": {"V_rw": RW_LABEL},
         "label": "Forecast (AR(1) baseline, advisory). Settlement uses the realised path only.",
         "rows": table_rows,
     }
+    cond = {"manifest_version": man["version"], "product": "excess",
+            "note": "V and sigma of the Excess product conditional on the realised path up to month t (t=0 session start, t=48 realised). "
+                    "Advisory; settlement uses the realised path only.",
+            "rows": [{"t": r["t"], "period_id": table_rows[r["t"]]["period_id"], "V": r["V"], "sigma": r["sigma"]}
+                     for r in per["excess"][:N_OBS]]}
+    COND.write_text(json.dumps(cond, indent=1) + "\n", encoding="utf-8", newline="\n")
     OUT.write_text(json.dumps(table, indent=1) + "\n", encoding="utf-8", newline="\n")
     for k in per:
         r0, r48 = per[k][0], per[k][48]
