@@ -54,7 +54,7 @@ def build(snapshot: Path = SNAPSHOT) -> dict:
         raise SystemExit(f"rule gives {rule}, series.toml declares {fb['value']}")
     return {
         "note": "Declared fallback for a future dataset rule; v1 sessions and tests/vectors.json do not use it.",
-        "snapshot": {"retrieved_at": snap["retrieved_at"], "sha256_of_raw": snap["sha256_of_raw"]},
+        "snapshot": {"sha256_of_raw": snap["sha256_of_raw"]},  # content only: retrieved_at differs per machine
         "fallback": fb,
         "rule_check": {"formula": "CPI_2025-09 * (CPI_2025-09 / CPI_2024-09)^(1/12), rounded to 0.001",
                        "inputs": {"2025-09": lv["2025-09"], "2024-09": lv["2024-09"]}, "value": str(rule)},

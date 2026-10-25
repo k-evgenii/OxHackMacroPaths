@@ -1,7 +1,6 @@
 {
   "note": "Declared fallback for a future dataset rule; v1 sessions and tests/vectors.json do not use it.",
   "snapshot": {
-    "retrieved_at": "2026-10-24T16:25:32Z",
     "sha256_of_raw": "cfab9b9be4a5d4f06253c4dcc3f7e0b28b1d58837e710dd7cb1fd54a49e7ad7c"
   },
   "fallback": {
