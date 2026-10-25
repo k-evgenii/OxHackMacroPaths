@@ -18,3 +18,4 @@
 | 12-seller-accounts | 592d98a | build 2s | 100 passing | orchestrator |
 | 13-cover | aff3e1f | build 11s | 113 passing | orchestrator |
 | 14-keeper-bridge | c7c98b3 | build 8s | 113 passing | orchestrator |
+| deploy-g2 | dab88ff | Phill binary d198a8c3fc792519ab0db4829007e2451c51d6783fb6c7225b353dd639f658e2 | 117 passing | gate G2 pass on d198a8c3. lifecycle_one_product and lifecycle_full passed on that binary at dab88ff43ed988a112b192702b474db8f2cbcdc7. Deployed bytes verified identical on devnet: program FvT786RtMTtbdXWemA9zgA9rfwhvxFsKY1ypiMMNwMbS, 487344 bytes, upgrade authority DwZ3j9GQZZTegHocho27JQfY7HZfCt8HNRceqe2hrJLV |
