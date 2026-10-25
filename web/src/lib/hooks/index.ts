@@ -8,11 +8,11 @@ import {
   queryKeys,
   researchBundleQuery,
   sessionOverviewQuery,
-  usePendingRecovery,
   walletActivityQuery,
   walletOverviewQuery,
   type HistoryData,
 } from "@/lib/queries";
+import { usePendingRecovery } from "@/lib/queries/history-recovery";
 import { healthQuery, positionsQuery, sellerQuery, sessionQuery, sessionsQuery } from "./queries";
 
 export * from "./format";
