@@ -14,6 +14,22 @@ CPI rows (Jan 2021 to Dec 2024) are replayed on devnet against a pre-committed
 SHA-256 hash chain, so the keeper cannot alter, skip or reorder a row after the
 session is created.
 
+What this does and does not show:
+
+- **Reproducible replay (deployed).** The 2021–24 replay can be recomputed by anyone
+  from the committed data and rules ([docs/verify.md](docs/verify.md)). The chain is
+  built from data that already exists, so it says nothing about future months.
+- **Attested live data (proposed, not built).** A live session would trust a named
+  attester to post each month after release; the hash makes the log append-only but
+  cannot show a value is correct ([docs/live-mode.md](docs/live-mode.md)).
+- **Forecasts and quotes are advisory.** Settlement uses only the realised path. The
+  matched pool's implied price is 0.5, which favours one side whenever the expected
+  score is not 0.5; cover is priced by a declared seller policy
+  ([docs/pricing.md](docs/pricing.md)). Only the CPI session is
+  executable; fuel, diesel and loan-rate products are design or proposal only
+  ([docs/products.md](docs/products.md)). Wording we can and cannot use:
+  [docs/pitch-claims.md](docs/pitch-claims.md).
+
 ### Deployed program and reference session
 
 All on devnet. Details and the deployed commit are in [docs/deployments.md](docs/deployments.md).
@@ -90,7 +106,7 @@ two scores by hand from `D` and `A`, and reproducing the worked payout of
 - `keeper/`: the off-chain keeper that fetches CPI, builds the chain (`src/prepare.ts`), creates sessions and replays the 48 rows. See [keeper/README.md](keeper/README.md).
 - `web/` and `packages/client/`: Next.js frontend and the typed client, on branch `evgenii/frontend`.
 - `tests/`: `make_vectors.py` and the committed `vectors.json` that every implementation is pinned to; `pixi run test` for toolchain checks.
-- `docs/`: [program-spec.md](docs/program-spec.md), [commitment-chain.md](docs/commitment-chain.md), [deployments.md](docs/deployments.md), [verify.md](docs/verify.md), [security-review.md](docs/security-review.md).
+- `docs/`: [program-spec.md](docs/program-spec.md), [commitment-chain.md](docs/commitment-chain.md), [deployments.md](docs/deployments.md), [verify.md](docs/verify.md), [security-review.md](docs/security-review.md), [live-mode.md](docs/live-mode.md), [pricing.md](docs/pricing.md), [products.md](docs/products.md), [pitch-claims.md](docs/pitch-claims.md).
 
 ## Development environment
 
