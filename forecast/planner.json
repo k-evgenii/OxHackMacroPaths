@@ -39,6 +39,20 @@
    "note": "expected_score is the AR(1) forecast at session start; historical_mean_score is the empirical mean over the scenario windows"
   }
  },
+ "not_in_planner": [
+  {
+   "key": "diesel",
+   "name": "Diesel Surcharge",
+   "series": "GASDESW",
+   "status": "proposal: no threshold, cap or aggregation rule declared; no score is computed"
+  },
+  {
+   "key": "loan_rate",
+   "name": "Floating-Loan Rate",
+   "series": "DFF",
+   "status": "proposal: no threshold, cap or aggregation rule declared; no score is computed"
+  }
+ ],
  "defaults": {
   "q": 100.0,
   "G": 3.5,

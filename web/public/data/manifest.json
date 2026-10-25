@@ -49,6 +49,68 @@
    "note": "research product; not settled on chain this weekend"
   }
  ],
+ "proposed_products": [
+  {
+   "key": "diesel",
+   "name": "Diesel Surcharge",
+   "series": "GASDESW",
+   "units": "US No 2 diesel retail price, dollars per gallon (research proposal row; no product defined)",
+   "frequency": "weekly",
+   "first_value": "1994-03-21",
+   "natural_exposure": "carriers and fleets paying diesel above a declared level",
+   "threshold": null,
+   "cap": null,
+   "executable": false,
+   "status": "proposal: no threshold, cap or aggregation rule declared; no score is computed"
+  },
+  {
+   "key": "loan_rate",
+   "name": "Floating-Loan Rate",
+   "series": "DFF",
+   "units": "Percent",
+   "frequency": "daily",
+   "first_value": "1954-07-01",
+   "natural_exposure": "borrowers paying a floating rate above a declared level",
+   "threshold": null,
+   "cap": null,
+   "executable": false,
+   "status": "proposal: no threshold, cap or aggregation rule declared; no score is computed"
+  }
+ ],
+ "data_rules": {
+  "CPIAUCNS": {
+   "source": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=CPIAUCNS",
+   "bls_series": "CUUR0000SA0",
+   "units": "Index 1982-1984=100, not seasonally adjusted",
+   "frequency": "monthly",
+   "first_value": "1913-01",
+   "revision_policy": "NSA CPI-U is final when issued (BLS); the snapshot is FRED's current values, not an archived first-release vintage",
+   "missing_value_policy": "strict: an empty level fails unless declared in series.toml known_missing; months must be contiguous; nothing is filled or skipped silently",
+   "known_missing": [
+    {
+     "month": "2025-10",
+     "reason": "BLS collected no October 2025 CPI (2025 lapse in appropriations) and will not publish it; see docs/commitment-chain.md, Data rules"
+    }
+   ],
+   "fallback": [
+    {
+     "month": "2025-10",
+     "value": "325.604",
+     "source": "https://www.treasurydirect.gov/instit/annceresult/press/preanre/2025/SPL_20251126_1.pdf",
+     "rule": "31 CFR 356 Appendix B, I.B.4(iv): last available twelve-month change"
+    }
+   ],
+   "fallback_use": "presentation and the AR(1) fit input only (data/presentation.py); never the caps or the chain"
+  },
+  "GASREGW": {
+   "source": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=GASREGW",
+   "units": "Regular gasoline price, dollars per gallon",
+   "frequency": "weekly",
+   "first_value": "1990-08-20",
+   "aggregation": "a weekly reading belongs to the calendar month of its date (a Monday); the month is the arithmetic mean of the readings present, floored to 1e-4 usd",
+   "missing_value_policy": "empty weekly readings are skipped and the month's reading count is recorded; months must be contiguous; months with fewer than 3 readings are flagged thin"
+  }
+ },
  "chain": {
   "series_id": "CPIAUCNS",
   "source_url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=CPIAUCNS",

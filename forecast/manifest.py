@@ -16,6 +16,7 @@ import hashlib
 import json
 import math
 import sys
+import tomllib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -49,8 +50,27 @@ def load_snapshot(series_id: str) -> dict:
     return json.loads((SNAP / f"{series_id}.json").read_text(encoding="utf-8"))
 
 
+def series_specs() -> dict[str, dict]:
+    return {s["id"]: s for s in tomllib.loads((ROOT / "data" / "series.toml").read_text(encoding="utf-8"))["series"]}
+
+
+def known_missing(series_id: str) -> set[str]:
+    return {m["month"] for m in series_specs()[series_id].get("known_missing", [])}
+
+
 def cpi_row(snap: dict) -> list[tuple[str, int]]:
-    """(month 'YYYY-MM', x_t) for every month with a 12-month lag, integers only."""
+    """(month 'YYYY-MM', x_t) for every month with a 12-month lag, integers only.
+
+    An empty level fails unless series.toml declares it in known_missing; a declared
+    one has no x_t, and neither has the month a year later. windows() never spans them.
+    """
+    declared = known_missing(SERIES_ID)
+    for a, b in zip(snap["rows"], snap["rows"][1:]):
+        if next_month(a["date"])[:7] != b["date"][:7]:
+            raise ValueError(f"{SERIES_ID}: months not contiguous between {a['date'][:7]} and {b['date'][:7]}")
+    empty = {r["date"][:7] for r in snap["rows"] if r["value_str"] in ("", ".")}
+    if empty - declared:
+        raise ValueError(f"{SERIES_ID}: empty level(s) not declared in series.toml known_missing: {sorted(empty - declared)}")
     rows = [r for r in snap["rows"] if r["value_str"] not in ("", ".")]
     scale = max(frac_digits(r["value_str"]) for r in rows)
     lv = {r["date"][:7]: to_scaled_int(r["value_str"], scale) for r in rows}
@@ -98,10 +118,68 @@ def thin_fuel_windows() -> list[str]:
 
 
 def windows(row: list[tuple[str, int]]):
+    """Every WINDOW-month run of consecutive months inside [TRAIN_START, TRAIN_END].
+
+    A run that crosses a gap in the row (a declared missing month) is a different
+    length in calendar months, so it fails rather than being taken as 48 months.
+    """
     for i in range(len(row) - WINDOW + 1):
         start, end = row[i][0], row[i + WINDOW - 1][0]
         if start >= TRAIN_START and end <= TRAIN_END:
+            months = [m for m, _ in row[i:i + WINDOW]]
+            for a, b in zip(months, months[1:]):
+                if next_month(a + "-01")[:7] != b:
+                    raise ValueError(f"window {start}..{end} spans a gap between {a} and {b}")
             yield start, [x for _, x in row[i:i + WINDOW]]
+
+
+def first_value_date(series_id: str) -> str:
+    return next(r["date"] for r in load_snapshot(series_id)["rows"] if r["value_str"] not in ("", "."))
+
+
+def data_rules() -> dict:
+    """What the caps and the chain read, and the rules for gaps, from series.toml and the snapshots."""
+    specs = series_specs()
+    cpi, gas = specs[SERIES_ID], specs[FUEL_ID]
+    return {
+        SERIES_ID: {
+            "source": SOURCE_URL, "bls_series": "CUUR0000SA0", "units": cpi["units"],
+            "frequency": cpi["frequency"], "first_value": first_value_date(SERIES_ID)[:7],
+            "revision_policy": ("NSA CPI-U is final when issued (BLS); the snapshot is FRED's current values, "
+                                "not an archived first-release vintage"),
+            "missing_value_policy": ("strict: an empty level fails unless declared in series.toml known_missing; "
+                                     "months must be contiguous; nothing is filled or skipped silently"),
+            "known_missing": cpi.get("known_missing", []),
+            "fallback": cpi.get("fallback", []),
+            "fallback_use": "presentation and the AR(1) fit input only (data/presentation.py); never the caps or the chain",
+        },
+        FUEL_ID: {
+            "source": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=GASREGW",
+            "units": gas["units"], "frequency": gas["frequency"], "first_value": first_value_date(FUEL_ID),
+            "aggregation": ("a weekly reading belongs to the calendar month of its date (a Monday); the month is the "
+                            "arithmetic mean of the readings present, floored to 1e-4 usd"),
+            "missing_value_policy": ("empty weekly readings are skipped and the month's reading count is recorded; "
+                                     "months must be contiguous; months with fewer than 3 readings are flagged thin"),
+        },
+    }
+
+
+def proposed_products() -> list[dict]:
+    """Catalogue entries with a series but no declared threshold or cap: nothing is computed for them."""
+    specs = series_specs()
+    out = []
+    for key, name, sid, exposure in (
+        ("diesel", "Diesel Surcharge", "GASDESW", "carriers and fleets paying diesel above a declared level"),
+        ("loan_rate", "Floating-Loan Rate", "DFF", "borrowers paying a floating rate above a declared level"),
+    ):
+        if not (SNAP / f"{sid}.json").exists():
+            raise FileNotFoundError(f"data/snapshots/{sid}.json missing: run `pixi run fetch --series {sid}`")
+        first = first_value_date(sid)
+        out.append({"key": key, "name": name, "series": sid, "units": specs[sid]["units"],
+                    "frequency": specs[sid]["frequency"], "first_value": first,
+                    "natural_exposure": exposure, "threshold": None, "cap": None, "executable": False,
+                    "status": "proposal: no threshold, cap or aggregation rule declared; no score is computed"})
+    return out
 
 
 def excess(xs: list[int], k: int) -> int:
@@ -153,6 +231,8 @@ def main() -> int:
              "aggregation": "arithmetic mean of the weekly rows dated inside the calendar month, floored to 1e-4 usd",
              "note": "research product; not settled on chain this weekend"},
         ],
+        "proposed_products": proposed_products(),
+        "data_rules": data_rules(),
         "chain": {"series_id": SERIES_ID, "source_url": SOURCE_URL, "transform_id": TRANSFORM_ID,
                   "window_start": WINDOW_START, "window_end": WINDOW_END, "n": N_OBS,
                   "first_period_id": FIRST_PERIOD_ID, "k": K, "d_cap": d_cap, "a_cap": a_cap},

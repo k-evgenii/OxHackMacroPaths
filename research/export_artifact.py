@@ -88,6 +88,8 @@ def main() -> int:
         "scenario_note": f"{len(scen)} overlapping 48-month windows {scen[0].start}..{scen[-1].start} (ending <= {TRAIN_END}); "
                          "an empirical decision score, not independent episodes or a calibrated probability",
         "products": expected,
+        "not_in_planner": [{"key": q["key"], "name": q["name"], "series": q["series"], "status": q["status"]}
+                           for q in man.get("proposed_products", [])],
         "defaults": DEFAULTS,
         "scenarios": [{"start": s.start, "excess_score": s.excess_score, "fuel_score": s.fuel_score,
                        "fuel_overrun_per_gallon": s.fuel_overrun_per_gallon} for s in scen],

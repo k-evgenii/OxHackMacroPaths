@@ -35,7 +35,7 @@ pytest_file() { # path
   elif grep -q "^import pytest" "$1" && ! "$PY" -c "import pytest" 2>/dev/null; then skip "py:$1" "pytest not installed"
   else run "py:$1" "$PY" "$1"; fi
 }
-for t in data/test_presentation.py research/test_planner.py forecast/test_link.py tests/data/test_fetch.py; do
+for t in data/test_presentation.py research/test_planner.py forecast/test_link.py forecast/test_manifest.py tests/data/test_fetch.py; do
   pytest_file "$t"
 done
 
