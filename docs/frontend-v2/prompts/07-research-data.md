@@ -19,7 +19,7 @@ Publish the committed manifest/forecast/planner as one versioned, hash-identifie
 
 Research p90 terms and reference session A's test caps are different. Never associate them implicitly or substitute model prices for on-chain offers. Keep Fuel labelled Research and defer the newer catalogue/v2 deployment claims.
 
-The inspected frontend bundle uses Fuel excess 72833; newer prose may use 72844. Keep the selected bundle coherent rather than mixing revisions or regenerating the research.
+The inspected frontend bundle has Fuel cap 36411 and Fuel showcase statistic 72833; newer prose may cite 72844 for the statistic, which no committed artifact contains. Keep the selected bundle coherent rather than mixing revisions or regenerating the research.
 
 Replace automatic startup/build copying with explicit validated publication and a nonmutating validation command. Coordinate npm wiring with Agent 15. Validate candidates before replacement and preserve a valid old bundle if a candidate fails.
 
