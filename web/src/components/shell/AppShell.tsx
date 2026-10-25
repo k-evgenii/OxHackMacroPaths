@@ -118,6 +118,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   useEffect(() => setOpen(false), [pathname]);
 
+  if (pathname === "/") return <>{children}</>;
+
   return (
     <div className="flex min-h-screen">
       <aside className="sticky top-0 hidden h-screen w-56 shrink-0 overflow-y-auto border-r border-border bg-surface lg:block">

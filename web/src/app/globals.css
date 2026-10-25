@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "../styles/tokens.css";
+@import "../demo/theme.css";
 
 @theme inline {
   --color-bg: var(--bg);
@@ -18,14 +19,14 @@
   --font-mono: var(--font-mono);
 }
 
-html,
 body {
-  overflow-x: hidden;
-}
-body {
-  background: var(--bg);
+  background: var(--color-ink);
   color: var(--text);
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+@media (max-width: 420px) {
+  h1 { overflow-wrap: anywhere; }
 }
 .num {
   font-variant-numeric: tabular-nums;

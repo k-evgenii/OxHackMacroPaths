@@ -1,11 +1,5 @@
-import { Prefetch } from "@/components/shell/Prefetch";
-import { healthQuery, sessionsQuery } from "@/lib/hooks/queries";
-import { Overview } from "@/components/shell/Overview";
+import DemoApp from "@/demo/DemoApp";
 
 export default function Home() {
-  return (
-    <Prefetch queries={[healthQuery(), sessionsQuery()]}>
-      <Overview />
-    </Prefetch>
-  );
+  return <DemoApp />;
 }

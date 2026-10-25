@@ -8,11 +8,11 @@ export const metadata: Metadata = {
   description: "Path-dependent contracts on US CPI inflation, settled on Solana devnet.",
 };
 
-export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: "#0f0b09" };
+export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: "#f3f3f1" };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en">
+    <html lang="en" data-theme="light">
       <body className="antialiased">
         <Providers>
           <AppShell>{children}</AppShell>
