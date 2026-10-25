@@ -1,9 +1,9 @@
 // Normalize one getTransaction response (legacy or v0) into the JSON-serializable HistoryTransaction.
 import { utils } from "@anchor-lang/core";
-import type { HistoryTransaction, InstructionNode } from "./types";
+import type { HistoryTransaction, InstructionNode, NormalizedTransaction } from "./types";
 
 /** Bump whenever the normalized representation changes: it is part of every cache key. */
-export const NORMALIZER_VERSION = 1;
+export const NORMALIZER_VERSION = 2;
 
 type Key = { toBase58(): string } | string;
 const b58 = (k: Key) => (typeof k === "string" ? k : k.toBase58());
@@ -40,7 +40,7 @@ export function normalizeTransaction(
   signature: string,
   raw: RawTransaction,
   finality: HistoryTransaction["finality"],
-): HistoryTransaction {
+): NormalizedTransaction {
   const msg = raw.transaction.message;
   const loaded = raw.meta?.loadedAddresses;
   // v0 resolution order: static keys, then loaded writable, then loaded readonly.
@@ -60,14 +60,19 @@ export function normalizeTransaction(
   });
 
   const instructions: InstructionNode[] = [];
+  let parentageResolved = true;
   const top = msg.compiledInstructions ?? msg.instructions ?? [];
   const innerByIndex = new Map((raw.meta?.innerInstructions ?? []).map((g) => [g.index, g.instructions]));
   top.forEach((ix, i) => {
     instructions.push(node(ix, i, null, null));
     // stackHeight 2 = direct CPI of the top-level instruction (parent null); h > 2 = child of the
     // most recent inner instruction at h-1. Missing stackHeight leaves parentage unresolved (null).
+    // A single inner instruction is necessarily a direct child even without stackHeight;
+    // otherwise missing stackHeight means parentage is unknown, flagged via parentageResolved.
     const lastAt: number[] = [];
-    (innerByIndex.get(i) ?? []).forEach((inner, j) => {
+    const group = innerByIndex.get(i) ?? [];
+    if (group.length > 1 && group.some((g) => g.stackHeight == null)) parentageResolved = false;
+    group.forEach((inner, j) => {
       const h = inner.stackHeight ?? null;
       const parent = h !== null && h > 2 ? (lastAt[h - 1] ?? null) : null;
       if (h !== null) {
@@ -97,5 +102,6 @@ export function normalizeTransaction(
     instructions,
     logs: raw.meta?.logMessages ?? [],
     tokenBalances: [...balances.values()].sort((a, b) => a.accountIndex - b.accountIndex),
+    parentageResolved,
   };
 }

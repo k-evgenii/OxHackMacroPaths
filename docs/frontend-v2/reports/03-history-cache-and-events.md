@@ -3,9 +3,24 @@
 ## Identity
 
 - Worker ID and assignment: 03 — history-cache-and-events
-- Foundation SHA: 6d2865bf526f0bf980293d9cdcfec547acbfd9f8. The foundation checkpoint is not merged yet.
+- Foundation SHA: 6d2865bf. Checkpoint 1 (85a62e8) is merged.
 - Branch: frontend-v2/03-history-cache-and-events
-- Status: PARTIAL. Implementation and unit tests are done. Route and index typecheck is blocked until the checkpoint lands.
+- Status: PARTIAL. Implementation and unit tests are done. Two typecheck errors remain; they need exports from workers 02 and 04 (below).
+
+## Checkpoint 1 update
+
+- **Shared types:** `types.ts` now re-exports the ports from `@/server/contracts` and `HistoryPageMeta` from `@macropaths/client`. It no longer keeps local copies.
+- **Proposed additive amendment, inner-instruction parentage:** the normalized transaction is `NormalizedTransaction = HistoryTransaction & { parentageResolved: boolean }`, and it is cached in this shape. `HistoryTransaction` itself is unchanged.
+  - A CPI group with a single inner instruction is resolved as a direct child of its top-level instruction, even without `stackHeight`.
+  - If any instruction in a group of two or more lacks `stackHeight`, the transaction gets `parentageResolved: false`. Its null parents then mean "unknown", not "direct child".
+  - Worker 06 should return `amount: null` for actions attributed through such a transaction.
+  - Proposal: add `parentageResolved: boolean` to `HistoryTransaction` in contracts.ts. The alternative is for 06 to read it through this module's exported `NormalizedTransaction` type.
+  - `NORMALIZER_VERSION` is bumped to 2, so cache keys change.
+- **Checks after the merge:**
+  - `vitest run test/history test/api`: test/history passes 34/34 and `test/api/resilience` passes.
+  - `test/api/events-session`, `routes` and `live` fail at import. The route imports `@/server/sessions`, which worker 04 has not landed.
+  - `events-session.test.ts` (Dave's file) also targets the old `chain.ts`-based route and the old limit range (1..100). Once 04 lands, it needs to be rewritten against the history repository or retired. I have not edited it.
+  - `tsc --noEmit` errors left in owned files: `@/server/sessions` is missing (04), and `createRpcReader` is missing from `@/server/rpc` (02).
 
 ## Delivered
 

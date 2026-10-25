@@ -103,6 +103,22 @@ describe("history query parsing", () => {
 });
 
 describe("normalizeTransaction", () => {
+  const withInner = (inner: Array<{ stackHeight?: number }>) =>
+    normalizeTransaction(
+      "s",
+      {
+        slot: 1,
+        transaction: { message: { staticAccountKeys: ["A", "P"], compiledInstructions: [{ programIdIndex: 1, accountKeyIndexes: [], data: new Uint8Array() }] } },
+        meta: { err: null, innerInstructions: [{ index: 0, instructions: inner.map((x) => ({ programIdIndex: 1, accounts: [], data: "", ...x })) }] },
+      },
+      "confirmed",
+    );
+  it("flags unresolved parentage only when stackHeight is missing in a multi-instruction group", () => {
+    expect(withInner([{}]).parentageResolved).toBe(true);
+    expect(withInner([{}, {}]).parentageResolved).toBe(false);
+    expect(withInner([{ stackHeight: 2 }, { stackHeight: 2 }]).parentageResolved).toBe(true);
+  });
+
   it("resolves v0 loaded keys, inner instruction parentage and token balances as strings", () => {
     const tx = normalizeTransaction(
       "s",
@@ -135,6 +151,7 @@ describe("normalizeTransaction", () => {
       [0, 0, null, "R"],
       [0, 1, 0, "R"],
     ]);
+    expect(tx.parentageResolved).toBe(true);
     expect(tx.tokenBalances).toEqual([{ accountIndex: 2, mint: "M", owner: "A", preAmount: "18446744073709551615", postAmount: "0" }]);
   });
 });

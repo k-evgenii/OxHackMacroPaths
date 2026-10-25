@@ -1,59 +1,28 @@
-// History ports. These mirror docs/frontend-v2/interfaces.md ("Internal repository ports").
-// At the foundation checkpoint they are re-exported from @/server/contracts instead of being
-// declared here; the shapes are identical, so consumers import them from "@/server/history".
-import type { Connection } from "@solana/web3.js";
+// History ports: frozen shared declarations from @/server/contracts, plus history-internal types.
+import type { CacheStore, HistoryTransaction } from "@/server/contracts";
 
-export type RpcContext = { signal?: AbortSignal; deadlineAt?: number };
+export type {
+  RpcContext,
+  RpcAdmission,
+  RpcReader,
+  CacheStore,
+  InstructionNode,
+  HistoryTransaction,
+  HistoryScope,
+  HistoryPageRequest,
+  HistoryPage,
+  TransactionRepository,
+} from "@/server/contracts";
+export type { HistoryPageMeta } from "@macropaths/client";
 
-export interface RpcAdmission {
-  acquire(method: string, context: RpcContext): Promise<{ release(): Promise<void> }>;
-  noteRateLimit(method: string, retryAfterMs: number): Promise<void>;
-}
-
-export interface RpcReader {
-  read<T>(method: string, op: (connection: Connection) => Promise<T>, context?: RpcContext): Promise<T>;
-}
-
-export interface CacheStore {
-  get<T>(key: string): Promise<T | null>;
-  set<T>(key: string, value: T, ttlSeconds: number): Promise<void>;
-}
-
-export type InstructionNode = {
-  instructionIndex: number;
-  innerInstructionIndex: number | null;
-  parentInnerInstructionIndex: number | null;
-  programId: string;
-  accounts: string[];
-  dataBase64: string;
-};
-
-export type HistoryTransaction = {
-  signature: string;
-  slot: number;
-  blockTime: number | null;
-  finality: "confirmed" | "finalized";
-  failed: boolean;
-  accountKeys: string[];
-  instructions: InstructionNode[];
-  logs: string[];
-  tokenBalances: Array<{
-    accountIndex: number;
-    mint: string;
-    owner: string | null;
-    preAmount: string | null;
-    postAmount: string | null;
-  }>;
-};
-
-export type HistoryPageMeta = { nextBefore: string | null; pending: string[]; retryCursor: string | null };
-export type HistoryScope = { kind: "session" | "wallet"; address: string };
-export type HistoryPageRequest = { before?: string; limit?: number; retryCursor?: string };
-export type HistoryPage = HistoryPageMeta & { transactions: HistoryTransaction[] };
-
-export interface TransactionRepository {
-  page(scope: HistoryScope, request: HistoryPageRequest, context?: RpcContext): Promise<HistoryPage>;
-}
+/**
+ * HistoryTransaction as cached by worker 03. `parentageResolved` (proposed additive amendment)
+ * is false when some inner instruction's parent could not be established (missing stackHeight
+ * in a multi-instruction CPI group); its `parentInnerInstructionIndex` null then means
+ * "unknown", not "direct child of the top-level instruction". Consumers must treat amounts
+ * attributed through such subtrees as unavailable.
+ */
+export type NormalizedTransaction = HistoryTransaction & { parentageResolved: boolean };
 
 /**
  * Internal extension implemented by the Redis store: atomic owner-token leases.
