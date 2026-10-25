@@ -1,0 +1,3 @@
+@import "tailwindcss";
+/* Agent 3 owns tokens in src/styles/tokens.css and may import it here. */
+body { background: #0f0b09; color: #f4ece6; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
