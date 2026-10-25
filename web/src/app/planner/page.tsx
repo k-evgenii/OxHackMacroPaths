@@ -4,13 +4,14 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { plannerQuery, type PlannerArtifact } from "@/lib/artifacts";
 import { recommend, showcase, type Product, type Result } from "@/lib/planner";
+import { Provenance } from "@/components/shell/Provenance";
 import { Badge, Card, ErrorState, Num, Skeleton, Stat } from "./_fallback";
 
 const ILLUSTRATION = "illustration until settlement";
 const NAME: Record<Product, string> = { cash: "Keep cash", excess: "Excess Inflation", fuel: "Fuel Pass-through" };
 const LABEL: Record<Product, string> = {
   excess: "executable on chain",
-  fuel: "research product, not executable this weekend",
+  fuel: "research proposal, not executable",
   cash: "no contract",
 };
 const TONE = { excess: "good", fuel: "warn", cash: "muted" } as const;
@@ -61,7 +62,11 @@ function Planner({ art }: { art: PlannerArtifact }) {
           <Stat label="Budget price (fixed)" value={`${art.defaults.G.toFixed(2)} usd/gal`} />
           <Stat label="Excess Inflation entry price" value={art.prices.excess} hint={ILLUSTRATION} />
           <Stat label="Fuel entry price" value={art.prices.fuel} hint={ILLUSTRATION} />
-          <Stat label="Caps" value={<span className="text-sm">{CAP_TEXT(art, "excess")}; {CAP_TEXT(art, "fuel")}</span>} />
+          <Stat
+            label="Caps"
+            value={<span className="text-sm">{CAP_TEXT(art, "excess")}; {CAP_TEXT(art, "fuel")}</span>}
+            hint="manifest caps; an on-chain session scores against its own terms"
+          />
         </div>
         {!valid ? <p className="mt-2 text-xs text-red-300">Enter gallons ≥ 0 and a budget &gt; 0.</p> : null}
       </Card>
@@ -106,13 +111,17 @@ function Recommendation({ art, best, n, first, last }: { art: PlannerArtifact; b
         {n} overlapping 48-month windows {first}..{last}; an empirical decision score, not a probability.
       </p>
       <div className="mt-4">
-        <button type="button" disabled className="cursor-not-allowed rounded border border-white/20 px-3 py-1.5 text-sm text-white/50">
-          Wallet flow comes next
-        </button>
+        {best.product === "excess" && (
+          <button type="button" disabled className="cursor-not-allowed rounded border border-white/20 px-3 py-1.5 text-sm text-white/50">
+            Wallet flow comes next
+          </button>
+        )}
         <p className="mt-1 text-xs text-white/50">
           {best.product === "excess"
-            ? `It will deposit [0, 0, ${Math.round(best.stake * 1e6)}, 0] PLAY base units (stake·1e6 on product 1, side 0), or buy_cover(1, ${best.units.toFixed(0)}) if the seller extension is live; the other side is funded by the disclosed seed wallet.`
-            : "No on-chain action: this recommendation is not executable on chain."}
+            ? `Not available yet. The planned flow would deposit [0, 0, ${Math.round(best.stake * 1e6)}, 0] PLAY base units (stake·1e6 on product 1, side 0), or buy_cover(1, ${best.units.toFixed(0)}) if the seller extension is live; the other side is funded by the disclosed seed wallet.`
+            : best.product === "fuel"
+              ? "Research proposal only: the deployed program has no fuel product, so there is nothing to buy or deposit for this recommendation."
+              : "No contract: keep the budget as a cash reserve."}
         </p>
       </div>
     </Card>
@@ -162,13 +171,14 @@ function PolicyTable({ rows, best }: { rows: Result[]; best: Result }) {
 export default function PlannerPage() {
   const { data, error } = useQuery(plannerQuery);
   return (
-    <main className="mx-auto max-w-5xl space-y-4 p-4 sm:p-6">
+    <div className="mx-auto max-w-5xl space-y-4">
       <header>
         <h1 className="text-xl font-semibold">Exposure planner</h1>
         <p className="mt-1 text-sm text-amber-200/80">Research layer, advisory. Read-only: no wallet, no transactions.</p>
       </header>
+      <Provenance />
       {error ? <ErrorState error={error} /> : null}
       {data ? <Planner art={data} /> : !error ? <Skeleton className="h-96" /> : null}
-    </main>
+    </div>
   );
 }

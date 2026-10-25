@@ -3,7 +3,8 @@ import { Area, CartesianGrid, ComposedChart, Line, ResponsiveContainer, Tooltip,
 import type { Forecast } from "@/lib/artifacts";
 
 const LINE = "#6ea8fe";
-const fmtPeriod = (id: number) => `${String(id).slice(0, 4)}-${String(id).slice(4)}`;
+// The terminal row (t = 48, realised end state) has no calendar period.
+const fmtPeriod = (id: number | null) => (id === null ? "final" : `${String(id).slice(0, 4)}-${String(id).slice(4)}`);
 
 export function ForecastChart({ rows, productKey }: { rows: Forecast["rows"]; productKey: "cooling" | "excess" | "fuel" }) {
   const data = rows.map((r) => {

@@ -15,6 +15,17 @@ export class HttpError extends Error {
 export const badRequest = (msg: string) => new HttpError("bad_request", msg);
 export const notFound = (msg: string) => new HttpError("not_found", msg);
 
+/** Client-facing text for an RPC failure. Never echoes the raw RPC message, which can carry provider details. */
+export function rpcMessage(e: RpcFailure): string {
+  const m = e.message;
+  if (/Endpoint URL must start|Invalid URL/i.test(m)) return "RPC_URL is not a valid http(s) URL. Check web/.env.local and restart the server.";
+  if (/429|too many requests|rate limit/i.test(m))
+    return "The Solana RPC endpoint is rate-limiting requests (HTTP 429). Wait a few seconds and retry, or set RPC_URL to a dedicated devnet endpoint.";
+  if (/ENOTFOUND|ECONNREFUSED|ECONNRESET|ETIMEDOUT|fetch failed|timed? ?out/i.test(m))
+    return "Could not reach the Solana RPC endpoint. Check RPC_URL and the network, then retry.";
+  return "RPC request failed. Retry, and check that RPC_URL points at a working devnet endpoint.";
+}
+
 const NO_STORE = { "cache-control": "no-store" };
 
 export function errorResponse(code: Code, error: string): Response {
@@ -26,7 +37,7 @@ export function toErrorResponse(e: unknown): Response {
   if (e instanceof HttpError) return errorResponse(e.code, e.message);
   if (e instanceof RpcFailure) {
     console.error("[api] rpc_error", e.message);
-    return errorResponse("rpc_error", "RPC request failed");
+    return errorResponse("rpc_error", rpcMessage(e));
   }
   console.error("[api] internal", e);
   return errorResponse("internal", "internal error");

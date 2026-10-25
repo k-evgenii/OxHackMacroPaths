@@ -22,8 +22,11 @@ const ManifestProduct = z.object({
 export type ManifestProduct = z.infer<typeof ManifestProduct>;
 
 const StatScore = z.object({ stat: z.number(), score: z.number() });
+const Snapshot = z.object({ retrieved_at: z.string() });
 export const Manifest = z.object({
   version: z.number(),
+  // Source snapshots the artefacts were computed from; retrieved_at is the data date shown on research screens.
+  snapshots: z.record(Snapshot).optional(),
   products: z.array(ManifestProduct),
   showcase: z.object({
     window: z.tuple([z.string(), z.string()]),
@@ -47,7 +50,9 @@ export type Fit = z.infer<typeof Fit>;
 const Cell = z.object({ V: z.number(), sigma: z.number() });
 
 export const Forecast = z.object({
+  manifest_version: z.number().optional(),
   model: z.string(),
+  seed: z.number().optional(),
   n_paths: z.number(),
   fit: z.object({ cpi: Fit, fuel: Fit }),
   quotes: z.object({
@@ -57,7 +62,8 @@ export const Forecast = z.object({
     fuel_research_quote: z.number(),
   }),
   label: z.string(),
-  rows: z.array(z.object({ t: z.number(), period_id: z.number(), cooling: Cell, excess: Cell, fuel: Cell })),
+  // The terminal row (t = 48, the realised end state) has no calendar period: period_id is null there.
+  rows: z.array(z.object({ t: z.number(), period_id: z.number().nullable(), cooling: Cell, excess: Cell, fuel: Cell })),
 });
 export type Forecast = z.infer<typeof Forecast>;
 
@@ -91,6 +97,7 @@ const Showcase = z.object({
 });
 
 export const PlannerArtifact = z.object({
+  manifest_version: z.number().optional(),
   prices: z.object({ excess: z.number(), fuel: z.number() }),
   caps: z.object({ cooling: z.number(), excess: z.number(), fuel: z.number() }),
   thresholds: z.object({ excess_k_1e4pp: z.number(), fuel_k_1e4usd: z.number() }),
@@ -119,3 +126,36 @@ export const plannerQuery = queryOptions({
   queryFn: () => fetchJson("/api/artifacts/planner", PlannerArtifact),
   staleTime: Infinity,
 });
+
+/** "2026-10-24T13:29:31Z" -> "2026-10-24 13:29 UTC": the data date of a source snapshot. */
+export function fmtRetrieved(iso: string): string {
+  const m = iso.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/);
+  return m ? `${m[1]} ${m[2]} UTC` : iso;
+}
+
+/** Where the research artefacts came from: source snapshot dates plus the model label and version. */
+export function provenance(m: Manifest, f: Forecast) {
+  return {
+    snapshots: Object.entries(m.snapshots ?? {}).map(([id, s]) => ({ id, retrievedAt: fmtRetrieved(s.retrieved_at) })),
+    label: f.label,
+    model: f.model,
+    version: `artefact v${f.manifest_version ?? m.version}, ${f.n_paths.toLocaleString("en-US")} simulated paths${f.seed === undefined ? "" : `, seed ${f.seed}`}`,
+  };
+}
+
+export type ProductStatus = { label: string; tone: "good" | "warn" | "muted"; detail: string };
+
+/** What the deployed program can do with a product. Only products with an on-chain index exist there. */
+export function productStatus(p: Pick<ManifestProduct, "key" | "executable" | "index">): ProductStatus {
+  if (!p.executable || p.index === null)
+    return { label: "research proposal, not executable", tone: "warn", detail: "Not part of the deployed program." };
+  if (p.key === "cooling")
+    return { label: "view", tone: "muted", detail: `On-chain product ${p.index}, scored in the same session as Excess Inflation.` };
+  return { label: "executable on chain", tone: "good", detail: `On-chain product ${p.index}.` };
+}
+
+/** Seller entry quote p in millionths for a product key (research products use the research quote). */
+export function quoteFor(f: Forecast, key: string): number {
+  const i = f.quotes.products.indexOf(key);
+  return i >= 0 ? f.quotes.p[i] : f.quotes.fuel_research_quote;
+}
