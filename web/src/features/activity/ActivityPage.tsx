@@ -117,11 +117,17 @@ function OwnerFeed({ owner }: { owner: string }) {
         <div role="status" className={styles.notice}>
           Some transactions are still loading ({feed.pendingCount}). Rows shown are complete; missing ones will appear
           when recovered.{" "}
-          {!q.isFetching && (
+          {q.recovery.needsRefresh ? (
             <button type="button" className={styles.link} onClick={() => void q.refetch()}>
+              Reload
+            </button>
+          ) : q.recovery.status === "retrying" ? (
+            <span>Retrying…</span>
+          ) : q.recovery.status === "exhausted" ? (
+            <button type="button" className={styles.link} onClick={() => void q.recovery.retry()}>
               Retry now
             </button>
-          )}
+          ) : null}
         </div>
       )}
 
@@ -222,7 +228,7 @@ function FeedError({ error, onRetry, retrying }: { error: unknown; onRetry: () =
 
 function MarketActivity() {
   const selected = useSelectedSession();
-  const q = useSessionOverview(selected.address ?? "");
+  const q = useSessionOverview(selected.address);
   if (selected.status === "invalid")
     return <Notice title="Unknown session">The selected session isn’t registered.</Notice>;
   if (!selected.address || q.status === "pending")
