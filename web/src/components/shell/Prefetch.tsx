@@ -1,3 +1,4 @@
+import { USE_FIXTURES } from "@/lib/api-client";
 import { dehydrate, HydrationBoundary, QueryClient, type FetchQueryOptions } from "@tanstack/react-query";
 
 /**
@@ -15,6 +16,9 @@ export async function Prefetch({
   infinite?: any[];
   children: React.ReactNode;
 }) {
+  // Against the real API a server-side fetch of a relative /api URL cannot resolve (and hangs static
+  // prerendering), so only prefetch in fixture mode; otherwise the client fetches.
+  if (!USE_FIXTURES) return <>{children}</>;
   const client = new QueryClient();
   await Promise.all([
     ...queries.map((q) => client.prefetchQuery(q)),

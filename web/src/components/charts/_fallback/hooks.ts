@@ -1,12 +1,19 @@
 "use client";
-// Minimal stand-ins for fe-03's web/src/lib/hooks. Repoint imports at merge.
+// Integrator: delegates to the shared query builders (same cache keys and polling as fe-03's hooks),
+// keeping the optional initialData that the Path/Results/Seller server components pass in fixture mode.
 import { useQuery } from "@tanstack/react-query";
-import { PositionsResponse, SellerResponse, SessionView } from "@macropaths/client";
-import { fetchJson } from "@/lib/api-client";
+import type { PositionsResponse, SellerResponse, SessionView } from "@macropaths/client";
+import { positionsQuery, sellerQuery, sessionQuery } from "@/lib/hooks/queries";
 
 export const useSession = (addr: string, initialData?: SessionView) =>
-  useQuery({ queryKey: ["session", addr], queryFn: () => fetchJson(`/api/sessions/${addr}`, SessionView), initialData });
-export const usePositions = (addr: string, initialData?: PositionsResponse) =>
-  useQuery({ queryKey: ["positions", addr], queryFn: () => fetchJson(`/api/sessions/${addr}/positions`, PositionsResponse), initialData });
-export const useSeller = (addr: string, initialData?: SellerResponse) =>
-  useQuery({ queryKey: ["seller", addr], queryFn: () => fetchJson(`/api/sessions/${addr}/seller`, SellerResponse), initialData });
+  useQuery({ ...sessionQuery(addr), initialData });
+
+export function usePositions(addr: string, initialData?: PositionsResponse) {
+  const state = useSession(addr).data?.state;
+  return useQuery({ ...positionsQuery(addr, state), initialData });
+}
+
+export function useSeller(addr: string, initialData?: SellerResponse) {
+  const state = useSession(addr).data?.state;
+  return useQuery({ ...sellerQuery(addr, state), initialData });
+}
