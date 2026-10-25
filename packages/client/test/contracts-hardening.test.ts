@@ -11,6 +11,7 @@ import {
   claimAmount,
   coverPayout,
   EventView,
+  ResearchBundle,
   fmtMillionthsPct,
   fmtPlay,
   fmtPointMonths,
@@ -243,4 +244,25 @@ describe("browser-safe modules", () => {
         for (const s of specs) for (const re of FORBIDDEN) expect(re.test(s), `${f} imports ${s}`).toBe(false);
     });
   }
+});
+
+describe("research bundle keeps legacy artifact fields", () => {
+  it("round-trips unknown keys in manifest/forecast/planner and nested objects", () => {
+    const b = structuredClone(scenarios.research.bundle) as Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
+    b.manifest.chain = { cluster: "devnet", programId: "X" };
+    b.manifest.products[0].legacy_note = "kept";
+    b.forecast.caps = { cooling: 1, excess: 2 };
+    b.forecast.fit.cpi.extra = [1, 2];
+    b.planner.labels = { cooling: "Inflation Cooling" };
+    b.planner.caps.legacy = 7;
+    const parsed = ResearchBundle.parse(b) as Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
+    expect(parsed).toEqual(b);
+    expect(parsed.manifest.chain).toEqual({ cluster: "devnet", programId: "X" });
+    expect(parsed.forecast.caps).toEqual({ cooling: 1, excess: 2 });
+    expect(parsed.planner.labels).toEqual({ cooling: "Inflation Cooling" });
+    // relied-on fields are still validated
+    const bad = structuredClone(b);
+    bad.planner.caps.cooling = "x";
+    expect(ResearchBundle.safeParse(bad).success).toBe(false);
+  });
 });
