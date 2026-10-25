@@ -16,6 +16,7 @@ import { publish, validatePublished } from "../../scripts/artifacts/fsbundle.mjs
 import { getResearchBundle, PUBLISHED_IDENTITY } from "@/server/research";
 import * as route from "@/app/api/artifacts/[name]/route";
 import { PUBLISHED_BUNDLE_ID } from "@/lib/artifacts";
+import { ResearchBundle } from "@macropaths/client";
 
 const WEB = path.resolve(__dirname, "../..");
 const DATA = path.join(WEB, "public", "data");
@@ -47,6 +48,9 @@ describe("committed default bundle", () => {
       { key: "excess", threshold: "40000", cap: "1883141", units: "1e-4-pp-months", quoteMillionths: "57153", researchOnly: false },
       { key: "fuel", threshold: "35000", cap: "36411", units: "1e-4-usd-months", quoteMillionths: "108466", researchOnly: true },
     ]);
+  });
+  it("satisfies the shared ResearchBundle contract", () => {
+    expect(ResearchBundle.safeParse(b).success).toBe(true);
   });
   it("does not fabricate metadata and carries no session association", () => {
     expect(b.metadata.generatedAt).toBeNull();

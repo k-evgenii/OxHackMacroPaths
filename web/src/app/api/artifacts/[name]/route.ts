@@ -1,4 +1,5 @@
-import { HttpError, handle, notFound } from "@/server/errors";
+import { ResearchBundle } from "@macropaths/client";
+import { HttpError, handle, notFound, okJson } from "@/server/errors";
 import { ARTIFACT_NAMES, BundleError, getArtifactText, getResearchBundle, type ArtifactName } from "@/server/research";
 
 export const dynamic = "force-dynamic";
@@ -25,7 +26,9 @@ export function GET(_req: Request, ctx: { params: Promise<{ name: string }> }): 
     const { name } = await ctx.params;
     if (name === "bundle") {
       const bundle = await getResearchBundle().catch(mapError);
-      return new Response(JSON.stringify(bundle), { headers: headers(bundle.id) });
+      const res = okJson(ResearchBundle, bundle as ResearchBundle); // shared contract; 500 on violation
+      if (res.ok) for (const [k, v] of Object.entries(headers(bundle.id))) res.headers.set(k, v);
+      return res;
     }
     if (!(ARTIFACT_NAMES as readonly string[]).includes(name)) throw notFound(`unknown artifact ${name}`);
     const text = await getArtifactText(name as ArtifactName).catch(mapError);
