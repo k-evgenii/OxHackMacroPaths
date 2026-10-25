@@ -29,7 +29,7 @@ The matched pool is therefore a **two-view instrument**: two people who disagree
   - `V0` and `σ0` are the AR(1) forecast's mean and standard deviation of the score at the origin.
   - The policy is the one recorded in `web/public/data/manifest.json` (`price_convention`) and `forecast.json` (`quotes.formula`) on `evgenii/frontend`.
   - Those files give quotes of `p = [384852, 57153]` (Cooling, Excess) with pre-2021 p90 caps.
-  - The script that writes those numbers (`forecast/ar1.py`) is not yet on a shared branch.
+  - The script that writes those numbers is `forecast/ar1.py`.
 - **What the quote is and isn't:** it is a policy the seller declares. It is not a forecast, and it is not a validated price. The forecast is advisory; settlement uses only the realised path.
 
 ## What the history does and does not show
@@ -54,6 +54,6 @@ All divisions floor. The bounds below were checked with exact integer arithmetic
 | Pool claims | `floor(a·R_j/S_j) + floor(a·P_j/S_j)` | each position is short by less than 2 base units; the shortfall stays in the vault as dust and `sweep_dust` empties it | nobody (dust) |
 | Cover premium | `ceil(p·U/ONE)` | over by less than 1 base unit | the seller |
 | Cover payout | `floor(s·U/ONE)` | short by less than 1 base unit | the seller |
-| Fuel row (v2 proposal, not on chain) | monthly mean of weekly prices in 1e-4 $, floored | GASREGW prices have 3 decimals, so the loss per month is at most 2/3 × 1e-4 $ with 3 weekly rows, 1/2 × 1e-4 $ with 4 and 0 with 5. This is within the review's stated 0.75e-4 $. | the seller (a lower row lowers an accumulated-excess score) |
+| Fuel row (research, not executable; v2 proposal, not on chain) | monthly mean of the weekly prices dated in that calendar month (by the Monday date), in 1e-4 $, floored | GASREGW prices have 3 decimals, so the loss per month is at most 2/3 × 1e-4 $ with 3 weekly rows, 1/2 × 1e-4 $ with 4 and 0 with 5. This is within the review's stated 0.75e-4 $. | the seller (a lower row lowers an accumulated-excess score) |
 
 Score rounding: `score = floor(ONE·min(stat, cap)/cap)` is short of the exact ratio by less than one millionth.
