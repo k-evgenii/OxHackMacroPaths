@@ -1,0 +1,160 @@
+{
+  "schemaVersion": 1,
+  "packVersion": "1.0.0",
+  "targetBranch": "evgenii/frontend",
+  "inspectedFrontendSha": "dfb4b97ea40287c7308698bd21f7111248f2538e",
+  "workerCount": 15,
+  "maxConcurrentWorkers": 15,
+  "pathMatching": "Literal repository-relative paths. Trailing slash owns all descendants. Exclusions subtract paths/subtrees. No glob expansion; route brackets are literal.",
+  "foundationRequired": true,
+  "runtimeInputs": ["repositoryPath", "integrationWorktree", "originalFrontendSha", "foundationSha", "workerWorktreeParent", "runnerOutputDirectory"],
+  "coordinatorPrompt": "docs/frontend-v2/prompts/00-orchestrator.md",
+  "sharedEditOwner": "15",
+  "defaultMergeOrder": ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15"],
+  "commonReads": [
+    "docs/frontend-v2/frontend-protocol.md",
+    "docs/frontend-v2/README.md",
+    "docs/frontend-v2/interfaces.md",
+    "docs/frontend-v2/parallel-execution.md",
+    "docs/frontend-v2/acceptance.md"
+  ],
+  "forbiddenWrites": ["programs/", "keeper/", "keys/", "research/", "forecast/", "data/", "tests/vectors.json"],
+  "workers": [
+    {
+      "id": "01", "name": "contracts-and-models", "branchSuffix": "01-contracts-and-models",
+      "brief": "docs/frontend-v2/agents/01-contracts-and-models.md",
+      "prompt": "docs/frontend-v2/prompts/01-contracts-and-models.md",
+      "report": "docs/frontend-v2/reports/01-contracts-and-models.md",
+      "skills": ["macropaths-delivery", "macropaths-exact-data"],
+      "owns": ["packages/client/src/", "packages/client/fixtures/", "packages/client/test/"],
+      "excludes": [], "mergeAfter": [], "startAfter": ["foundationReady"]
+    },
+    {
+      "id": "02", "name": "rpc-transport", "branchSuffix": "02-rpc-transport",
+      "brief": "docs/frontend-v2/agents/02-rpc-transport.md",
+      "prompt": "docs/frontend-v2/prompts/02-rpc-transport.md",
+      "report": "docs/frontend-v2/reports/02-rpc-transport.md",
+      "skills": ["macropaths-delivery", "macropaths-history"],
+      "owns": ["web/src/server/rpc.ts", "web/src/server/transport/", "web/test/rpc/"],
+      "excludes": [], "mergeAfter": ["01"], "startAfter": ["foundationReady"]
+    },
+    {
+      "id": "03", "name": "history-cache-and-events", "branchSuffix": "03-history-cache-and-events",
+      "brief": "docs/frontend-v2/agents/03-history-cache-and-events.md",
+      "prompt": "docs/frontend-v2/prompts/03-history-cache-and-events.md",
+      "report": "docs/frontend-v2/reports/03-history-cache-and-events.md",
+      "skills": ["macropaths-delivery", "macropaths-history", "macropaths-exact-data"],
+      "owns": ["web/src/server/history/", "web/src/app/api/sessions/[addr]/events/route.ts", "web/test/history/"],
+      "excludes": [], "mergeAfter": ["01", "02"], "startAfter": ["foundationReady"]
+    },
+    {
+      "id": "04", "name": "session-read-api", "branchSuffix": "04-session-read-api",
+      "brief": "docs/frontend-v2/agents/04-session-read-api.md",
+      "prompt": "docs/frontend-v2/prompts/04-session-read-api.md",
+      "report": "docs/frontend-v2/reports/04-session-read-api.md",
+      "skills": ["macropaths-delivery", "macropaths-exact-data"],
+      "owns": ["web/src/server/chain.ts", "web/src/server/sessions/", "web/config/sessions.json", "web/src/app/api/catalog/", "web/src/app/api/health/route.ts", "web/src/app/api/sessions/route.ts", "web/src/app/api/sessions/[addr]/route.ts", "web/src/app/api/sessions/[addr]/overview/", "web/src/app/api/sessions/[addr]/positions/route.ts", "web/src/app/api/sessions/[addr]/seller/route.ts", "web/test/sessions/"],
+      "excludes": [], "mergeAfter": ["01", "02"], "startAfter": ["foundationReady"]
+    },
+    {
+      "id": "05", "name": "wallet-read-api", "branchSuffix": "05-wallet-read-api",
+      "brief": "docs/frontend-v2/agents/05-wallet-read-api.md",
+      "prompt": "docs/frontend-v2/prompts/05-wallet-read-api.md",
+      "report": "docs/frontend-v2/reports/05-wallet-read-api.md",
+      "skills": ["macropaths-delivery", "macropaths-exact-data"],
+      "owns": ["web/src/server/wallet/overview.ts", "web/src/app/api/wallet/[owner]/route.ts", "web/test/wallet-read/"],
+      "excludes": [], "mergeAfter": ["01", "02", "04"], "startAfter": ["foundationReady"]
+    },
+    {
+      "id": "06", "name": "wallet-history", "branchSuffix": "06-wallet-history",
+      "brief": "docs/frontend-v2/agents/06-wallet-history.md",
+      "prompt": "docs/frontend-v2/prompts/06-wallet-history.md",
+      "report": "docs/frontend-v2/reports/06-wallet-history.md",
+      "skills": ["macropaths-delivery", "macropaths-history", "macropaths-exact-data"],
+      "owns": ["web/src/server/wallet/activity.ts", "web/src/server/wallet/decode/", "web/src/app/api/wallet/[owner]/activity/", "web/test/wallet-history/"],
+      "excludes": [], "mergeAfter": ["01", "03", "04", "05"], "startAfter": ["foundationReady"]
+    },
+    {
+      "id": "07", "name": "research-data", "branchSuffix": "07-research-data",
+      "brief": "docs/frontend-v2/agents/07-research-data.md",
+      "prompt": "docs/frontend-v2/prompts/07-research-data.md",
+      "report": "docs/frontend-v2/reports/07-research-data.md",
+      "skills": ["macropaths-delivery", "macropaths-exact-data"],
+      "owns": ["web/src/server/research/", "web/src/lib/artifacts.ts", "web/src/app/api/artifacts/[name]/route.ts", "web/scripts/copy-artifacts.mjs", "web/scripts/artifacts/", "web/public/data/", "web/test/research/"],
+      "excludes": [], "mergeAfter": ["01"], "startAfter": ["foundationReady"]
+    },
+    {
+      "id": "08", "name": "ui-foundations", "branchSuffix": "08-ui-foundations",
+      "brief": "docs/frontend-v2/agents/08-ui-foundations.md",
+      "prompt": "docs/frontend-v2/prompts/08-ui-foundations.md",
+      "report": "docs/frontend-v2/reports/08-ui-foundations.md",
+      "skills": ["macropaths-delivery", "macropaths-ui", "macropaths-exact-data"],
+      "owns": ["packages/ui/src/", "web/test/ui-primitives/"],
+      "excludes": ["packages/ui/src/index.ts", "packages/ui/src/charts.tsx", "packages/ui/src/glow-chart/"],
+      "mergeAfter": ["01"], "startAfter": ["foundationReady"]
+    },
+    {
+      "id": "09", "name": "glow-charts", "branchSuffix": "09-glow-charts",
+      "brief": "docs/frontend-v2/agents/09-glow-charts.md",
+      "prompt": "docs/frontend-v2/prompts/09-glow-charts.md",
+      "report": "docs/frontend-v2/reports/09-glow-charts.md",
+      "skills": ["macropaths-delivery", "macropaths-ui", "macropaths-exact-data"],
+      "owns": ["packages/ui/src/charts.tsx", "packages/ui/src/glow-chart/", "web/test/glow-chart/"],
+      "excludes": [], "mergeAfter": ["01", "08"], "startAfter": ["foundationReady"]
+    },
+    {
+      "id": "10", "name": "shell-and-wallet-connection", "branchSuffix": "10-shell-and-wallet-connection",
+      "brief": "docs/frontend-v2/agents/10-shell-and-wallet-connection.md",
+      "prompt": "docs/frontend-v2/prompts/10-shell-and-wallet-connection.md",
+      "report": "docs/frontend-v2/reports/10-shell-and-wallet-connection.md",
+      "skills": ["macropaths-delivery", "macropaths-ui", "macropaths-exact-data", "macropaths-history"],
+      "owns": ["web/src/components/shell/", "web/src/features/shell/", "web/src/features/wallet-connect/", "web/src/lib/api-client.ts", "web/src/lib/hooks/index.ts", "web/src/lib/hooks/queries.ts", "web/src/lib/queries/"],
+      "excludes": [], "mergeAfter": ["01", "07", "08"], "startAfter": ["foundationReady"]
+    },
+    {
+      "id": "11", "name": "dashboard", "branchSuffix": "11-dashboard",
+      "brief": "docs/frontend-v2/agents/11-dashboard.md",
+      "prompt": "docs/frontend-v2/prompts/11-dashboard.md",
+      "report": "docs/frontend-v2/reports/11-dashboard.md",
+      "skills": ["macropaths-delivery", "macropaths-ui", "macropaths-exact-data"],
+      "owns": ["web/src/app/page.tsx", "web/src/features/dashboard/"],
+      "excludes": [], "mergeAfter": ["01", "04", "05", "08", "09", "10"], "startAfter": ["foundationReady"]
+    },
+    {
+      "id": "12", "name": "session-page", "branchSuffix": "12-session-page",
+      "brief": "docs/frontend-v2/agents/12-session-page.md",
+      "prompt": "docs/frontend-v2/prompts/12-session-page.md",
+      "report": "docs/frontend-v2/reports/12-session-page.md",
+      "skills": ["macropaths-delivery", "macropaths-ui", "macropaths-exact-data"],
+      "owns": ["web/src/app/session/[addr]/page.tsx", "web/src/app/session/[addr]/layout.tsx", "web/src/features/session/"],
+      "excludes": [], "mergeAfter": ["01", "04", "05", "08", "09", "10"], "startAfter": ["foundationReady"]
+    },
+    {
+      "id": "13", "name": "activity-page", "branchSuffix": "13-activity-page",
+      "brief": "docs/frontend-v2/agents/13-activity-page.md",
+      "prompt": "docs/frontend-v2/prompts/13-activity-page.md",
+      "report": "docs/frontend-v2/reports/13-activity-page.md",
+      "skills": ["macropaths-delivery", "macropaths-ui", "macropaths-history", "macropaths-exact-data"],
+      "owns": ["web/src/app/activity/", "web/src/features/activity/"],
+      "excludes": [], "mergeAfter": ["01", "03", "04", "06", "08", "10"], "startAfter": ["foundationReady"]
+    },
+    {
+      "id": "14", "name": "products-and-planner", "branchSuffix": "14-products-and-planner",
+      "brief": "docs/frontend-v2/agents/14-products-and-planner.md",
+      "prompt": "docs/frontend-v2/prompts/14-products-and-planner.md",
+      "report": "docs/frontend-v2/reports/14-products-and-planner.md",
+      "skills": ["macropaths-delivery", "macropaths-ui", "macropaths-exact-data"],
+      "owns": ["web/src/app/products/", "web/src/features/products/", "web/src/lib/planner.ts", "web/test/planner/"],
+      "excludes": [], "mergeAfter": ["01", "04", "07", "08", "09", "10"], "startAfter": ["foundationReady"]
+    },
+    {
+      "id": "15", "name": "integration-and-qa", "branchSuffix": "15-integration-and-qa",
+      "brief": "docs/frontend-v2/agents/15-integration-and-qa.md",
+      "prompt": "docs/frontend-v2/prompts/15-integration-and-qa.md",
+      "report": "docs/frontend-v2/reports/15-integration-and-qa.md",
+      "skills": ["macropaths-delivery", "macropaths-ui", "macropaths-exact-data", "macropaths-history"],
+      "owns": ["web/src/app/layout.tsx", "web/src/lib/providers.tsx", "web/src/app/globals.css", "web/src/styles/", "packages/ui/src/index.ts", "package.json", "package-lock.json", "packages/client/package.json", "packages/client/package-lock.json", "packages/client/tsconfig.json", "packages/ui/package.json", "packages/ui/package-lock.json", "packages/ui/tsconfig.json", "web/package.json", "web/package-lock.json", "web/next.config.ts", "web/tsconfig.json", "web/vitest.config.ts", "web/eslint.config.mjs", "web/postcss.config.mjs", "web/playwright.config.ts", "web/src/server/contracts.ts", "web/src/lib/presentation/contracts.ts", "web/src/app/dev/", "web/src/app/forecast/", "web/src/app/planner/", "web/src/app/session/[addr]/path/", "web/src/app/session/[addr]/results/", "web/src/app/session/[addr]/seller/", "web/src/app/session/[addr]/activity/", "web/test/e2e/", "web/test/integration/", "web/test/support/frontend-v2/", "web/test/api/", "web/test/contract/", "web/test/charts/", "web/test/ui/", "web/src/components/charts/", "web/src/components/ui/", "web/src/lib/hooks/format.ts", "web/.env.example", "web/README.md"],
+      "excludes": [], "mergeAfter": ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14"], "startAfter": ["foundationReady"]
+    }
+  ]
+}
