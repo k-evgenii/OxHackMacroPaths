@@ -27,3 +27,8 @@
 3. `server-only` npm package is not a dependency; a runtime `window` guard is used instead. Agent 15 may add `import "server-only"` after adding the dep.
 4. `errors.ts` `rpcMessage` still string-matches; consider mapping by `RpcFailure.kind` (owner of errors.ts).
 5. Production: call `configureDefaultReader({ admission: createHistoryAdmission(store) })` at composition, and history should use `createRpcReader(admission)` passing `deadlineAt = start + HISTORY_BUDGET_MS`.
+
+## Checkpoint 1 (merged frontend-v2/integration 85a62e8)
+- Port types now re-exported from shared `web/src/server/contracts.ts` (no local copies).
+- `npx vitest run test/rpc`: 19/19 pass. `tsc --noEmit`: no errors in owned files; remaining errors are in other owners' tests (implicit any in test/api, artifacts, charts, contract, planner, ui; `resilience.test.ts` references the removed `RPC_URL` export).
+- `test/api/*` fail at collection on the integration base (`@anchor-lang/core` mock: "Cannot find module './nodewallet'"), independent of this transport; even with `RPC_URL` set they do not load. Owner: coordinator/15.
