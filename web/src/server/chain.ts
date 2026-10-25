@@ -92,17 +92,22 @@ export function logsForSession(logs: string[], session: string): string[] {
   });
 }
 
-async function eventsForSignature(signature: string, session: string): Promise<EventView[]> {
+/** null = transaction not yet visible at "confirmed" (reported as pending, retried on a later request). */
+async function eventsForSignature(signature: string, session: string): Promise<EventView[] | null> {
   const key = `${session}:${signature}`;
   const hit = txEvents.get(key);
   if (hit) return hit;
   const tx = await rpc("getTransaction", (c) =>
     c.getTransaction(signature, { maxSupportedTransactionVersion: 0, commitment: "confirmed" }),
   );
-  if (!tx) return []; // not yet visible at "confirmed"; retry on a later request
+  if (!tx) return null;
+  // Parse every event first so eventIndex counts all MacroPaths events of the transaction, then keep
+  // only those whose emitted `session` is the requested one (frontend v2 event identity).
   const events =
     tx.meta && !tx.meta.err
-      ? parseEvents(logsForSession(tx.meta.logMessages ?? [], session), { signature, slot: tx.slot, blockTime: tx.blockTime ?? null })
+      ? parseEvents(tx.meta.logMessages ?? [], { signature, slot: tx.slot, blockTime: tx.blockTime ?? null }).filter(
+          (e) => e.session === session,
+        )
       : [];
   txEvents.set(key, events);
   return events;
@@ -111,7 +116,7 @@ async function eventsForSignature(signature: string, session: string): Promise<E
 export async function getSessionEvents(
   session: SessionView,
   opts: { before?: string; limit: number },
-): Promise<{ events: EventView[]; nextBefore: string | null }> {
+): Promise<{ events: EventView[]; nextBefore: string | null; pending: string[]; retryCursor: string | null }> {
   const key = new PublicKey(session.address);
   const sigs = await cached(`sigs:${session.address}:${opts.before ?? ""}:${opts.limit}`, ttlFor(session.state), () =>
     rpc("getSignaturesForAddress", (c) =>
@@ -120,7 +125,10 @@ export async function getSessionEvents(
   );
   const perTx = await mapLimit(sigs, TX_CONCURRENCY, (s) => eventsForSignature(s.signature, session.address));
   return {
-    events: perTx.flat(),
+    events: perTx.flatMap((e) => e ?? []),
     nextBefore: sigs.length === opts.limit ? sigs[sigs.length - 1].signature : null,
+    // Legacy route: no snapshot store yet (worker 03), so pending signatures carry no retry token.
+    pending: sigs.filter((_, i) => perTx[i] === null).map((s) => s.signature),
+    retryCursor: null,
   };
 }

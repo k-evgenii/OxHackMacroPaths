@@ -1,0 +1,24 @@
+{
+  "_synthetic": "SYNTHETIC test data for frontend v2 scenarios; not an on-chain read.",
+  "events": [
+    {
+      "type": "Claimed",
+      "signature": "3TBhNKezMieiHkB71cgP74u26v85Usmjr1zgrWiVLozbXjrFhbQ2n8p6NS6MCsryxiFGWR7vzTRG2mSSTZGu4qAA",
+      "slot": 1000,
+      "blockTime": 1792890000,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 1,
+      "data": {
+        "owner": "EuUN3PSjtV5bp1nY2JoFjPSCGxJjAXPMx7TA2kKSwgmy",
+        "amounts": [
+          "3000000",
+          "4000000"
+        ],
+        "refund": false
+      }
+    }
+  ],
+  "nextBefore": null,
+  "pending": [],
+  "retryCursor": null
+}
