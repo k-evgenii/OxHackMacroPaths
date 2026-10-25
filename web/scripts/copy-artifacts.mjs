@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 const web = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const src = path.resolve(web, "../forecast");
 const dst = path.join(web, "public", "data");
-const map = { "manifest.json": "manifest.json", "table.json": "forecast.json", "planner.json": "planner.json" };
+const map = { "manifest.json": "manifest.json", "table.json": "forecast.json", "planner.json": "planner.json", "conditional.json": "conditional.json", "presentation.json": "presentation.json" };
 
 if (existsSync(src)) {
   mkdirSync(dst, { recursive: true });

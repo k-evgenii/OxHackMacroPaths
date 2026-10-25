@@ -47,7 +47,7 @@ const Fit = z.object({
   half_life_months: z.number(),
 });
 export type Fit = z.infer<typeof Fit>;
-const Cell = z.object({ V: z.number(), sigma: z.number() });
+const Cell = z.object({ V: z.number(), sigma: z.number(), accrued_floor: z.number().optional() });
 
 export const Forecast = z.object({
   manifest_version: z.number().optional(),
@@ -159,3 +159,38 @@ export function quoteFor(f: Forecast, key: string): number {
   const i = f.quotes.products.indexOf(key);
   return i >= 0 ? f.quotes.p[i] : f.quotes.fuel_research_quote;
 }
+
+// Linked forecast and presentation layer (forecast/conditional.json, forecast/presentation.json). Advisory, illustrative.
+export const Conditional = z.object({
+  product: z.string(),
+  note: z.string(),
+  rows: z.array(z.object({ t: z.number(), period_id: z.number(), V: z.number(), sigma: z.number() })),
+});
+export type Conditional = z.infer<typeof Conditional>;
+
+export const Presentation = z.object({
+  note: z.string(),
+  cpi: z.object({
+    series: z.string(),
+    source: z.string(),
+    rows: z.array(z.object({ date: z.string(), value_str: z.string(), filled: z.boolean() })),
+  }),
+  fuel: z.object({
+    series: z.string(),
+    source: z.string(),
+    unit: z.string(),
+    rows: z.array(z.object({ month: z.string(), value: z.number(), readings: z.number(), thin: z.boolean() })),
+  }),
+});
+export type Presentation = z.infer<typeof Presentation>;
+
+export const conditionalQuery = queryOptions({
+  queryKey: ["artifact", "conditional"],
+  queryFn: () => fetchJson("/api/artifacts/conditional", Conditional),
+  staleTime: Infinity,
+});
+export const presentationQuery = queryOptions({
+  queryKey: ["artifact", "presentation"],
+  queryFn: () => fetchJson("/api/artifacts/presentation", Presentation),
+  staleTime: Infinity,
+});
