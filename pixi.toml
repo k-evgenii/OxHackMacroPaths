@@ -10,11 +10,18 @@ versions = "node --version && npm --version && rustc --version && cargo --versio
 fetch = "python data/fetch.py"
 prepare = "python data/prepare.py"
 vectors = "python tests/make_vectors.py"
+manifest = "python forecast/manifest.py"
 forecast = "python forecast/ar1.py"
+planner-artifact = "python research/export_artifact.py"
+test-planner = "pytest research/test_planner.py forecast/test_link.py forecast/test_manifest.py -q"
+walkforward = "python forecast/walkforward.py"
 test-env = "pytest tests/env"
 test-surfpool = "pytest tests/integration -m surfpool"
 test = "pytest tests/env"
 test-program = "anchor test"
+gate = "bash scripts/gate.sh std"
+gate-fast = "bash scripts/gate.sh fast"
+gate-full = "bash scripts/gate.sh full"
 
 [dependencies]
 nodejs = "20.*"

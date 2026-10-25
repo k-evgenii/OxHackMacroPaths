@@ -2,7 +2,7 @@
 
 Usage:
     python data/fetch.py                  # fetch CPIAUCNS (default)
-    python data/fetch.py --series UNRATE  # one series
+    python data/fetch.py --series GASREGW  # one series
     python data/fetch.py --all            # every series in series.toml
     python data/fetch.py --refresh ...    # re-download and overwrite, printing changed rows
 
