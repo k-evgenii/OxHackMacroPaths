@@ -1,0 +1,29 @@
+{
+  "_synthetic": "SYNTHETIC test data for frontend v2 scenarios; not an on-chain read.",
+  "sessionAddress": "6cw4sw7xnaqScGQt1y2AJACynuGjgNCHeEaFYv75AzKG",
+  "sessionTerms": {
+    "k": "40000",
+    "dCap": "76973",
+    "aCap": "1883141"
+  },
+  "bundleId": "research-74f8198078d806de",
+  "bundleTerms": {
+    "cooling": {
+      "key": "cooling",
+      "threshold": null,
+      "cap": "76973",
+      "units": "1e-4-pp",
+      "quoteMillionths": "384852",
+      "researchOnly": false
+    },
+    "excess": {
+      "key": "excess",
+      "threshold": "40000",
+      "cap": "1883141",
+      "units": "1e-4-pp-months",
+      "quoteMillionths": "57153",
+      "researchOnly": false
+    }
+  },
+  "expected": "match"
+}
