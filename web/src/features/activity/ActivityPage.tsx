@@ -106,10 +106,10 @@ function OwnerFeed({ owner }: { owner: string }) {
       {q.isRefetchError && (
         <div role="alert" className={styles.notice}>
           {classifyFeedError(q.error) === "expired"
-            ? "This activity snapshot expired. Refresh to load the latest activity."
+            ? "This list is out of date. Reload to see the latest."
             : "Couldn’t refresh activity. Showing previously loaded rows."}{" "}
           <button type="button" className={styles.link} onClick={() => void q.refetch()}>
-            Refresh
+            Reload
           </button>
         </div>
       )}
@@ -149,7 +149,7 @@ function OwnerFeed({ owner }: { owner: string }) {
       {q.isFetchNextPageError && (
         <div role="alert" className={styles.notice}>
           {classifyFeedError(q.error) === "expired"
-            ? "The activity snapshot expired. Refresh to start again."
+            ? "This list is out of date. Reload to see the latest."
             : "Couldn’t load older activity."}
         </div>
       )}
@@ -166,7 +166,7 @@ function OwnerFeed({ owner }: { owner: string }) {
           </button>
         </div>
       ) : (
-        feed.items.length > 0 && <p className={styles.muted}>Beginning of history.</p>
+        feed.items.length > 0 && <p className={styles.muted}>No older activity.</p>
       )}
     </section>
   );
@@ -209,10 +209,10 @@ function FeedError({ error, onRetry, retrying }: { error: unknown; onRetry: () =
   const expired = classifyFeedError(error) === "expired";
   return (
     <div role="alert" className={styles.card}>
-      <h2 className={styles.groupTitle}>{expired ? "Activity snapshot expired" : "Couldn’t load activity"}</h2>
-      <p>{expired ? "Refresh to load the latest activity." : "The activity service is unavailable right now."}</p>
+      <h2 className={styles.groupTitle}>{expired ? "This list is out of date" : "Couldn’t load activity"}</h2>
+      <p>{expired ? "Reload to see the latest." : "The activity service is unavailable right now."}</p>
       <button type="button" className={styles.secondary} disabled={retrying} onClick={onRetry}>
-        {expired ? "Refresh" : "Try again"}
+        {expired ? "Reload" : "Try again"}
       </button>
     </div>
   );
