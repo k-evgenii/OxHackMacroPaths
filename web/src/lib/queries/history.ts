@@ -1,3 +1,5 @@
+"use client";
+
 // Shared history (events / wallet activity) infinite-query helper. Page agents never implement a second
 // retry loop: pending recovery lives here (`recoverHistoryPage`, `usePendingRecovery`).
 //
