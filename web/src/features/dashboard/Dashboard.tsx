@@ -1,11 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useQueries } from "@tanstack/react-query";
 import { fmtMillionthsPct, fmtPeriod, fmtPlay, fmtPp, type SessionView } from "@macropaths/client";
 import {
-  Button,
   Card,
   EmptyState,
   ErrorState,
@@ -16,7 +15,7 @@ import {
 } from "@macropaths/ui";
 import { useCatalog, useSessionOverview, useWalletActivity, useWalletOverview } from "@/lib/hooks";
 import { sessionOverviewQuery } from "@/lib/queries";
-import { useWalletConnection } from "@/features/wallet-connect";
+import { CopyableAddress, WalletPicker, shortAddress, useWalletConnection } from "@/features/wallet-connect";
 import { useSelectedSession } from "@/features/shell";
 import {
   activityRows,
@@ -47,10 +46,6 @@ const PRODUCT_COPY: Record<ProductIndex, string> = {
   1: "Pays according to how far and how long inflation stays above the session's threshold.",
   0: "Pays according to the largest decline in inflation from an earlier peak.",
 };
-
-function shortAddress(a: string): string {
-  return a.length > 10 ? `${a.slice(0, 4)}…${a.slice(-4)}` : a;
-}
 
 function sessionHref(address: string | null): string {
   return address ? `/session/${address}` : "/";
@@ -90,9 +85,7 @@ function DisconnectedHome() {
           own covers and pool positions; nothing is signed or sent.
         </p>
         <div className={styles.actions}>
-          <Button size="lg" onClick={() => void wallet.connect("phantom")} disabled={connecting} aria-busy={connecting}>
-            {connecting ? "Connecting…" : "Connect wallet"}
-          </Button>
+          <WalletPicker heading={connecting ? "Connecting…" : "Connect wallet"} />
           {selected.address ? (
             <Link className={styles.linkButton} href={sessionHref(selected.address)}>
               Explore session
@@ -327,21 +320,11 @@ function ConnectedHome({ owner }: { owner: string }) {
 }
 
 function AccountSummary({ owner, cluster }: { owner: string; cluster: string | null }) {
-  const [copied, setCopied] = useState(false);
   return (
     <section className={styles.account} aria-label="Connected wallet">
       <h1 className={styles.headingSmall}>Your covers and positions</h1>
       <div className={styles.accountMeta}>
-        <button
-          type="button"
-          className={styles.copy}
-          onClick={() => {
-            void navigator.clipboard?.writeText(owner).then(() => setCopied(true));
-          }}
-          aria-label={`Copy wallet address ${owner}`}
-        >
-          {shortAddress(owner)} {copied ? "· Copied" : ""}
-        </button>
+        <CopyableAddress address={owner} label="wallet address" />
         <span className={styles.chip}>Solana {cluster ?? "devnet"}</span>
         <span className={styles.chip}>Test PLAY</span>
       </div>
@@ -483,7 +466,8 @@ function Positions({ rows, multi }: { rows: PositionRow[]; multi: boolean }) {
 
 function RecentActivity({ owner, cluster, labelFor }: { owner: string; cluster: string; labelFor: (a: string) => string }) {
   const activity = useWalletActivity(owner, ACTIVITY_LIMIT);
-  const rows = activity.data ? activityRows(activity.data.items, { limit: ACTIVITY_LIMIT, cluster, labelFor }) : [];
+  const firstPage = activity.data?.pages[0];
+  const rows = firstPage ? activityRows(firstPage.items, { limit: ACTIVITY_LIMIT, cluster, labelFor }) : [];
   return (
     <Card
       title="Recent activity"
@@ -500,7 +484,7 @@ function RecentActivity({ owner, cluster, labelFor }: { owner: string; cluster: 
         <ErrorState description="Recent activity could not be read." onRetry={() => void activity.refetch()} retrying={activity.isFetching} />
       ) : (
         <>
-          {activity.data && activity.data.pending.length > 0 ? (
+          {firstPage && firstPage.pending.length > 0 ? (
             <PartialDataNotice description="Some recent transactions are still loading. See All activity to retry." />
           ) : null}
           {rows.length === 0 ? (

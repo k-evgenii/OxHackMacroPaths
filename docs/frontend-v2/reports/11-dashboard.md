@@ -5,7 +5,7 @@
 - Worker ID and assignment: 11 — Dashboard
 - Foundation/checkpoint SHA: 6d2865bf526f0bf980293d9cdcfec547acbfd9f8 (foundation checkpoint not yet merged; `frontend-v2/integration` still at this SHA when work was committed)
 - Branch and commit SHA(s): `frontend-v2/11-dashboard`, see commit "Dashboard: disconnected intro, connected home, holdings and activity adapters"
-- Status: incomplete — merged checkpoint 1 (85a62e8); unit tests pass; tsc blocked on worker 10/08 exports
+- Status: complete except connected-state screenshots (see Remaining issues)
 
 ## Delivered
 
@@ -21,6 +21,13 @@ Behaviour:
 - No transaction controls; a text explanation states deposits/purchases/claims/faucet are unavailable.
 
 ## Evidence
+
+Checkpoints 2 (6a06725) and 3 (aecb709) merged. `npm ci` ok. `tsc --noEmit`: 0 errors in owned files. `vitest run src/features/dashboard`: 12/12 passed.
+Private copy button and connect button replaced with worker 10's `CopyableAddress` and `WalletPicker`; recent activity reads the first page of the infinite `useWalletActivity` query.
+Screenshots (NEXT_PUBLIC_USE_FIXTURES=1, next dev, Playwright chromium): `docs/frontend-v2/reports/screens-11/dashboard-disconnected-{375,768,1440}.png`; no horizontal overflow at any width.
+Visual finding: the global theme is still dark (old globals.css), so the heading, which used --mp-text, was unreadable. It now inherits the text color (`color: inherit`), a change made after the screenshots were taken. Global theme is worker 08/15.
+
+Superseded notes from checkpoint 1:
 
 Checkpoint 1 (85a62e8) merged. `npm ci` (WSL) ok. `npx vitest run src/features/dashboard`: 12/12 passed.
 `npx tsc --noEmit` remaining errors in owned files, all from missing producer exports:
@@ -47,5 +54,8 @@ Code imports (per interfaces.md, not yet present):
 No production stubs or fixture fallbacks are bound.
 
 ## Remaining issues
+
+- Connected-state screenshots not captured: a wallet address cannot be injected under the fixture harness without a test hook; request a fixture-owner override from worker 10/15. Connected behaviour is covered by model tests only.
+- `/` still renders inside a dark global shell until the light theme lands.
 
 After the checkpoint: merge `frontend-v2/integration`, fix compile errors, run `npx vitest run src/features/dashboard` and `tsc --noEmit`, and capture 375/768/1440 screenshots for disconnected and connected states.
