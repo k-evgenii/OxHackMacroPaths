@@ -1,0 +1,27 @@
+.page { display: flex; flex-direction: column; gap: 24px; max-width: 1280px; margin: 0 auto; padding: 0 16px 48px; }
+.title { font-size: 30px; font-weight: 600; color: var(--mp-text); margin: 0; }
+.lede { color: var(--mp-muted); font-size: 14px; margin: 4px 0 0; }
+.grid { display: grid; gap: 16px; grid-template-columns: 1fr; }
+@media (min-width: 768px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1200px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.card { background: var(--mp-surface-raised); border: 1px solid var(--mp-border); border-radius: var(--mp-radius-card); padding: 20px; display: flex; flex-direction: column; gap: 8px; }
+.cardTitle { font-size: 17px; font-weight: 600; margin: 0; }
+.pill { align-self: flex-start; border-radius: var(--mp-radius-pill); border: 1px solid var(--mp-border); padding: 2px 10px; font-size: 12px; color: var(--mp-muted); }
+.muted { color: var(--mp-muted); font-size: 13px; }
+.quote { font-variant-numeric: tabular-nums; font-size: 20px; font-weight: 600; }
+.inputs { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; }
+.field { display: flex; flex-direction: column; gap: 4px; font-size: 13px; color: var(--mp-muted); min-width: 0; flex: 1 1 160px; }
+.field input { min-height: 44px; border-radius: var(--mp-radius-control); border: 1px solid var(--mp-border); background: var(--mp-surface); color: var(--mp-text); padding: 0 12px; font-size: 16px; font-variant-numeric: tabular-nums; }
+.field input:focus-visible, .disclosure summary:focus-visible { outline: 2px solid var(--mp-primary); outline-offset: 2px; }
+.error { color: var(--mp-down); font-size: 14px; }
+.sentence { font-size: 20px; font-weight: 600; margin: 0; }
+.headline { display: grid; gap: 12px; grid-template-columns: 1fr; }
+@media (min-width: 768px) { .headline { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.figure { display: flex; flex-direction: column; gap: 2px; }
+.figureValue { font-size: 28px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.disclosure summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; font-weight: 600; }
+.tableWrap { overflow-x: auto; }
+.table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+.table th, .table td { padding: 6px 8px; text-align: right; border-top: 1px solid var(--mp-border); white-space: nowrap; }
+.table th:first-child, .table td:first-child { text-align: left; }
+.best { background: rgba(49, 92, 245, .06); }
