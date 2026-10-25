@@ -1,3 +1,4 @@
+import referenceSession from "@macropaths/client/fixtures/session-B89z.view.json";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   CatalogResponse,
@@ -9,7 +10,7 @@ import {
 } from "@macropaths/client/types";
 import { FIXTURE_OWNER, fixtureResponse } from "./fixture-router";
 
-const A = "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju";
+const A = referenceSession.address;
 const OTHER_OWNER = "GGj85c2FS3Ku5zQWNaRqaz8wyZ1aV8bkwio2FAYU7AUw";
 const RUNNING = "3UKMQHpTS81vkTh9kaWfnJKqC4NKpAFxtUnmCi4MSdVe";
 
