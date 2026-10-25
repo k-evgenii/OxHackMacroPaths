@@ -30,35 +30,6 @@ export const ON_CHAIN = false; // User actions in this walkthrough never send tr
 export const explorerLink = (signature: string) =>
   `https://explorer.solana.com/tx/${signature}?cluster=devnet`;
 export type Amounts = [number, number, number, number];
-export type PracticeEntry = {
-  id: string;
-  monthIndex: number;
-  amounts: Amounts;
-};
-export const MAX_PRACTICE_ENTRIES = 25;
-export const REFERENCE_POTS = fixture.sideTotals.map(
-  (amount) => Number(amount) / 1e6,
-) as Amounts;
-export function amountsThrough(
-  entries: readonly PracticeEntry[],
-  monthIndex = TOTAL_OBSERVATIONS - 1,
-): Amounts {
-  const sums = [0n, 0n, 0n, 0n];
-  for (const entry of entries) {
-    if (entry.monthIndex > monthIndex) continue;
-    entry.amounts.forEach((amount, side) => {
-      sums[side] += toBase(amount);
-    });
-  }
-  return sums.map((amount) => Number(amount) / 1e6) as Amounts;
-}
-export function potsThrough(
-  entries: readonly PracticeEntry[],
-  monthIndex: number,
-): Amounts {
-  const added = amountsThrough(entries, monthIndex);
-  return REFERENCE_POTS.map((base, side) => base + added[side]) as Amounts;
-}
 export type Scores = { cooling: number; excess: number };
 export type Activity = {
   id: number;

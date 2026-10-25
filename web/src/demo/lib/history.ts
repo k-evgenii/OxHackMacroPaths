@@ -5,11 +5,7 @@ import {
   DEMO_WALLET_BALANCE,
   FINAL_SCORES,
   illustrativePayout,
-  amountsThrough,
-  TOTAL_OBSERVATIONS,
-  MAX_PRACTICE_ENTRIES,
   type Amounts,
-  type PracticeEntry,
 } from "./demoData";
 
 export type Run = {
@@ -18,22 +14,12 @@ export type Run = {
   amounts: Amounts;
   put: number; // PLAY deposited
   back: number; // PLAY claimed
-  entries?: PracticeEntry[]; // Legacy saved previews have one full-period position.
 };
 
 const KEY = "macropaths.runs.v2";
 const NAME_KEY = "macropaths.name.v2";
 const MAX_RUNS = 100;
 const amountSchema = z.number().finite().nonnegative().max(DEMO_WALLET_BALANCE);
-const entrySchema = z.object({
-  id: z.string().uuid(),
-  monthIndex: z
-    .number()
-    .int()
-    .min(0)
-    .max(TOTAL_OBSERVATIONS - 1),
-  amounts: z.tuple([amountSchema, amountSchema, amountSchema, amountSchema]),
-});
 const runSchema = z
   .object({
     id: z
@@ -45,7 +31,6 @@ const runSchema = z
     amounts: z.tuple([amountSchema, amountSchema, amountSchema, amountSchema]),
     put: amountSchema.positive(),
     back: z.number().finite().nonnegative(),
-    entries: z.array(entrySchema).min(1).max(MAX_PRACTICE_ENTRIES).optional(),
   })
   .superRefine((run, context) => {
     const total = run.amounts.reduce((sum, amount) => sum + amount, 0);
@@ -64,24 +49,6 @@ const runSchema = z
         message: "Invalid demo position total",
       });
       return;
-    }
-    if (run.entries) {
-      const combined = amountsThrough(run.entries);
-      if (
-        run.entries.some((entry) =>
-          entry.amounts.every((amount) => amount === 0),
-        ) ||
-        combined.some(
-          (amount, side) => Math.abs(amount - run.amounts[side]) > 0.00000001,
-        )
-      ) {
-        context.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ["entries"],
-          message: "Entries do not match the saved position",
-        });
-        return;
-      }
     }
     const payout = illustrativePayout(run.amounts, FINAL_SCORES);
     if (Math.abs(run.back - payout) > 0.00000001) {

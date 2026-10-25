@@ -24,10 +24,7 @@ import {
   pathStats,
   scoresFrom,
   claimsBySide,
-  amountsThrough,
-  MAX_PRACTICE_ENTRIES,
   type Amounts,
-  type PracticeEntry,
 } from "./lib/demoData";
 import {
   loadName,
@@ -97,8 +94,6 @@ export default function DemoApp({
   const [draftName, setDraftName] = useState("");
   const [runs, setRuns] = useState<Run[]>([]);
   const [amounts, setAmounts] = useState<Amounts>(DEFAULT_AMOUNTS);
-  const [entries, setEntries] = useState<PracticeEntry[]>([]);
-  const [decisionMonth, setDecisionMonth] = useState(0);
   const [deposited, setDeposited] = useState(false);
   const [claimed, setClaimed] = useState(false);
   const [observed, setObserved] = useState(0);
@@ -142,15 +137,14 @@ export default function DemoApp({
     if (observed === TOTAL_OBSERVATIONS) setRunning(false);
   }, [observed]);
 
-  const combinedAmounts = amountsThrough(entries);
-  const total = combinedAmounts.reduce((a, b) => a + b, 0);
+  const total = amounts.reduce((a, b) => a + b, 0);
   const done = observed === TOTAL_OBSERVATIONS;
   const stats = useMemo(
     () => pathStats(CPI_YOY.slice(0, observed).map((o) => o.value)),
     [observed],
   );
   const scores = scoresFrom(stats);
-  const payout = illustrativePayout(combinedAmounts, FINAL_SCORES);
+  const payout = illustrativePayout(amounts, FINAL_SCORES);
   const currentDelta = claimed ? payout - total : deposited ? -total : 0;
   const historyDelta = runs.reduce((sum, r) => sum + r.back - r.put, 0);
   // Completed runs already include this run; don't count its result twice.
@@ -164,8 +158,6 @@ export default function DemoApp({
     setDeposited(false);
     setClaimed(false);
     setAmounts([...DEFAULT_AMOUNTS]);
-    setEntries([]);
-    setDecisionMonth(0);
     claimGuard.current = false;
     setNewRunPrompt(false);
     setScreen("choose");
@@ -180,36 +172,15 @@ export default function DemoApp({
     }
     resetPosition();
   }
-  function addEntry() {
-    if (deposited || entries.length >= MAX_PRACTICE_ENTRIES) return;
-    const draftTotal = amounts.reduce((sum, value) => sum + value, 0);
-    if (
-      draftTotal <= 0 ||
-      total + draftTotal > Math.min(balance, DEMO_WALLET_BALANCE)
-    )
-      return;
-    setEntries((current) => [
-      ...current,
-      {
-        id: crypto.randomUUID(),
-        monthIndex: decisionMonth,
-        amounts: [...amounts],
-      },
-    ]);
-  }
   function finishRun() {
     if (!deposited || !done || claimGuard.current || runs.length >= 100) return;
     claimGuard.current = true;
     const run: Run = {
       id: crypto.randomUUID(),
       at: new Date().toISOString(),
-      amounts: [...combinedAmounts],
+      amounts: [...amounts],
       put: total,
       back: payout,
-      entries: entries.map((entry) => ({
-        ...entry,
-        amounts: [...entry.amounts],
-      })),
     };
     const next = [...runs, run];
     setRuns(next);
@@ -490,19 +461,10 @@ export default function DemoApp({
                   key={deposited ? "locked" : "editable"}
                   amounts={amounts}
                   setAmounts={setAmounts}
-                  entries={entries}
-                  monthIndex={decisionMonth}
-                  setMonthIndex={setDecisionMonth}
-                  onAddEntry={addEntry}
-                  onRemoveEntry={(id) =>
-                    setEntries((current) =>
-                      current.filter((entry) => entry.id !== id),
-                    )
-                  }
                   deposited={deposited}
                   availableBalance={balance}
                   onDeposited={() => {
-                    if (runs.length >= 100 || entries.length === 0) {
+                    if (runs.length >= 100) {
                       setScreen("wallet");
                       return;
                     }
@@ -661,26 +623,25 @@ export default function DemoApp({
                       <p className="text-sm font-medium">
                         Your choice, by product
                       </p>
-                      {claimsBySide(combinedAmounts, FINAL_SCORES).map(
-                        (v, j) =>
-                          combinedAmounts[j] ? (
-                            <div
-                              key={j}
-                              className="mt-3 flex justify-between gap-2 text-sm"
-                            >
-                              <span className="text-muted">
-                                {
-                                  [
-                                    "Cooling · More",
-                                    "Cooling · Less",
-                                    "Excess · More",
-                                    "Excess · Less",
-                                  ][j]
-                                }
-                              </span>
-                              <span className="num">{fmt(v)} PLAY</span>
-                            </div>
-                          ) : null,
+                      {claimsBySide(amounts, FINAL_SCORES).map((v, j) =>
+                        amounts[j] ? (
+                          <div
+                            key={j}
+                            className="mt-3 flex justify-between gap-2 text-sm"
+                          >
+                            <span className="text-muted">
+                              {
+                                [
+                                  "Cooling · More",
+                                  "Cooling · Less",
+                                  "Excess · More",
+                                  "Excess · Less",
+                                ][j]
+                              }
+                            </span>
+                            <span className="num">{fmt(v)} PLAY</span>
+                          </div>
+                        ) : null,
                       )}
                       <div className="mt-5">
                         {claimed ? (
@@ -812,27 +773,8 @@ export default function DemoApp({
                               })}
                             </p>
                             <p className="mt-2 text-sm text-muted">
-                              {r.entries?.length
-                                ? r.entries.length +
-                                  " month-labelled entries · " +
-                                  sidesText(r.amounts)
-                                : sidesText(r.amounts)}
+                              {sidesText(r.amounts)}
                             </p>
-                            {r.entries?.length ? (
-                              <details className="mt-3 text-xs text-muted">
-                                <summary className="cursor-pointer">
-                                  View monthly decisions
-                                </summary>
-                                <ul className="mt-2 space-y-1">
-                                  {r.entries.map((entry) => (
-                                    <li key={entry.id}>
-                                      {CPI_YOY[entry.monthIndex].period} ·{" "}
-                                      {sidesText(entry.amounts)}
-                                    </li>
-                                  ))}
-                                </ul>
-                              </details>
-                            ) : null}
                           </div>
                           <div className="text-right">
                             <p className="num text-2xl font-semibold">
@@ -942,9 +884,6 @@ export default function DemoApp({
                               Position preview settled
                             </p>
                             <p className="mt-1 text-xs text-muted">
-                              {r.entries?.length
-                                ? r.entries.length + " entries · "
-                                : ""}
                               {fmt(r.put)} put in → {fmt(r.back)} illustrative
                               payout
                             </p>

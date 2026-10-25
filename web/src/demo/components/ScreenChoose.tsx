@@ -2,27 +2,16 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Card, Button, WhatHappens, InfoTip, fmt } from "./ui";
-import MonthDecisionPanel from "./MonthDecisionPanel";
 import {
   DEMO_WALLET_BALANCE,
-  CPI_YOY,
-  MAX_PRACTICE_ENTRIES,
-  amountsThrough,
   payoutRange,
   type Amounts,
-  type PracticeEntry,
 } from "../lib/demoData";
 import { GOALS, goalFor } from "../lib/goals";
-import { sidesText } from "../lib/history";
 
 type Props = {
   amounts: Amounts;
   setAmounts: (a: Amounts) => void;
-  entries: PracticeEntry[];
-  monthIndex: number;
-  setMonthIndex: (monthIndex: number) => void;
-  onAddEntry: () => void;
-  onRemoveEntry: (id: string) => void;
   deposited: boolean;
   onDeposited: () => void;
   availableBalance: number;
@@ -63,11 +52,6 @@ const amountFrom = (a: Amounts, i: number) => {
 export default function ScreenChoose({
   amounts,
   setAmounts,
-  entries,
-  monthIndex,
-  setMonthIndex,
-  onAddEntry,
-  onRemoveEntry,
   deposited,
   onDeposited,
   availableBalance,
@@ -90,12 +74,9 @@ export default function ScreenChoose({
   ]);
 
   const total = amounts.reduce((s, v) => s + v, 0);
-  const combined = amountsThrough(entries);
-  const basketTotal = combined.reduce((s, v) => s + v, 0);
-  const tooMuch = basketTotal + total > availableBalance;
-  const tooLarge = basketTotal + total > DEMO_WALLET_BALANCE;
-  const full = entries.length >= MAX_PRACTICE_ENTRIES;
-  const range = payoutRange(combined);
+  const tooMuch = total > availableBalance;
+  const tooLarge = total > DEMO_WALLET_BALANCE;
+  const range = payoutRange(amounts);
   const goal = goalFor(amounts);
 
   const apply = (nextSides: Side[], nextTyped: string[]) => {
@@ -143,21 +124,13 @@ export default function ScreenChoose({
           Build your position
         </h1>
         <p className="mt-2 text-muted">
-          Choose a recorded month, inspect the pool and inflation path, then add
-          one or more practice entries. You can add several for the same month
-          before reviewing the combined position.
+          Start with a view on inflation. Choose More or Less for each product,
+          then set your PLAY amount.
         </p>
         <p className="mt-2 text-xs text-brand">
           US CPI · Jan 2021–Dec 2024 · Practice position
         </p>
       </div>
-
-      <MonthDecisionPanel
-        entries={entries}
-        monthIndex={monthIndex}
-        setMonthIndex={setMonthIndex}
-        deposited={deposited}
-      />
 
       {/* 1. Choose by goal */}
       <div
@@ -300,37 +273,34 @@ export default function ScreenChoose({
         })}
       </div>
 
-      {/* 3. Add decisions and review the combined position */}
+      {/* 3. Confirm */}
       <Card order={3}>
         <div className="grid gap-6 md:grid-cols-3 md:items-center">
           <div>
-            <p className="text-sm text-muted">
-              Draft for {CPI_YOY[monthIndex].period}
-            </p>
+            <p className="text-sm text-muted">Position size</p>
             <p className="num mt-1 text-3xl font-semibold">{fmt(total)} PLAY</p>
           </div>
           <div>
-            <p className="text-sm text-muted">Entries already added</p>
-            <p className="num mt-1 text-2xl font-semibold">{entries.length}</p>
-            <p className="mt-1 text-xs text-muted">
-              {fmt(basketTotal)} PLAY in your local scenario
+            <p className="text-sm text-muted">Potential payout range</p>
+            <p className="num mt-1 text-2xl font-semibold">
+              {fmt(range.min)} – {fmt(range.max)} PLAY
             </p>
           </div>
-          <div>
+          <div ref={triggerRef}>
             <Button
-              disabled={total <= 0 || tooMuch || tooLarge || deposited || full}
-              onClick={onAddEntry}
+              disabled={total <= 0 || tooMuch || tooLarge || deposited}
+              onClick={() => setReview(true)}
             >
               {deposited
-                ? "Position confirmed ✓"
-                : "Add entry for " + CPI_YOY[monthIndex].period + " →"}
+                ? "Position preview saved ✓"
+                : `Review ${fmt(total)} PLAY`}
             </Button>
             {tooMuch ? (
               <p className="mt-2 text-sm text-down">More than your balance.</p>
             ) : null}
             {tooLarge && !tooMuch ? (
               <p className="mt-2 text-sm text-down">
-                Maximum 1,000 PLAY per combined practice position.
+                Maximum 1,000 PLAY per practice position.
               </p>
             ) : null}
             {total <= 0 ? (
@@ -338,102 +308,10 @@ export default function ScreenChoose({
                 Pick a goal or a side first.
               </p>
             ) : null}
-            {full ? (
-              <p className="mt-2 text-sm text-muted">
-                Maximum {MAX_PRACTICE_ENTRIES} entries per practice position.
-              </p>
-            ) : null}
             <WhatHappens>
-              Adding an entry updates the local pot. Add the same choice again,
-              or change month, side and amount.
+              Review your sides and the historical period before confirming.
             </WhatHappens>
           </div>
-        </div>
-      </Card>
-      <Card order={4}>
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h2 className="text-xl font-semibold">Your monthly entries</h2>
-            <p className="mt-1 text-sm text-muted">
-              Entries combine into one practice position for final settlement.
-            </p>
-          </div>
-          <span
-            aria-live="polite"
-            className="num text-sm font-semibold text-brand"
-          >
-            {entries.length} {entries.length === 1 ? "entry" : "entries"}
-          </span>
-        </div>
-        {entries.length ? (
-          <ol className="mt-5 divide-y divide-line">
-            {entries.map((entry, index) => (
-              <li
-                key={entry.id}
-                className="flex flex-wrap items-center justify-between gap-3 py-3 text-sm"
-              >
-                <div>
-                  <p className="font-semibold">
-                    {index + 1}. {CPI_YOY[entry.monthIndex].period}
-                  </p>
-                  <p className="mt-1 text-xs text-muted">
-                    {sidesText(entry.amounts)}
-                  </p>
-                </div>
-                {!deposited ? (
-                  <button
-                    type="button"
-                    onClick={() => onRemoveEntry(entry.id)}
-                    aria-label={
-                      "Remove entry " +
-                      (index + 1) +
-                      " for " +
-                      CPI_YOY[entry.monthIndex].period
-                    }
-                    className="rounded-full border border-line px-3 py-2 text-xs font-semibold text-muted hover:text-text"
-                  >
-                    Remove
-                  </button>
-                ) : null}
-              </li>
-            ))}
-          </ol>
-        ) : (
-          <p className="mt-5 rounded-xl bg-panel-2 p-4 text-sm text-muted">
-            No entries yet. Choose a side and add your first month decision.
-          </p>
-        )}
-        <div className="mt-5 grid gap-5 border-t border-line pt-5 sm:grid-cols-2">
-          <div>
-            <p className="text-xs text-muted">Combined amount</p>
-            <p className="num mt-1 text-2xl font-semibold">
-              {fmt(basketTotal)} PLAY
-            </p>
-          </div>
-          <div>
-            <p className="text-xs text-muted">
-              Illustrative final payout range
-            </p>
-            <p className="num mt-1 text-xl font-semibold">
-              {entries.length
-                ? fmt(range.min) + " – " + fmt(range.max) + " PLAY"
-                : "—"}
-            </p>
-          </div>
-        </div>
-        <div ref={triggerRef} className="mt-5 max-w-sm">
-          <Button
-            disabled={!entries.length || deposited}
-            onClick={() => setReview(true)}
-          >
-            {deposited
-              ? "Position confirmed ✓"
-              : "Review " +
-                entries.length +
-                " " +
-                (entries.length === 1 ? "entry" : "entries") +
-                " →"}
-          </Button>
         </div>
       </Card>
       <dialog
@@ -464,41 +342,42 @@ export default function ScreenChoose({
         className="fixed inset-0 m-auto w-[calc(100%_-_2rem)] max-w-md rounded-3xl border border-line bg-panel p-6 text-text shadow-xl backdrop:bg-black/40"
       >
         <h2 id="review-title" className="text-2xl font-semibold">
-          Review monthly entries
+          Review position
         </h2>
         <p className="mt-2 text-sm text-muted">
           US CPI · 48 monthly readings · Jan 2021–Dec 2024
         </p>
         <dl className="my-5 space-y-3 text-sm">
-          {entries.map((entry, index) => (
-            <div key={entry.id} className="flex justify-between gap-2">
-              <dt>
-                {index + 1}. {CPI_YOY[entry.monthIndex].period} ·{" "}
-                {sidesText(entry.amounts)}
-              </dt>
-              <dd className="num">
-                {fmt(entry.amounts.reduce((sum, value) => sum + value, 0))} PLAY
-              </dd>
-            </div>
-          ))}
+          {amounts.map((a, j) =>
+            a > 0 ? (
+              <div key={j} className="flex justify-between gap-2">
+                <dt>
+                  {
+                    [
+                      "Cooling · More",
+                      "Cooling · Less",
+                      "Excess · More",
+                      "Excess · Less",
+                    ][j]
+                  }
+                </dt>
+                <dd className="num">{fmt(a)} PLAY</dd>
+              </div>
+            ) : null,
+          )}
           <div className="flex justify-between border-t border-line pt-3 font-semibold">
             <dt>Total</dt>
-            <dd className="num">{fmt(basketTotal)} PLAY</dd>
+            <dd className="num">{fmt(total)} PLAY</dd>
           </div>
         </dl>
         <Button
-          disabled={
-            !entries.length ||
-            basketTotal > availableBalance ||
-            basketTotal > DEMO_WALLET_BALANCE ||
-            deposited
-          }
+          disabled={tooMuch || tooLarge || total <= 0 || deposited}
           onClick={() => {
             setReview(false);
             onDeposited();
           }}
         >
-          Confirm combined practice position →
+          Confirm practice position →
         </Button>
         <button
           type="button"
@@ -509,8 +388,8 @@ export default function ScreenChoose({
           Back to edit
         </button>
         <p className="mt-3 text-xs text-muted">
-          Month-labelled entries are local scenarios. The reference session
-          closed deposits before its replay; no wallet transfer occurs.
+          Practice position · no wallet transfer. Your PLAY balance updates on
+          this device.
         </p>
       </dialog>
     </div>
