@@ -17,3 +17,11 @@ export { type AccountKind, accountKind, decodeAccount, parseEvents } from "./dec
 export { recomputePath, score, budgets, claimAmount, coverPayout } from "./math";
 export { fmtPp, fmtPpMonths, fmtMillionthsPct, fmtPlay, fmtPeriod } from "./format";
 export { toSessionView, toPositionView, toCoverView, toSellerView, toEntryQuoteView } from "./view";
+export { fmtPpDifference, fmtPointMonths, fmtQuotePlay } from "./format";
+export {
+  type AmountSummary,
+  type HoldingSummary,
+  sumAmounts,
+  calculateAccruedScores,
+  summarizeHolding,
+} from "./presentation";

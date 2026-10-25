@@ -1,0 +1,37 @@
+{
+  "_synthetic": "SYNTHETIC test data for frontend v2 scenarios; not an on-chain read.",
+  "transactionEvents": [
+    {
+      "type": "Claimed",
+      "signature": "3TBhNKezMieiHkB71cgP74u26v85Usmjr1zgrWiVLozbXjrFhbQ2n8p6NS6MCsryxiFGWR7vzTRG2mSSTZGu4qAA",
+      "slot": 1000,
+      "blockTime": 1792890000,
+      "session": "6PNvtQ5kUu9JgioxRRUY9rhdyRLMUSm28gCS13X4VE6D",
+      "eventIndex": 0,
+      "data": {
+        "owner": "A9oG4Xp5wQq5TspAUPijkMNjWcr4KWMFbeP9KNVL3Kg8",
+        "amounts": [
+          "1000000",
+          "2000000"
+        ],
+        "refund": false
+      }
+    },
+    {
+      "type": "Claimed",
+      "signature": "3TBhNKezMieiHkB71cgP74u26v85Usmjr1zgrWiVLozbXjrFhbQ2n8p6NS6MCsryxiFGWR7vzTRG2mSSTZGu4qAA",
+      "slot": 1000,
+      "blockTime": 1792890000,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 1,
+      "data": {
+        "owner": "EuUN3PSjtV5bp1nY2JoFjPSCGxJjAXPMx7TA2kKSwgmy",
+        "amounts": [
+          "3000000",
+          "4000000"
+        ],
+        "refund": false
+      }
+    }
+  ]
+}

@@ -1,9 +1,11 @@
-/* Frozen chart contract (docs/frontend-v2/interfaces.md, "Chart props").
- * Numeric values are display-only plotting coordinates; formattedValue and label
- * are exact strings supplied by the web adapter and are rendered verbatim. */
+// Frozen glow chart props (interfaces.md "Chart props"). Worker 09 implements GlowLineChart /
+// GlowSparkline against these; the UI barrel exports them at integration.
+// Numeric values are bounded plotting coordinates; formattedValue comes from exact caller formatting.
+
 export type GlowPoint = {
   id: string;
   x: number;
+  /** null = gap (unobserved), never interpolated */
   value: number | null;
   label: string;
   formattedValue: string;
@@ -24,3 +26,6 @@ export type GlowLineChartProps = {
   height?: number;
   className?: string;
 };
+
+/** GlowSparkline: same props with the variant fixed to sparkline. */
+export type GlowSparklineProps = Omit<GlowLineChartProps, "variant">;

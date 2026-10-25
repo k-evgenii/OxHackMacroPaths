@@ -1,0 +1,287 @@
+{
+  "_synthetic": "SYNTHETIC test data for frontend v2 scenarios; not an on-chain read.",
+  "session": {
+    "address": "3UKMQHpTS81vkTh9kaWfnJKqC4NKpAFxtUnmCi4MSdVe",
+    "sessionId": "1792890199",
+    "authority": "EuUN3PSjtV5bp1nY2JoFjPSCGxJjAXPMx7TA2kKSwgmy",
+    "playMint": "AvVf2k9ixDvLjGnjCD4MDGTVBFfrhvzGgzwvptweaPWW",
+    "vaults": [
+      "HrY95BUEGb3QT3taAPkPZm5e1jNQ9LgcYdwn6FghT7RJ",
+      "HtYP7Riy8QBenKoifr3EMKk8Sm1s1GhGGd88BY2pPbWB"
+    ],
+    "state": "Running",
+    "datasetId": "328f498b394e988f88f763947e0c656cb0e988321c3f66228c8549946401143e",
+    "commitment": "b5a06c8e2aa10b7fe1339666afb92af7a30cf98e318efde9acdc4a6c5733abef",
+    "terminal": "0000000000000000000000000000000000000000000000000000000000000000",
+    "integrityOk": false,
+    "nObs": 48,
+    "nextIndex": 24,
+    "lastPeriodId": 202412,
+    "terms": {
+      "k": "40000",
+      "dCap": "80000",
+      "aCap": "800000"
+    },
+    "depositDeadline": 1792889792,
+    "replayDeadline": 1792893392,
+    "sideTotals": [
+      "90000000",
+      "100000000",
+      "90000000",
+      "100000000"
+    ],
+    "matched": [
+      "0",
+      "0"
+    ],
+    "stats": {
+      "peak": "90597",
+      "maxDecline": "26053",
+      "excessAcc": "627099"
+    },
+    "scores": [
+      "0",
+      "0"
+    ],
+    "pBudget": [
+      "0",
+      "0",
+      "0",
+      "0"
+    ],
+    "rBudget": [
+      "0",
+      "0",
+      "0",
+      "0"
+    ],
+    "counts": {
+      "positions": 1,
+      "claimed": 0,
+      "covers": 0,
+      "coversClaimed": 0,
+      "sellerProductsOpen": 0
+    },
+    "path": [
+      {
+        "i": 0,
+        "periodId": 202101,
+        "value": "13997",
+        "peak": "13997",
+        "decline": "0",
+        "excess": "0"
+      },
+      {
+        "i": 1,
+        "periodId": 202102,
+        "value": "16762",
+        "peak": "16762",
+        "decline": "0",
+        "excess": "0"
+      },
+      {
+        "i": 2,
+        "periodId": 202103,
+        "value": "26197",
+        "peak": "26197",
+        "decline": "0",
+        "excess": "0"
+      },
+      {
+        "i": 3,
+        "periodId": 202104,
+        "value": "41596",
+        "peak": "41596",
+        "decline": "0",
+        "excess": "1596"
+      },
+      {
+        "i": 4,
+        "periodId": 202105,
+        "value": "49927",
+        "peak": "49927",
+        "decline": "0",
+        "excess": "11523"
+      },
+      {
+        "i": 5,
+        "periodId": 202106,
+        "value": "53914",
+        "peak": "53914",
+        "decline": "0",
+        "excess": "25437"
+      },
+      {
+        "i": 6,
+        "periodId": 202107,
+        "value": "53654",
+        "peak": "53914",
+        "decline": "260",
+        "excess": "39091"
+      },
+      {
+        "i": 7,
+        "periodId": 202108,
+        "value": "52512",
+        "peak": "53914",
+        "decline": "1402",
+        "excess": "51603"
+      },
+      {
+        "i": 8,
+        "periodId": 202109,
+        "value": "53903",
+        "peak": "53914",
+        "decline": "1402",
+        "excess": "65506"
+      },
+      {
+        "i": 9,
+        "periodId": 202110,
+        "value": "62218",
+        "peak": "62218",
+        "decline": "1402",
+        "excess": "87724"
+      },
+      {
+        "i": 10,
+        "periodId": 202111,
+        "value": "68090",
+        "peak": "68090",
+        "decline": "1402",
+        "excess": "115814"
+      },
+      {
+        "i": 11,
+        "periodId": 202112,
+        "value": "70364",
+        "peak": "70364",
+        "decline": "1402",
+        "excess": "146178"
+      },
+      {
+        "i": 12,
+        "periodId": 202201,
+        "value": "74798",
+        "peak": "74798",
+        "decline": "1402",
+        "excess": "180976"
+      },
+      {
+        "i": 13,
+        "periodId": 202202,
+        "value": "78710",
+        "peak": "78710",
+        "decline": "1402",
+        "excess": "219686"
+      },
+      {
+        "i": 14,
+        "periodId": 202203,
+        "value": "85424",
+        "peak": "85424",
+        "decline": "1402",
+        "excess": "265110"
+      },
+      {
+        "i": 15,
+        "periodId": 202204,
+        "value": "82586",
+        "peak": "85424",
+        "decline": "2838",
+        "excess": "307696"
+      },
+      {
+        "i": 16,
+        "periodId": 202205,
+        "value": "85815",
+        "peak": "85815",
+        "decline": "2838",
+        "excess": "353511"
+      },
+      {
+        "i": 17,
+        "periodId": 202206,
+        "value": "90597",
+        "peak": "90597",
+        "decline": "2838",
+        "excess": "404108"
+      },
+      {
+        "i": 18,
+        "periodId": 202207,
+        "value": "85248",
+        "peak": "90597",
+        "decline": "5349",
+        "excess": "449356"
+      },
+      {
+        "i": 19,
+        "periodId": 202208,
+        "value": "82626",
+        "peak": "90597",
+        "decline": "7971",
+        "excess": "491982"
+      },
+      {
+        "i": 20,
+        "periodId": 202209,
+        "value": "82016",
+        "peak": "90597",
+        "decline": "8581",
+        "excess": "533998"
+      },
+      {
+        "i": 21,
+        "periodId": 202210,
+        "value": "77454",
+        "peak": "90597",
+        "decline": "13143",
+        "excess": "571452"
+      },
+      {
+        "i": 22,
+        "periodId": 202211,
+        "value": "71103",
+        "peak": "90597",
+        "decline": "19494",
+        "excess": "602555"
+      },
+      {
+        "i": 23,
+        "periodId": 202212,
+        "value": "64544",
+        "peak": "90597",
+        "decline": "26053",
+        "excess": "627099"
+      }
+    ],
+    "_synthetic": "SYNTHETIC test data for frontend v2 scenarios; not an on-chain read."
+  },
+  "meta": {
+    "source": "fixture",
+    "fetchedAt": "2026-10-25T00:00:00.000Z"
+  },
+  "presentation": {
+    "label": "Synthetic Running (sections unavailable)",
+    "mode": "historical_replay",
+    "layout": "v1",
+    "firstPeriodId": 202101,
+    "researchBundleId": null
+  },
+  "derived": {
+    "currentScores": [
+      "325662",
+      "783873"
+    ],
+    "poolDeposited": "380000000"
+  },
+  "vault": {
+    "status": "unavailable",
+    "data": null
+  },
+  "coverOffer": {
+    "status": "unavailable",
+    "data": null
+  }
+}
