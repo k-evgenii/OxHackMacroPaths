@@ -92,5 +92,24 @@
    "max": 5
   }
  },
- "one": 1000000
+ "one": 1000000,
+ "notes": {
+  "thin_fuel_windows": [
+   "1990-08",
+   "1990-09",
+   "1990-10",
+   "1990-11",
+   "1990-12",
+   "1991-01"
+  ],
+  "thin_fuel_months": [
+   "1990-08",
+   "1990-12",
+   "1991-01"
+  ],
+  "cpi_filled_months": [
+   "2025-10"
+  ],
+  "scope": "illustrative historical data; the gap fill is presentation-only and the caps read the raw snapshot"
+ }
 }

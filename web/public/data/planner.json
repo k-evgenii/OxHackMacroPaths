@@ -23,6 +23,22 @@
  },
  "objective": "TailLoss95 = mean of the largest ceil(0.05*N) shortfalls U_k = max(L_k - (B - c) - H_k, 0); ties -> lower stake, then cash, excess, fuel",
  "scenario_note": "318 overlapping 48-month windows 1990-08..2017-01 (ending <= 2020-12); an empirical decision score, not independent episodes or a calibrated probability",
+ "products": {
+  "excess": {
+   "expected_score": 0.0243611709,
+   "sigma": 0.0655849806919564,
+   "rw_benchmark_score": 0.0,
+   "historical_mean_score": 0.007473792452830189,
+   "note": "expected_score is the AR(1) forecast at session start; historical_mean_score is the empirical mean over the scenario windows"
+  },
+  "fuel": {
+   "expected_score": 0.0323668698,
+   "sigma": 0.1522001090113008,
+   "rw_benchmark_score": 0.0,
+   "historical_mean_score": 0.25933672955974846,
+   "note": "expected_score is the AR(1) forecast at session start; historical_mean_score is the empirical mean over the scenario windows"
+  }
+ },
  "defaults": {
   "q": 100.0,
   "G": 3.5,

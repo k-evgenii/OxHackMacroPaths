@@ -5,7 +5,7 @@ import { handle, notFound } from "@/server/errors";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-const NAMES = new Set(["manifest", "forecast", "planner"]);
+const NAMES = new Set(["manifest", "forecast", "planner", "conditional", "presentation"]);
 
 /** Directory holding the research artifacts (written by the data pipeline into web/public/data). */
 const artifactsDir = () => process.env.ARTIFACTS_DIR ?? path.join(process.cwd(), "public", "data");
