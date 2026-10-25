@@ -1,0 +1,37 @@
+{
+  "_synthetic": "SYNTHETIC test data for frontend v2 scenarios; not an on-chain read.",
+  "items": [
+    {
+      "id": "253iZsdtW3vTMdt9RgDQG6hm3KFkkHFkGCVBaq6wgmtHtpYzZxWyXDB5dLKUZakfBDMSSpCuL7NB7jV6gFfpa86K:0:top:PoolPayout",
+      "signature": "253iZsdtW3vTMdt9RgDQG6hm3KFkkHFkGCVBaq6wgmtHtpYzZxWyXDB5dLKUZakfBDMSSpCuL7NB7jV6gFfpa86K",
+      "instructionIndex": 0,
+      "innerInstructionIndex": null,
+      "session": "6PNvtQ5kUu9JgioxRRUY9rhdyRLMUSm28gCS13X4VE6D",
+      "product": null,
+      "slot": 900,
+      "blockTime": 1792889000,
+      "kind": "PoolPayout",
+      "amount": "26000000",
+      "mint": "AvVf2k9ixDvLjGnjCD4MDGTVBFfrhvzGgzwvptweaPWW"
+    },
+    {
+      "id": "3GNoYeq2hiRjMtCPV1ZFcxN31Pjds7HkMDpVuFx8SPksGp7zF3QJrcpvaaRCEwYjxxZfncLJN3jUmgM5dWqCBgxt:0:top:CoverPayout",
+      "signature": "3GNoYeq2hiRjMtCPV1ZFcxN31Pjds7HkMDpVuFx8SPksGp7zF3QJrcpvaaRCEwYjxxZfncLJN3jUmgM5dWqCBgxt",
+      "instructionIndex": 0,
+      "innerInstructionIndex": null,
+      "session": "6PNvtQ5kUu9JgioxRRUY9rhdyRLMUSm28gCS13X4VE6D",
+      "product": 1,
+      "slot": 899,
+      "blockTime": 1792889000,
+      "kind": "CoverPayout",
+      "amount": "36000000",
+      "mint": "AvVf2k9ixDvLjGnjCD4MDGTVBFfrhvzGgzwvptweaPWW"
+    }
+  ],
+  "nextBefore": "5PcoMyhsmKzgMWRGkrxj96uZYdUcrKb54RSy5nKqh8ALHAsYUS8g9gJgxw8WTZo5ngaWZo76rYro9iWtpfw7nWiF",
+  "pending": [
+    "3r61SAQZWtFEnmdRgtYzgScGScnC6NqDvuYhKhxBwuAshDFCYYzYf3a9K1sE2RqNEfjzhV7N3nJAk65R9h2ng4n6",
+    "5PcoMyhsmKzgMWRGkrxj96uZYdUcrKb54RSy5nKqh8ALHAsYUS8g9gJgxw8WTZo5ngaWZo76rYro9iWtpfw7nWiF"
+  ],
+  "retryCursor": "synthetic-retry-token-0001"
+}
