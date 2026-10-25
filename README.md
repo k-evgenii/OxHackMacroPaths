@@ -1,5 +1,97 @@
 # OxHackMacroPaths
 
+## MacroPaths on devnet: what to look at
+
+### What it is
+
+MacroPaths is a Solana program that pays out on the *path* of US CPI inflation,
+not just its end value: two products, **Cooling** (how far year-on-year CPI fell
+from its running peak) and **Excess** (how long and how far it stayed above 4%),
+each settle to a score in millionths. Each product has two sides that deposit
+PLAY tokens; the smaller side is the matched collateral, and settlement splits the
+matched pot by the score while the unmatched remainder is refunded. The 48 monthly
+CPI rows (Jan 2021 to Dec 2024) are replayed on devnet against a pre-committed
+SHA-256 hash chain, so the keeper cannot alter, skip or reorder a row after the
+session is created.
+
+### Deployed program and reference session
+
+All on devnet. Details and the deployed commit are in [docs/deployments.md](docs/deployments.md).
+
+| What | Id / link |
+|---|---|
+| Program | [`FvT786RtMTtbdXWemA9zgA9rfwhvxFsKY1ypiMMNwMbS`](https://explorer.solana.com/address/FvT786RtMTtbdXWemA9zgA9rfwhvxFsKY1ypiMMNwMbS?cluster=devnet) |
+| Deployed commit | `dab88ff43ed988a112b192702b474db8f2cbcdc7` |
+| Upgrade authority | `DwZ3j9GQZZTegHocho27JQfY7HZfCt8HNRceqe2hrJLV` |
+| Reference session A (settled, read-only) | [`B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju`](https://explorer.solana.com/address/B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju?cluster=devnet) |
+| create_session | [tx](https://explorer.solana.com/tx/2Brpr2T3oEaPQqAvkFxeQBAkQEDB2UZ9r2tYF2GnPq1paC2Ct2o67SfyqCYx5sHsNQ5THkLHzMoGkAMPeVyiSaR4?cluster=devnet) |
+| lock_and_start | [tx](https://explorer.solana.com/tx/vAi1jotFXBc8MRaWRiLC9vBrNfd6vnWY58edJf4w7h8gigUKzRMdS6H8QsA4yAL76yRAgirXr6xGoYKQ6QQS9GF?cluster=devnet) |
+| first observe (row 0) | [tx](https://explorer.solana.com/tx/4rrUGVz4eVjHNi23Bh2R5uCeGNpQj88L57k4uu8zVsR9NuSEhSXACgeR77h8pjB3WcTAP2HqjeBSqBAnBsSddpeA?cluster=devnet) |
+| last observe (row 47) | [tx](https://explorer.solana.com/tx/4vWs7z2LnXRVEppvYz2pec6jaDmGEzQxsfRvdxZdoJyCcUx46zHKMGKGEPbKzdK4g7ofcebGoHvCEGt2HjZqEZXv?cluster=devnet) |
+| settle | [tx](https://explorer.solana.com/tx/3hq1yZunZwcaK6vsZgJ1ggVsQ6PS1eT57FuhBkpgXipvGgoyAaNG1JAkNua6a1j1izUWQjf5Kg58ySoxNZy7E2Xv?cluster=devnet) |
+
+The settled scores on that session are `827387` (Cooling) and `863980` (Excess),
+in millionths.
+
+### Reproduce the numbers
+
+Needs Pixi (install below), plus rustup and Anchor 1.0.2 for the Rust tests
+(see [TOOLCHAIN.md](TOOLCHAIN.md)). No wallet or RPC is needed for any of this.
+
+```bash
+pixi install --locked
+pixi run fetch            # downloads CPIAUCNS from FRED into data/snapshots/
+pixi run vectors          # rebuilds tests/vectors.json from the snapshot
+```
+
+The last line `pixi run vectors` prints is `D=66191 A=691184 827387 863980`; the
+line before it is `dataset_id=... C_0=... C_N=...`, which must match the values in
+[docs/verify.md](docs/verify.md).
+
+```bash
+anchor build --ignore-keys && cargo test -p macropaths    # LiteSVM; 117 passing at the deployed commit
+```
+
+`--ignore-keys` is needed because a fresh clone generates its own program keypair
+that does not match `declare_id!`; the tests load the program under the declared
+id and do not use the keypair file.
+
+### Run the web app
+
+The frontend lives on the `evgenii/frontend` branch, not on this one. From a
+checkout of that branch:
+
+```bash
+pixi install --locked
+(cd packages/client && npm ci)
+(cd web && npm ci)
+cp web/.env.example web/.env.local
+(cd web && npm run dev)
+```
+
+The app opens on reference session A (`NEXT_PUBLIC_DEFAULT_SESSION` in
+`web/.env.example`). Set `RPC_URL` in `web/.env.local` to a keyed devnet endpoint
+(Helius, QuickNode or similar): the public endpoint rate-limits `getTransaction`.
+`NEXT_PUBLIC_USE_FIXTURES=1` serves the committed fixtures for session A without
+any RPC. Running `npm ci` at the repo root currently fails on lockfile drift; see #30.
+It is not needed for either the vectors or the web app.
+
+### Verify the chain yourself
+
+[docs/verify.md](docs/verify.md) walks through recomputing `dataset_id`, `C_0` and
+`C_N` from the public FRED series, comparing them with the `dataset_id`,
+`commitment` and `terminal` fields of the on-chain Session account, checking the
+two scores by hand from `D` and `A`, and reproducing the worked payout of
+33,827,340 PLAY base units for a buyer who put 10 PLAY on each product.
+
+### Where things live
+
+- `programs/macropaths/`: the Anchor program (`math.rs`, `chain.rs`, `state.rs`, `instructions/`) and its LiteSVM tests.
+- `keeper/`: the off-chain keeper that fetches CPI, builds the chain (`src/prepare.ts`), creates sessions and replays the 48 rows. See [keeper/README.md](keeper/README.md).
+- `web/` and `packages/client/`: Next.js frontend and the typed client, on branch `evgenii/frontend`.
+- `tests/`: `make_vectors.py` and the committed `vectors.json` that every implementation is pinned to; `pixi run test` for toolchain checks.
+- `docs/`: [program-spec.md](docs/program-spec.md), [commitment-chain.md](docs/commitment-chain.md), [deployments.md](docs/deployments.md), [verify.md](docs/verify.md), [security-review.md](docs/security-review.md).
+
 ## Development environment
 
 The local toolchain is managed by [Pixi](https://pixi.sh). The manifest and
