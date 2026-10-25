@@ -3,11 +3,30 @@
 ## Identity
 
 - Worker ID and assignment: 12, unified Session page
-- Foundation/checkpoint: checkpoint 1 (85a62e8) is merged, on top of foundation 6d2865b.
+- Foundation/checkpoint: checkpoint 3 (integration aecb709) is merged (merge commit af62a9d).
 - Branch: frontend-v2/12-session-page (commit SHA in the final message)
 - Status: incomplete.
-  - Done: the page code, the curator fixes and the user-approved additions A–C. The model tests pass.
-  - Still to do: tsc is not clean until worker 10's exports and worker 08/09's UI exports land. Screenshots and browser checks are outstanding.
+  - Done: the page, the curator fixes, additions A–C and the checkpoint-2 swaps. 26/26 tests pass and tsc reports no errors in my files.
+  - Still to do: screenshots and browser checks. They are blocked by a shared build error (see "Checkpoint 2/3 update").
+
+## Checkpoint 2/3 update
+
+- **Swaps done:**
+  - "Explain this number" now uses `Explain` from `@macropaths/ui`, triggered by an "Explain this number" button labelled e.g. "Explain Inflation Cooling score". It replaces the native `<details>`.
+  - Composition uses worker 08's `ShareBar`, given exact bigint side totals plus formatted amounts. I removed my own share calculation and bar CSS so the logic isn't duplicated. The test for the removed share calculation is replaced by one checking the exact raw segments, so the count stays at 26.
+  - The walkthrough uses `GlowLineChart` `revealUpToPointId` and no longer trims points itself.
+  - The band text moved to `threshold.bandLabel` ("69.1 point-months above 4.00 %"). The label stays "Threshold 4.00 %", and the band label is omitted before any readings.
+- **Results after merging checkpoint 3:** `npx vitest run src/features/session` 26/26 passed. `npx tsc --noEmit` shows no errors in `features/session` or `app/session/[addr]`.
+- **Screenshots blocked:** `next dev` with `NEXT_PUBLIC_USE_FIXTURES=1` returns 500 on every route, including `/` and `/session/B89z…`.
+  - Cause: `web/src/lib/queries/history.ts` uses useEffect/useRef/useState without `"use client"`. It is pulled into a server component through `lib/queries/index.ts` → `lib/hooks/queries.ts` → `src/app/page.tsx`.
+  - This belongs to worker 10/15, not to my files. The fix is to add `"use client"` to `history.ts`, or to keep the hooks out of the barrel that server code imports.
+  - The Playwright script is ready, covering:
+    - screenshots at 375, 768 and 1440 px with a horizontal-overflow check;
+    - the range button and whether scores stay unchanged;
+    - Explain open, Escape and focus return;
+    - the walkthrough to month 48 of 48, "Final payout" and 1.69 PLAY;
+    - tab order, reduced motion with no Play button, and invalid or unregistered addresses.
+  - I'll run it as soon as that fix is merged.
 
 ## Delivered
 
