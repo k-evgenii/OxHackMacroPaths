@@ -1,6 +1,6 @@
 import { PositionsResponse, toCoverView, toPositionView, type CoverView, type PositionView } from "@macropaths/client";
 import { handle, okJson } from "@/server/errors";
-import { getSessionView, listSessionChildren } from "@/server/chain";
+import { getSessionView, listSessionChildren } from "@/server/chain"; // registered sessions only
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
