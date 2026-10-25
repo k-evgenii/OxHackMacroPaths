@@ -7,6 +7,7 @@ row each product would need.
 from __future__ import annotations
 
 import json
+import tomllib
 from pathlib import Path
 
 import numpy as np
@@ -19,12 +20,35 @@ SNAP = ROOT / "data" / "snapshots"
 # Loading and monthly alignment
 
 
+MISSING = ("", ".")
+
+
+def known_missing(series_id: str) -> set[str]:
+    """Months ("YYYY-MM") that data/series.toml declares empty at the source."""
+    specs = tomllib.loads((ROOT / "data" / "series.toml").read_text())["series"]
+    spec = next((x for x in specs if x["id"] == series_id), {})
+    return {d["month"] for d in spec.get("known_missing", [])}
+
+
 def load(series_id: str) -> pd.Series:
-    """One FRED snapshot as a float series indexed by date. '.' rows dropped."""
+    """One FRED snapshot as a float series indexed by date. Empty values ("" or ".")
+    are kept as NaN, never dropped. For a monthly series, a skipped month or an empty
+    value that data/series.toml does not declare in `known_missing` raises, so a gap
+    is never closed silently. Daily and weekly series keep their empties (holidays) as
+    NaN; `monthly` averages the days that have a value."""
     snap = json.loads((SNAP / f"{series_id}.json").read_text())
-    rows = [(r["date"], r["value_str"]) for r in snap["rows"] if r["value_str"] not in ("", ".")]
-    s = pd.Series([float(v) for _, v in rows], index=pd.to_datetime([d for d, _ in rows]), name=series_id)
+    rows = snap["rows"]
+    vals = [np.nan if r["value_str"] in MISSING else float(r["value_str"]) for r in rows]
+    s = pd.Series(vals, index=pd.to_datetime([r["date"] for r in rows]), name=series_id)
     s.attrs["frequency"] = snap.get("frequency")
+    if s.attrs["frequency"] == "monthly":
+        per = s.index.to_period("M")
+        if (np.diff(per.asi8) != 1).any():
+            raise ValueError(f"{series_id}: months skipped in the snapshot")
+        empty = {str(p) for p in per[s.isna().to_numpy()]}
+        undeclared = sorted(empty - known_missing(series_id))
+        if undeclared:
+            raise ValueError(f"{series_id}: empty values not declared in data/series.toml: {undeclared}")
     return s
 
 
@@ -63,7 +87,7 @@ def mom_diff(s: pd.Series) -> pd.Series:
 
 
 def zscore(s: pd.Series, fit_until: str = "2020-12") -> pd.Series:
-    """Standardise with mean/sd fitted strictly before `fit_until` (inclusive).
+    """Standardise with mean/sd fitted on data up to and including `fit_until`.
     On-chain these two numbers are fixed integers on the session."""
     hist = s[: pd.Period(fit_until, "M")].dropna()
     return (s - hist.mean()) / hist.std(ddof=1)
@@ -115,12 +139,15 @@ STATS = {
 
 
 def rolling_windows(s: pd.Series, window: int = 48, step: int = 1):
-    """Yield (start_period, values) for every full window of length `window`."""
+    """Yield (start_period, values) for every run of `window` consecutive calendar
+    months with no missing value. A window never spans a gap (a NaN or a skipped
+    month); such windows are skipped, not closed up."""
     v = s.dropna()
     idx = v.index
     arr = v.to_numpy()
     for i in range(0, len(arr) - window + 1, step):
-        yield idx[i], arr[i : i + window]
+        if idx.asi8[i + window - 1] - idx.asi8[i] == window - 1:
+            yield idx[i], arr[i : i + window]
 
 
 def window_stats(s: pd.Series, fn, window: int = 48, **kw) -> pd.Series:
@@ -137,7 +164,9 @@ def fit_ou(s: pd.Series, until: str = "2020-12") -> dict:
     OU mapping on a monthly grid: kappa = -ln(b), theta = a/(1-b),
     sigma_OU = sd(e) * sqrt(2 kappa / (1 - b^2)), half-life = ln2/kappa months."""
     v = s[: pd.Period(until, "M")].dropna()
-    x0, x1 = v.to_numpy()[:-1], v.to_numpy()[1:]
+    # Regress only on consecutive months: a pair across a gap is not one step of AR(1).
+    step = np.diff(v.index.asi8) == 1
+    x0, x1 = v.to_numpy()[:-1][step], v.to_numpy()[1:][step]
     # Closed-form OLS for one regressor: b = cov/var, a = mean(y) - b mean(x).
     # (Run with the pixi env activated: numpy's BLAS needs Library/bin on PATH.)
     mx, my = x0.mean(), x1.mean()

@@ -13,10 +13,15 @@
  *   --replay-window <secs>   replay_deadline = deposit_deadline + this (default 3600)
  *   --out <file>             where to write the session addresses (default data/session.json)
  *   --seed <a,b,c,d|none>    PLAY per side to seed from the keeper (default 90,100,90,100)
+ *   --force                  replace an existing --out file even without --session-id
  *
  * Re-running with the same --session-id after the session exists does not send anything: it
  * reads the inputs back from --out and repeats the field check, and seeding only tops the keeper's
  * position up to the targets. Exits 1 if any field differs (and then does not seed).
+ *
+ * Without --session-id the id is the cluster time, so every run would create a new session and
+ * silently replace --out, which is the only record of the previous one. When --out already exists
+ * and --session-id is not given, the command refuses before touching the cluster unless --force.
  */
 import { existsSync, mkdirSync } from "node:fs";
 import path from "node:path";
@@ -95,14 +100,40 @@ const { values: args } = parseArgs({
     "replay-window": { type: "string", default: "3600" },
     out: { type: "string" },
     seed: { type: "string", default: DEFAULT_SEED },
+    force: { type: "boolean", default: false },
   },
 });
+
+/**
+ * The refusal for an existing --out file when no --session-id was given, or null to proceed.
+ * `prev` is that file's content. Pure; it runs before any cluster access (run.test.ts drives it through the CLI).
+ */
+function overwriteRefusal(
+  outFile: string,
+  prev: SessionFile | undefined,
+  opts: { sessionId: string | undefined; force: boolean },
+): string | null {
+  if (opts.sessionId !== undefined || opts.force || !prev) return null;
+  return (
+    `${outFile} already describes session ${prev.session} (session_id ${prev.sessionId}); ` +
+    `re-run with --session-id ${prev.sessionId} to re-check it, --out <other file> for a new session, ` +
+    `or --force to replace it`
+  );
+}
 
 async function main(): Promise<number> {
   const cfg = getConfig();
   const fromRoot = (p: string | undefined, dflt: string) => path.resolve(cfg.repoRoot, p ?? dflt);
   const replayFile = fromRoot(args.replay, "data/cpi-yoy-replay.json");
   const outFile = fromRoot(args.out, "data/session.json");
+
+  // Refuse to replace an existing session file before anything is loaded or sent.
+  const refusal = overwriteRefusal(
+    path.relative(cfg.repoRoot, outFile),
+    existsSync(outFile) ? readSessionFile(outFile) : undefined,
+    { sessionId: args["session-id"], force: args.force },
+  );
+  if (refusal) throw new Error(refusal);
 
   const replay = loadReplay(replayFile);
   const idl = loadIdl(fromRoot(args.idl, "packages/client/idl.json"));

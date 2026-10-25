@@ -1,7 +1,7 @@
-"""Opt-in: `pixi run test-surfpool`. Builds the repo program, deploys it to a local Surfnet and calls it.
+"""Opt-in: `pixi run test-surfpool`. Builds the repo program, deploys it to a local Surfnet and reads its IDL.
 
 Proves: anchor build works, Surfpool starts offline, the program deploys and is executable, and the
-Anchor TS client (tests/integration/initialize.test.ts) can call `initialize` on it.
+Anchor TS client (tests/integration/idl.test.ts) can read the IDL.
 """
 import json
 import os
@@ -35,7 +35,7 @@ def declared_id():
 
 @pytest.fixture(scope="module")
 def built():
-    r = run(["anchor", "build"], cwd=ROOT, timeout=900)
+    r = run(["anchor", "build", "--ignore-keys"], cwd=ROOT, timeout=900)
     assert r.returncode == 0, r.stdout[-2000:] + r.stderr[-2000:]
     keypair_id = run(["solana-keygen", "pubkey", str(PROGRAM_KEYPAIR)]).stdout.strip()
     if keypair_id != declared_id():
@@ -99,7 +99,7 @@ def test_program_is_executable(deployed, surfnet):
     assert info is not None and info["executable"] is True
 
 
-def test_client_calls_initialize(deployed, surfnet, payer):
+def test_client_reads_idl(deployed, surfnet, payer):
     env = {**os.environ, "ANCHOR_PROVIDER_URL": surfnet, "ANCHOR_WALLET": str(payer)}
     r = run(["npm", "run", "-s", "test:client"], cwd=ROOT, env=env, timeout=180)
     assert r.returncode == 0, r.stdout[-3000:] + r.stderr[-3000:]

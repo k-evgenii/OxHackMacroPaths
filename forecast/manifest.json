@@ -1,0 +1,177 @@
+{
+ "version": 1,
+ "cap_rule": "nearest-rank p90 of the statistic over 48-month windows starting >= 1960-01 (or the row's first month) and ending <= 2020-12; index ceil(q*n)-1 of the ascending sort; integer by construction",
+ "quantile_method": "nearest-rank",
+ "price_convention": "seller entry quote p = clamp(V0 + 0.5*sigma0, 0.05, 0.95) from forecast/table.json; the matched pool's implicit 0.5 is not used for the demo",
+ "products": [
+  {
+   "index": 0,
+   "key": "cooling",
+   "name": "Inflation Cooling",
+   "stat": "max_decline",
+   "row": "CPIAUCNS yoy, 1e-4 pp",
+   "k": null,
+   "cap": 76973,
+   "cap_units": "1e-4 pp",
+   "windows": 685,
+   "first_window": "1960-01",
+   "last_window": "2017-01",
+   "executable": true
+  },
+  {
+   "index": 1,
+   "key": "excess",
+   "name": "Excess Inflation",
+   "stat": "accumulated_excess",
+   "row": "CPIAUCNS yoy, 1e-4 pp",
+   "k": 40000,
+   "cap": 1883141,
+   "cap_units": "1e-4 pp-months",
+   "windows": 685,
+   "first_window": "1960-01",
+   "last_window": "2017-01",
+   "executable": true
+  },
+  {
+   "index": null,
+   "key": "fuel",
+   "name": "Fuel Pass-through",
+   "stat": "accumulated_excess",
+   "row": "GASREGW calendar-month mean, 1e-4 usd/gal",
+   "k": 35000,
+   "cap": 36411,
+   "cap_units": "1e-4 usd-months",
+   "windows": 318,
+   "first_window": "1990-08",
+   "last_window": "2017-01",
+   "executable": false,
+   "aggregation": "arithmetic mean of the weekly rows dated inside the calendar month, floored to 1e-4 usd",
+   "note": "research product; not settled on chain this weekend"
+  }
+ ],
+ "proposed_products": [
+  {
+   "key": "diesel",
+   "name": "Diesel Surcharge",
+   "series": "GASDESW",
+   "units": "US No 2 diesel retail price, dollars per gallon (research proposal row; no product defined)",
+   "frequency": "weekly",
+   "first_value": "1994-03-21",
+   "natural_exposure": "carriers and fleets paying diesel above a declared level",
+   "threshold": null,
+   "cap": null,
+   "executable": false,
+   "status": "proposal: no threshold, cap or aggregation rule declared; no score is computed"
+  },
+  {
+   "key": "loan_rate",
+   "name": "Floating-Loan Rate",
+   "series": "DFF",
+   "units": "Percent",
+   "frequency": "daily",
+   "first_value": "1954-07-01",
+   "natural_exposure": "borrowers paying a floating rate above a declared level",
+   "threshold": null,
+   "cap": null,
+   "executable": false,
+   "status": "proposal: no threshold, cap or aggregation rule declared; no score is computed"
+  }
+ ],
+ "data_rules": {
+  "CPIAUCNS": {
+   "source": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=CPIAUCNS",
+   "bls_series": "CUUR0000SA0",
+   "units": "Index 1982-1984=100, not seasonally adjusted",
+   "frequency": "monthly",
+   "first_value": "1913-01",
+   "revision_policy": "NSA CPI-U is final when issued (BLS); the snapshot is FRED's current values, not an archived first-release vintage",
+   "missing_value_policy": "strict: an empty level fails unless declared in series.toml known_missing; months must be contiguous; nothing is filled or skipped silently",
+   "known_missing": [
+    {
+     "month": "2025-10",
+     "reason": "BLS collected no October 2025 CPI (2025 lapse in appropriations) and will not publish it; see docs/commitment-chain.md, Data rules"
+    }
+   ],
+   "fallback": [
+    {
+     "month": "2025-10",
+     "value": "325.604",
+     "source": "https://www.treasurydirect.gov/instit/annceresult/press/preanre/2025/SPL_20251126_1.pdf",
+     "rule": "31 CFR 356 Appendix B, I.B.4(iv): last available twelve-month change"
+    }
+   ],
+   "fallback_use": "presentation and the AR(1) fit input only (data/presentation.py); never the caps or the chain"
+  },
+  "GASREGW": {
+   "source": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=GASREGW",
+   "units": "Regular gasoline price, dollars per gallon",
+   "frequency": "weekly",
+   "first_value": "1990-08-20",
+   "aggregation": "a weekly reading belongs to the calendar month of its date (a Monday); the month is the arithmetic mean of the readings present, floored to 1e-4 usd",
+   "missing_value_policy": "empty weekly readings are skipped and the month's reading count is recorded; months must be contiguous; months with fewer than 3 readings are flagged thin"
+  }
+ },
+ "chain": {
+  "series_id": "CPIAUCNS",
+  "source_url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=CPIAUCNS",
+  "transform_id": "yoy-1e6-floor-v1",
+  "window_start": "2020-01-01",
+  "window_end": "2024-12-01",
+  "n": 48,
+  "first_period_id": 202101,
+  "k": 40000,
+  "d_cap": 76973,
+  "a_cap": 1883141
+ },
+ "showcase": {
+  "window": [
+   "2021-01",
+   "2024-12"
+  ],
+  "cooling": {
+   "stat": 66191,
+   "score": 859924
+  },
+  "excess": {
+   "stat": 691184,
+   "score": 367037
+  },
+  "fuel": {
+   "stat": 72833,
+   "score": 1000000,
+   "months_above_k": 19
+  }
+ },
+ "snapshots": {
+  "CPIAUCNS": {
+   "retrieved_at": "2026-10-24T13:29:31Z",
+   "sha256_of_raw": "cfab9b9be4a5d4f06253c4dcc3f7e0b28b1d58837e710dd7cb1fd54a49e7ad7c"
+  },
+  "GASREGW": {
+   "retrieved_at": "2026-10-24T17:19:31Z",
+   "sha256_of_raw": "4d394332287db9cc8ee1765c3f67ebce333b068b9976947c9f2b53a14f4d746d",
+   "weekly_rows_per_month_min": 1,
+   "max": 5
+  }
+ },
+ "one": 1000000,
+ "notes": {
+  "thin_fuel_windows": [
+   "1990-08",
+   "1990-09",
+   "1990-10",
+   "1990-11",
+   "1990-12",
+   "1991-01"
+  ],
+  "thin_fuel_months": [
+   "1990-08",
+   "1990-12",
+   "1991-01"
+  ],
+  "cpi_filled_months": [
+   "2025-10"
+  ],
+  "scope": "illustrative historical data; the gap fill is presentation-only and the caps read the raw snapshot"
+ }
+}

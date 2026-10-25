@@ -1,0 +1,17 @@
+---
+description: MacroPaths on-chain program rules (integer discipline, settled formulas, security baseline, branch protocol)
+globs: programs/**, tests/**, keeper/src/**, docs/program-spec.md
+alwaysApply: true
+---
+
+Read `AGENTS.md` and `docs/program-spec.md` before editing. Your task is in `agents/NN-name.md`; follow its Steps in order and edit only the files it lists.
+
+- Integer only: `i64`/`u64`, `checked_*`, `u128` intermediates, every division floors. No floats near chain values.
+- Scores and prices in millionths (`ONE = 1_000_000`); `x_t` in 1e-4 pp; PLAY has 6 decimals.
+- Settlement: side-level budgets `M=min(S0,S1)`, `P0=floor(2Ms/ONE)`, `P1=2M-P0`, `R_j=S_j-M`, `claim=floor(aR_j/S_j)+floor(aP_j/S_j)`. Never per-user floor matching. Dust stays in the vault.
+- Commitment chain bytes are fixed in `docs/program-spec.md` §1.6; do not change the encoding.
+- No AMM, order book, LP vault, repricing during replay, or "fair value" wording.
+- Token-moving instructions check seeds+bump, owner, mint, token program, signer, state and deadline before any transfer.
+- Test values come from `tests/vectors.json` only.
+- Shared files (`lib.rs`, `instructions.rs`, `error.rs`, `events.rs`): add lines, never remove others'. `state.rs`/`constants.rs`: ask the orchestrator.
+- Acceptance for every task: `anchor build && cargo test -p macropaths` green, plus the brief's named test.

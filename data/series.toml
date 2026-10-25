@@ -1,5 +1,8 @@
 # Series pulled by data/fetch.py. Add an entry to fetch a new index.
 # window: months that must be present with no gaps or missing values (validated).
+# strict: any empty value or skipped month outside known_missing fails the fetch.
+# known_missing: months the source leaves empty, each with a reason. They are never
+#   filled or skipped silently; a window that needs one fails.
 
 [[series]]
 id = "CPIAUCNS"
@@ -7,12 +10,25 @@ source = "fred"
 frequency = "monthly"
 units = "Index 1982-1984=100, not seasonally adjusted"
 window = ["2020-01", "2024-12"]
+strict = true
+known_missing = [
+  { month = "2025-10", reason = "BLS collected no October 2025 CPI (2025 lapse in appropriations) and will not publish it; see docs/commitment-chain.md, Data rules" },
+]
+# Declared fallback, NOT applied by fetch.py (the snapshot keeps FRED's empty value).
+# U.S. Treasury TIPS contingency index under 31 CFR 356 App. B, announced 2025-11-26;
+# Treasury will not replace it even if BLS later reports a value.
+fallback = [
+  { month = "2025-10", value = "325.604", source = "https://www.treasurydirect.gov/instit/annceresult/press/preanre/2025/SPL_20251126_1.pdf", rule = "31 CFR 356 Appendix B, I.B.4(iv): last available twelve-month change" },
+]
 
 [[series]]
 id = "UNRATE"
 source = "fred"
 frequency = "monthly"
 units = "Percent, seasonally adjusted"
+known_missing = [
+  { month = "2025-10", reason = "empty in FRED: no October 2025 household survey (2025 federal shutdown)" },
+]
 
 [[series]]
 id = "FEDFUNDS"
@@ -55,3 +71,143 @@ id = "ICSA"
 source = "fred"
 frequency = "weekly"
 units = "Number, seasonally adjusted"
+
+# ---- candidates added 2026-10-24 for the multi-index research (see research/) ----
+
+[[series]]
+id = "CPILFENS"
+source = "fred"
+frequency = "monthly"
+units = "Core CPI (ex food and energy), index, NSA (not revised, unlike the SA CPILFESL)"
+known_missing = [
+  { month = "2025-10", reason = "empty in FRED: BLS published no October 2025 CPI (2025 federal shutdown)" },
+]
+
+[[series]]
+id = "PCEPILFE"
+source = "fred"
+frequency = "monthly"
+units = "Core PCE price index, SA (the Fed's 2% target is headline PCE)"
+
+[[series]]
+id = "PPIACO"
+source = "fred"
+frequency = "monthly"
+units = "Producer price index, all commodities, NSA"
+
+[[series]]
+id = "AHETPI"
+source = "fred"
+frequency = "monthly"
+units = "Average hourly earnings, production and nonsupervisory, dollars, SA"
+
+[[series]]
+id = "PAYEMS"
+source = "fred"
+frequency = "monthly"
+units = "Nonfarm payrolls, thousands, SA"
+
+[[series]]
+id = "JTSJOL"
+source = "fred"
+frequency = "monthly"
+units = "Job openings (JOLTS), thousands, SA"
+
+[[series]]
+id = "INDPRO"
+source = "fred"
+frequency = "monthly"
+units = "Industrial production index, SA"
+
+[[series]]
+id = "RSAFS"
+source = "fred"
+frequency = "monthly"
+units = "Retail sales, millions of dollars, SA"
+
+[[series]]
+id = "UMCSENT"
+source = "fred"
+frequency = "monthly"
+units = "U. Michigan consumer sentiment index"
+
+[[series]]
+id = "HOUST"
+source = "fred"
+frequency = "monthly"
+units = "Housing starts, thousands annualised, SA"
+
+[[series]]
+id = "MORTGAGE30US"
+source = "fred"
+frequency = "weekly"
+units = "30-year fixed mortgage rate, percent"
+
+[[series]]
+id = "BAMLH0A0HYM2"
+source = "fred"
+frequency = "daily"
+units = "ICE BofA US high-yield option-adjusted spread, percent"
+
+[[series]]
+id = "VIXCLS"
+source = "fred"
+frequency = "daily"
+units = "CBOE VIX close"
+
+[[series]]
+id = "DCOILWTICO"
+source = "fred"
+frequency = "daily"
+units = "WTI crude, dollars per barrel"
+
+[[series]]
+id = "DTWEXBGS"
+source = "fred"
+frequency = "daily"
+units = "Trade-weighted broad dollar index"
+
+[[series]]
+id = "M2SL"
+source = "fred"
+frequency = "monthly"
+units = "M2 money stock, billions, SA"
+
+[[series]]
+id = "EXPINF1YR"
+source = "fred"
+frequency = "monthly"
+units = "Cleveland Fed 1-year expected inflation, percent"
+
+[[series]]
+id = "GASREGW"
+source = "fred"
+frequency = "weekly"
+units = "Regular gasoline price, dollars per gallon"
+
+[[series]]
+id = "USREC"
+source = "fred"
+frequency = "monthly"
+units = "NBER recession indicator, 0/1"
+
+[[series]]
+id = "DFII10"
+source = "fred"
+frequency = "daily"
+units = "10-year TIPS real yield (constant maturity), percent, NSA"
+
+[[series]]
+id = "UNEMPLOY"
+source = "fred"
+frequency = "monthly"
+units = "Unemployment level, thousands of persons, SA"
+known_missing = [
+  { month = "2025-10", reason = "empty in FRED: no October 2025 household survey (2025 federal shutdown)" },
+]
+
+[[series]]
+id = "GASDESW"
+source = "fred"
+frequency = "weekly"
+units = "US No 2 diesel retail price, dollars per gallon (research proposal row; no product defined)"

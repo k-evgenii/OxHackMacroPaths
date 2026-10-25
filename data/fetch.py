@@ -2,11 +2,12 @@
 
 Usage:
     python data/fetch.py                  # fetch CPIAUCNS (default)
-    python data/fetch.py --series UNRATE  # one series
+    python data/fetch.py --series GASREGW  # one series
     python data/fetch.py --all            # every series in series.toml
     python data/fetch.py --refresh ...    # re-download and overwrite, printing changed rows
 
-A committed snapshot is never overwritten without --refresh, because the on-chain
+An existing snapshot is re-checked, not re-downloaded. A committed snapshot is never
+overwritten without --refresh, because the on-chain
 commitment chain is built from the snapshot and must not change silently.
 Values are kept as the exact strings from the source; no floats are parsed here.
 """
@@ -70,6 +71,51 @@ def parse_fred(series_id: str, raw: bytes) -> list[dict]:
     return rows
 
 
+MISSING = ("", ".")
+
+
+def next_month(date: str) -> str:
+    y, m = int(date[:4]), int(date[5:7])
+    y, m = (y + 1, 1) if m == 12 else (y, m + 1)
+    return f"{y:04d}-{m:02d}-01"
+
+
+def check_rows(series_id: str, rows: list[dict], spec: dict) -> None:
+    """Dates strictly increasing, monthly series contiguous, every empty value declared.
+
+    `known_missing` in series.toml lists the months the source leaves empty, each with a
+    reason. With `strict = true` any other empty value or skipped month fails, and so does
+    a declared month that now has a value, so a stale declaration is noticed. Without
+    `strict` the same problems are printed. Empty values are never dropped or filled here.
+    """
+    dates = [r["date"] for r in rows]
+    for a, b in zip(dates, dates[1:]):
+        if not a < b:
+            raise ValueError(f"{series_id}: dates not strictly increasing at {a} -> {b}")
+    problems = []
+    if spec.get("frequency") == "monthly":
+        problems += [f"months missing between {a[:7]} and {b[:7]}"
+                     for a, b in zip(dates, dates[1:]) if b != next_month(a)]
+    declared = {d["month"]: d["reason"] for d in spec.get("known_missing", [])}
+    empty = [r["date"][:7] for r in rows if r["value_str"] in MISSING]
+    for month in empty:
+        if month in declared:
+            print(f"  {month}: empty, declared in series.toml ({declared[month]})")
+        else:
+            problems.append(f"{month}: empty value not declared in known_missing")
+    problems += [f"{month}: declared in known_missing but not empty in the data"
+                 for month in sorted(set(declared) - set(empty))]
+    if not problems:
+        return
+    if spec.get("strict"):
+        raise ValueError(f"{series_id}: " + "; ".join(problems))
+    print(f"  WARNING: {len(problems)} gaps or undeclared empty values (series is not strict):")
+    for p in problems[:10]:
+        print(f"    {p}")
+    if len(problems) > 10:
+        print(f"    ... and {len(problems) - 10} more")
+
+
 def check_window(series_id: str, rows: list[dict], window: list[str]) -> None:
     start, end = window
     by_month = {r["date"][:7]: r for r in rows}
@@ -81,7 +127,7 @@ def check_window(series_id: str, rows: list[dict], window: list[str]) -> None:
         row = by_month.get(key)
         if row is None:
             raise ValueError(f"{series_id}: month {key} missing")
-        if row["value_str"] in ("", "."):
+        if row["value_str"] in MISSING:
             raise ValueError(f"{series_id}: month {key} has no value")
         n += 1
         y, m = (y + 1, 1) if m == 12 else (y, m + 1)
@@ -94,13 +140,18 @@ def fetch_one(spec: dict, refresh: bool) -> None:
     sid = spec["id"]
     snap_path = SNAP / f"{sid}.json"
     if snap_path.exists() and not refresh:
-        print(f"{sid}: snapshot exists, skipping (use --refresh to re-download)")
+        print(f"{sid}: snapshot exists, not downloading (use --refresh); re-checking it")
+        rows = json.loads(snap_path.read_text())["rows"]
+        check_rows(sid, rows, spec)
+        if "window" in spec:
+            check_window(sid, rows, spec["window"])
         return
 
     print(f"{sid}: downloading from {spec['source']}")
     url, raw = SOURCES[spec["source"]](sid)
     rows = parse_fred(sid, raw)
     print(f"  {len(rows)} rows, {rows[0]['date']} .. {rows[-1]['date']}")
+    check_rows(sid, rows, spec)
     if "window" in spec:
         check_window(sid, rows, spec["window"])
 

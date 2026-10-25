@@ -9,6 +9,10 @@ skip-lint = false
 [programs.localnet]
 macropaths = "FvT786RtMTtbdXWemA9zgA9rfwhvxFsKY1ypiMMNwMbS"
 
+[programs.devnet]
+macropaths = "FvT786RtMTtbdXWemA9zgA9rfwhvxFsKY1ypiMMNwMbS"
+
+# Tests run against Surfpool (localnet). Devnet deploys use `anchor deploy --provider.cluster devnet` with the shared program keypair from the program owner.
 [provider]
 cluster = "localnet"
 wallet = "~/.config/solana/id.json"

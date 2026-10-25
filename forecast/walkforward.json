@@ -1,0 +1,1280 @@
+{
+ "schema": "macropaths-walkforward-v1",
+ "method": {
+  "question": "How do three forecasts of the terminal Cooling and Excess scores (AR(1), an Atkeson-Ohanian random walk, climatology) score on 11 non-overlapping 48-month windows, and what can 11 windows show about the calibration of a 90th-percentile tail?",
+  "origins": {
+   "list": [
+    "1975-01",
+    "1979-01",
+    "1983-01",
+    "1987-01",
+    "1991-01",
+    "1995-01",
+    "1999-01",
+    "2003-01",
+    "2007-01",
+    "2011-01",
+    "2015-01"
+   ],
+   "windows": [
+    "1975-01..1978-12",
+    "1979-01..1982-12",
+    "1983-01..1986-12",
+    "1987-01..1990-12",
+    "1991-01..1994-12",
+    "1995-01..1998-12",
+    "1999-01..2002-12",
+    "2003-01..2006-12",
+    "2007-01..2010-12",
+    "2011-01..2014-12",
+    "2015-01..2018-12"
+   ],
+   "spacing_months": 48,
+   "declared_choice": "11 origins 1975-01, 1979-01, ..., 2015-01; the last window ends 2018-12; none overlaps the 2021-01..2024-12 demo window.",
+   "plan_note": "The plan said '1975-2017'. 11 non-overlapping 48-month windows span 528 months, but 1975-01..2017-12 holds 516, so that range cannot contain 11 windows with both endpoints. Starting at 1975-01 and stepping 48 months is the declared choice."
+  },
+  "no_look_ahead": {
+   "fits": "every fit uses observations dated up to t0 - 1 (bt.fit_ar1 calls macrolib.fit_ou(until = t0 - 1), which includes `until`); the AO sigma_delta uses the same sample",
+   "caps_B": "only windows that start >= 1960-01 and ended <= t0 - 1",
+   "climatology": "only windows (from 1914-01) that ended <= t0 - 1",
+   "guards": "evaluate_origin raises if a fit, a climatology window or a cap window reaches t0 or later",
+   "release_timing": "as in backtest.py, the forecast at t0 uses CPI for t0 - 1, which BLS publishes in the middle of month t0; the release lag is not otherwise modelled, and the values are FRED's current ones, not first-release vintages"
+  },
+  "models": {
+   "ar1": "exactly the primary specification of forecast/backtest.py: OLS y_{t+1} = a + b y_t + e on 1914-01..t0-1, Gaussian innovations with the fitted residual sd (ddof = 2), 48 months from x0 = y_(t0-1)",
+   "ao": "Atkeson-Ohanian (2001, 'Are Phillips curves useful for forecasting inflation?', Federal Reserve Bank of Minneapolis Quarterly Review 25(1)) use the four-quarter random walk as their benchmark: next year's inflation is forecast to equal last year's. This is its natural path extension: the 48 forecast values start at x_(t0-1) and follow a driftless Gaussian random walk x_{t+1} = x_t + e, e ~ N(0, sigma_delta^2), with sigma_delta the sample sd (ddof = 1) of the monthly changes of the year-on-year series over the same sample as the AR(1) fit. It is AR(1) with a = 0 and b = 1 (simulated by bt.simulate_paths). The path extension, not the point-forecast rule, is this analysis's choice",
+   "clim": "as forecast/backtest.py: realised scores of every 48-month window that ended <= t0 - 1, from 1914-01"
+  },
+  "simulation": {
+   "n_paths": 10000,
+   "seed": 20261025,
+   "horizon": 48,
+   "streams": "numpy SeedSequence([seed, stream, year*12+month]) via bt.origin_rng; stream 0 AR(1) simulation and stream 1 PIT draws (ar1, clim) as in backtest.py, so AR(1) and climatology rows reproduce backtest.py's at the same seed and origin; stream 3 AO simulation, stream 4 AO PIT draws",
+   "quantisation": "simulated percent -> floor(y * 1e4) contract units, then the exact integer recursions and scores of eqs. (2)-(6) (bt.forecast_stats, bt.scores); contract statistics start afresh at the first forecast month"
+  },
+  "cap_policies": {
+   "B": {
+    "label": "pre-origin p90 caps (honest)",
+    "rule": {
+     "statistic": "90th percentile of the exact integer statistic over eligible 48-month windows",
+     "eligible_windows": "start >= 1960-01 (declared post-1960 rule) and end <= t0 - 1",
+     "interpolation": "linear between order statistics (Hyndman-Fan type 7; numpy 'linear', the pandas Series.quantile default used by research/build_notebook.py)",
+     "rounding": "round half up to an integer in contract units (declared here: the repo has no integer rounding rule)",
+     "no_valid_cap": "a percentile <= 0 gives no valid cap (the program needs cap > 0 and the notebook skips such products): that product is excluded from policy B at that origin and counted",
+     "source": "research/README.md ('p90 ... post-1960 (or series-start) windows'), research/build_notebook.py (CAP_WINDOW_START = 1960-01, stats.quantile(0.9))"
+    },
+    "use": "applied to simulated, realised and climatology scores of the same origin"
+   },
+   "A": {
+    "label": "fixed caps 8 pp / 80 pp-months (retrospective: chosen after seeing 2021–24)",
+    "caps": {
+     "cooling": 80000,
+     "excess": 800000
+    },
+    "units": "1e-4 pp and 1e-4 pp-months",
+    "use": "shown as a retrospective demonstration only; never mixed with policy B"
+   }
+  },
+  "per_origin_and_product": "realised score, V0 (mean forecast score) per model, CRPS per model, randomised PIT per model, and the two 90th-percentile tail flags",
+  "metrics": {
+   "V0": "mean of the model's score distribution, in [0, 1]; a forecast, not a price",
+   "crps": "empirical-distribution CRPS of the score (bt.crps_ensemble, pair term 1/(2n^2))",
+   "pit": "randomised PIT u = F(y-) + v (F(y) - F(y-)), seeded v (bt.randomized_pit)",
+   "above_q90": "literal tail exceedance: the realised score is above the model's 90% quantile (inverted-CDF quantile of the model's integer scores). With probability mass at the cap this can never fire when that quantile is the cap, so it undercounts for a model that puts more than 10% of its mass at the cap",
+   "pit_above_0_9": "randomised tail exceedance u > 0.9; probability exactly 10% under calibration, including mass points. It is the count compared with Binomial(11, 0.1)",
+   "pit_below_0_1": "randomised lower-tail count u < 0.1, also exactly 10% under calibration; a forecast that runs high puts the realised score in its lowest decile too often. Read against the same binomial",
+   "lowest_crps_of_three": "per origin, the model with the lowest CRPS of AR(1), AO and climatology; exact ties count for each tied model and are reported",
+   "sign_test": "per pair of models, two-sided exact sign test (p = 1/2) on the origins where the CRPS differs; descriptive, 12 comparisons that are not independent",
+   "binomial": "exceedance counts are read against Binomial(n = 11, p = 0.1), assuming independent origins"
+  },
+  "tail_label": "n = 11: cannot validate a 10% tail",
+  "reference_origin_2021_01": "V0 of both products at 2021-01 from AR(1) and AO, each fitted on all history and on the last 288 months (1997-01..2020-12), under fixed caps 8/80 (retrospective: chosen after seeing 2021–24) and under the 2021-01 pre-origin caps; reported side by side",
+  "data_note": "FRED's CPIAUCNS has an empty value at 2025-10; the series is used only up to the first missing value and nothing here needs any month after 2024-12",
+  "vocabulary": "forecast, position, cover; V0 is a forecast under the physical measure, not a price"
+ },
+ "provenance": {
+  "data": {
+   "series_id": "CPIAUCNS",
+   "snapshot": "data/snapshots/CPIAUCNS.json",
+   "source_url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=CPIAUCNS",
+   "retrieved_at": "2026-10-24T16:25:32Z",
+   "sha256_of_raw": "cfab9b9be4a5d4f06253c4dcc3f7e0b28b1d58837e710dd7cb1fd54a49e7ad7c",
+   "snapshot_sha256": "8caae39af6be41fe2d129abdd898d4033752b794418cba1765155fe3c304f266",
+   "levels": "1913-01..2025-09",
+   "first_missing_value": "2025-10",
+   "yoy": "1914-01..2025-09",
+   "n_yoy": 1341
+  },
+  "command": "pixi run python forecast/walkforward.py --paths 10000 --seed 20261025",
+  "seed": 20261025,
+  "n_paths": 10000,
+  "code_sha256": {
+   "forecast/walkforward.py": "f942ec53c4591a2e3c9c8d337fc7d2e533274bd097428abf6e60e1ea24d5b289",
+   "forecast/backtest.py": "70e24114f81c4b91147f1b5a9862cd7b370ea3b6388d7423a80232c4c130fc67",
+   "research/macrolib.py": "4df837603f1b48b21c7f0504cdfbcadc04c6429bf099a969086f27aee1a65715",
+   "tests/make_vectors.py": "7d746ea50f8784c96db6531a230cef40f3540c8227c53974992490ff0de47879"
+  },
+  "environment": {
+   "git_commit_of_forecast_backtest_py": "e9f201dabdb9660026a4f9a396852b857f14f9a6",
+   "python": "3.12.15",
+   "numpy": "2.5.4",
+   "pandas": "3.1.0",
+   "scipy": "1.18.1",
+   "rng": "numpy default_rng (PCG64)",
+   "platform": "Linux-6.18.33.2-microsoft-standard-WSL2-x86_64-with-glibc2.39"
+  }
+ },
+ "tail_test": {
+  "n": 11,
+  "p": 0.1,
+  "expected_exceedances": 1.1,
+  "pmf": [
+   0.3138106,
+   0.3835463,
+   0.2130813,
+   0.0710271,
+   0.0157838,
+   0.0024553,
+   0.0002728,
+   2.17e-05,
+   1.2e-06,
+   0.0,
+   0.0,
+   0.0
+  ],
+  "P_at_least": [
+   1.0,
+   0.6861894,
+   0.3026431,
+   0.0895619,
+   0.0185348,
+   0.002751,
+   0.0002957,
+   2.29e-05,
+   1.2e-06,
+   0.0,
+   0.0,
+   0.0
+  ],
+  "P_at_most": [
+   0.3138106,
+   0.6973569,
+   0.9104381,
+   0.9814652,
+   0.997249,
+   0.9997043,
+   0.9999771,
+   0.9999988,
+   1.0,
+   1.0,
+   1.0,
+   1.0
+  ],
+  "counts_with_pmf_above_5pct": [
+   0,
+   1,
+   2,
+   3
+  ],
+  "smallest_count_with_upper_tail_at_most_5pct": 4,
+  "chance_of_staying_below_that_count_if_true_exceedance_probability_is": {
+   "0.2": 0.8388608,
+   "0.3": 0.5695623,
+   "0.5": 0.1132812
+  },
+  "label": "n = 11: cannot validate a 10% tail",
+  "explanation": "With p = 0.1 and n = 11, each of 0, 1, 2 and 3 exceedances has probability above 5% under calibration (0: 0.314, 1: 0.384, 2: 0.213, 3: 0.071), so no count from 0 to 3 can be told apart from a calibrated forecast, and the upper tail only reaches P(X >= k) <= 5% at k = 4 (P(X >= 4) = 0.0185); a count of 4 or more is needed to question the 90th percentile at all, and nothing here can show it is right."
+ },
+ "summary": {
+  "B": {
+   "label": "pre-origin p90 caps (honest)",
+   "cooling": {
+    "n_origins": 11,
+    "n_excluded": 0,
+    "mean_crps": {
+     "ar1": 0.2264757,
+     "ao": 0.2356934,
+     "clim": 0.1909227
+    },
+    "mean_V0": {
+     "ar1": 0.7688231,
+     "ao": 0.7741234,
+     "clim": 0.6793915
+    },
+    "mean_realised_score": 0.5080717,
+    "mean_pit": {
+     "ar1": 0.242948,
+     "ao": 0.2004214,
+     "clim": 0.3111507
+    },
+    "lowest_crps_of_three": {
+     "origins_with_lowest_crps": {
+      "ar1": 2,
+      "ao": 1,
+      "clim": 8
+     },
+     "origins_with_tied_lowest": 0
+    },
+    "pairwise": {
+     "ar1_vs_ao": {
+      "ar1_lower_crps": 8,
+      "ao_lower_crps": 3,
+      "equal": 0,
+      "sign_test_p_two_sided": 0.2265625,
+      "mean_crps_difference": -0.0092177
+     },
+     "ar1_vs_clim": {
+      "ar1_lower_crps": 3,
+      "clim_lower_crps": 8,
+      "equal": 0,
+      "sign_test_p_two_sided": 0.2265625,
+      "mean_crps_difference": 0.0355531
+     },
+     "ao_vs_clim": {
+      "ao_lower_crps": 3,
+      "clim_lower_crps": 8,
+      "equal": 0,
+      "sign_test_p_two_sided": 0.2265625,
+      "mean_crps_difference": 0.0447707
+     }
+    },
+    "tail_exceedances": {
+     "above_q90": {
+      "ar1": {
+       "count": 0,
+       "expected": 1.1,
+       "P_at_least": 1.0,
+       "P_at_most": 0.3138106,
+       "inconsistent_with_calibration_at_5pct": false
+      },
+      "ao": {
+       "count": 0,
+       "expected": 1.1,
+       "P_at_least": 1.0,
+       "P_at_most": 0.3138106,
+       "inconsistent_with_calibration_at_5pct": false
+      },
+      "clim": {
+       "count": 0,
+       "expected": 1.1,
+       "P_at_least": 1.0,
+       "P_at_most": 0.3138106,
+       "inconsistent_with_calibration_at_5pct": false
+      }
+     },
+     "pit_above_0_9": {
+      "ar1": {
+       "count": 0,
+       "expected": 1.1,
+       "P_at_least": 1.0,
+       "P_at_most": 0.3138106,
+       "inconsistent_with_calibration_at_5pct": false
+      },
+      "ao": {
+       "count": 0,
+       "expected": 1.1,
+       "P_at_least": 1.0,
+       "P_at_most": 0.3138106,
+       "inconsistent_with_calibration_at_5pct": false
+      },
+      "clim": {
+       "count": 0,
+       "expected": 1.1,
+       "P_at_least": 1.0,
+       "P_at_most": 0.3138106,
+       "inconsistent_with_calibration_at_5pct": false
+      }
+     }
+    },
+    "lower_tail_pit_below_0_1": {
+     "ar1": {
+      "count": 7,
+      "expected": 1.1,
+      "P_at_least": 2.29e-05,
+      "P_at_most": 0.9999988
+     },
+     "ao": {
+      "count": 5,
+      "expected": 1.1,
+      "P_at_least": 0.002751,
+      "P_at_most": 0.9997043
+     },
+     "clim": {
+      "count": 2,
+      "expected": 1.1,
+      "P_at_least": 0.3026431,
+      "P_at_most": 0.9104381
+     }
+    },
+    "origins_with_q90_at_cap": {
+     "ar1": 11,
+     "ao": 11,
+     "clim": 11
+    }
+   },
+   "excess": {
+    "n_origins": 11,
+    "n_excluded": 0,
+    "mean_crps": {
+     "ar1": 0.0653916,
+     "ao": 0.0682659,
+     "clim": 0.1509387
+    },
+    "mean_V0": {
+     "ar1": 0.3200721,
+     "ao": 0.3428373,
+     "clim": 0.3108578
+    },
+    "mean_realised_score": 0.1986284,
+    "mean_pit": {
+     "ar1": 0.3144408,
+     "ao": 0.2860187,
+     "clim": 0.4109773
+    },
+    "lowest_crps_of_three": {
+     "origins_with_lowest_crps": {
+      "ar1": 6,
+      "ao": 4,
+      "clim": 1
+     },
+     "origins_with_tied_lowest": 0
+    },
+    "pairwise": {
+     "ar1_vs_ao": {
+      "ar1_lower_crps": 7,
+      "ao_lower_crps": 4,
+      "equal": 0,
+      "sign_test_p_two_sided": 0.5488281,
+      "mean_crps_difference": -0.0028743
+     },
+     "ar1_vs_clim": {
+      "ar1_lower_crps": 10,
+      "clim_lower_crps": 1,
+      "equal": 0,
+      "sign_test_p_two_sided": 0.0117188,
+      "mean_crps_difference": -0.0855471
+     },
+     "ao_vs_clim": {
+      "ao_lower_crps": 9,
+      "clim_lower_crps": 2,
+      "equal": 0,
+      "sign_test_p_two_sided": 0.0654297,
+      "mean_crps_difference": -0.0826729
+     }
+    },
+    "tail_exceedances": {
+     "above_q90": {
+      "ar1": {
+       "count": 0,
+       "expected": 1.1,
+       "P_at_least": 1.0,
+       "P_at_most": 0.3138106,
+       "inconsistent_with_calibration_at_5pct": false
+      },
+      "ao": {
+       "count": 0,
+       "expected": 1.1,
+       "P_at_least": 1.0,
+       "P_at_most": 0.3138106,
+       "inconsistent_with_calibration_at_5pct": false
+      },
+      "clim": {
+       "count": 0,
+       "expected": 1.1,
+       "P_at_least": 1.0,
+       "P_at_most": 0.3138106,
+       "inconsistent_with_calibration_at_5pct": false
+      }
+     },
+     "pit_above_0_9": {
+      "ar1": {
+       "count": 0,
+       "expected": 1.1,
+       "P_at_least": 1.0,
+       "P_at_most": 0.3138106,
+       "inconsistent_with_calibration_at_5pct": false
+      },
+      "ao": {
+       "count": 0,
+       "expected": 1.1,
+       "P_at_least": 1.0,
+       "P_at_most": 0.3138106,
+       "inconsistent_with_calibration_at_5pct": false
+      },
+      "clim": {
+       "count": 0,
+       "expected": 1.1,
+       "P_at_least": 1.0,
+       "P_at_most": 0.3138106,
+       "inconsistent_with_calibration_at_5pct": false
+      }
+     }
+    },
+    "lower_tail_pit_below_0_1": {
+     "ar1": {
+      "count": 4,
+      "expected": 1.1,
+      "P_at_least": 0.0185348,
+      "P_at_most": 0.997249
+     },
+     "ao": {
+      "count": 4,
+      "expected": 1.1,
+      "P_at_least": 0.0185348,
+      "P_at_most": 0.997249
+     },
+     "clim": {
+      "count": 1,
+      "expected": 1.1,
+      "P_at_least": 0.6861894,
+      "P_at_most": 0.6973569
+     }
+    },
+    "origins_with_q90_at_cap": {
+     "ar1": 3,
+     "ao": 3,
+     "clim": 10
+    }
+   }
+  },
+  "A": {
+   "label": "fixed caps 8 pp / 80 pp-months (retrospective: chosen after seeing 2021–24)",
+   "cooling": {
+    "n_origins": 11,
+    "n_excluded": 0,
+    "mean_crps": {
+     "ar1": 0.2375048,
+     "ao": 0.2473025,
+     "clim": 0.2033401
+    },
+    "mean_V0": {
+     "ar1": 0.7528864,
+     "ao": 0.7506335,
+     "clim": 0.6605964
+    },
+    "mean_realised_score": 0.4881532,
+    "mean_pit": {
+     "ar1": 0.1962064,
+     "ao": 0.2206498,
+     "clim": 0.3415617
+    },
+    "lowest_crps_of_three": {
+     "origins_with_lowest_crps": {
+      "ar1": 2,
+      "ao": 1,
+      "clim": 8
+     },
+     "origins_with_tied_lowest": 0
+    },
+    "pairwise": {
+     "ar1_vs_ao": {
+      "ar1_lower_crps": 8,
+      "ao_lower_crps": 3,
+      "equal": 0,
+      "sign_test_p_two_sided": 0.2265625,
+      "mean_crps_difference": -0.0097977
+     },
+     "ar1_vs_clim": {
+      "ar1_lower_crps": 3,
+      "clim_lower_crps": 8,
+      "equal": 0,
+      "sign_test_p_two_sided": 0.2265625,
+      "mean_crps_difference": 0.0341647
+     },
+     "ao_vs_clim": {
+      "ao_lower_crps": 3,
+      "clim_lower_crps": 8,
+      "equal": 0,
+      "sign_test_p_two_sided": 0.2265625,
+      "mean_crps_difference": 0.0439624
+     }
+    },
+    "tail_exceedances": {
+     "above_q90": {
+      "ar1": {
+       "count": 0,
+       "expected": 1.1,
+       "P_at_least": 1.0,
+       "P_at_most": 0.3138106,
+       "inconsistent_with_calibration_at_5pct": false
+      },
+      "ao": {
+       "count": 0,
+       "expected": 1.1,
+       "P_at_least": 1.0,
+       "P_at_most": 0.3138106,
+       "inconsistent_with_calibration_at_5pct": false
+      },
+      "clim": {
+       "count": 0,
+       "expected": 1.1,
+       "P_at_least": 1.0,
+       "P_at_most": 0.3138106,
+       "inconsistent_with_calibration_at_5pct": false
+      }
+     },
+     "pit_above_0_9": {
+      "ar1": {
+       "count": 0,
+       "expected": 1.1,
+       "P_at_least": 1.0,
+       "P_at_most": 0.3138106,
+       "inconsistent_with_calibration_at_5pct": false
+      },
+      "ao": {
+       "count": 0,
+       "expected": 1.1,
+       "P_at_least": 1.0,
+       "P_at_most": 0.3138106,
+       "inconsistent_with_calibration_at_5pct": false
+      },
+      "clim": {
+       "count": 0,
+       "expected": 1.1,
+       "P_at_least": 1.0,
+       "P_at_most": 0.3138106,
+       "inconsistent_with_calibration_at_5pct": false
+      }
+     }
+    },
+    "lower_tail_pit_below_0_1": {
+     "ar1": {
+      "count": 7,
+      "expected": 1.1,
+      "P_at_least": 2.29e-05,
+      "P_at_most": 0.9999988
+     },
+     "ao": {
+      "count": 5,
+      "expected": 1.1,
+      "P_at_least": 0.002751,
+      "P_at_most": 0.9997043
+     },
+     "clim": {
+      "count": 2,
+      "expected": 1.1,
+      "P_at_least": 0.3026431,
+      "P_at_most": 0.9104381
+     }
+    },
+    "origins_with_q90_at_cap": {
+     "ar1": 11,
+     "ao": 11,
+     "clim": 11
+    }
+   },
+   "excess": {
+    "n_origins": 11,
+    "n_excluded": 0,
+    "mean_crps": {
+     "ar1": 0.1427944,
+     "ao": 0.1434806,
+     "clim": 0.2125025
+    },
+    "mean_V0": {
+     "ar1": 0.4857263,
+     "ao": 0.4849994,
+     "clim": 0.4259231
+    },
+    "mean_realised_score": 0.236454,
+    "mean_pit": {
+     "ar1": 0.3155867,
+     "ao": 0.3139608,
+     "clim": 0.3938726
+    },
+    "lowest_crps_of_three": {
+     "origins_with_lowest_crps": {
+      "ar1": 2,
+      "ao": 7,
+      "clim": 2
+     },
+     "origins_with_tied_lowest": 0
+    },
+    "pairwise": {
+     "ar1_vs_ao": {
+      "ar1_lower_crps": 4,
+      "ao_lower_crps": 7,
+      "equal": 0,
+      "sign_test_p_two_sided": 0.5488281,
+      "mean_crps_difference": -0.0006862
+     },
+     "ar1_vs_clim": {
+      "ar1_lower_crps": 9,
+      "clim_lower_crps": 2,
+      "equal": 0,
+      "sign_test_p_two_sided": 0.0654297,
+      "mean_crps_difference": -0.0697081
+     },
+     "ao_vs_clim": {
+      "ao_lower_crps": 9,
+      "clim_lower_crps": 2,
+      "equal": 0,
+      "sign_test_p_two_sided": 0.0654297,
+      "mean_crps_difference": -0.0690219
+     }
+    },
+    "tail_exceedances": {
+     "above_q90": {
+      "ar1": {
+       "count": 0,
+       "expected": 1.1,
+       "P_at_least": 1.0,
+       "P_at_most": 0.3138106,
+       "inconsistent_with_calibration_at_5pct": false
+      },
+      "ao": {
+       "count": 0,
+       "expected": 1.1,
+       "P_at_least": 1.0,
+       "P_at_most": 0.3138106,
+       "inconsistent_with_calibration_at_5pct": false
+      },
+      "clim": {
+       "count": 0,
+       "expected": 1.1,
+       "P_at_least": 1.0,
+       "P_at_most": 0.3138106,
+       "inconsistent_with_calibration_at_5pct": false
+      }
+     },
+     "pit_above_0_9": {
+      "ar1": {
+       "count": 1,
+       "expected": 1.1,
+       "P_at_least": 0.6861894,
+       "P_at_most": 0.6973569,
+       "inconsistent_with_calibration_at_5pct": false
+      },
+      "ao": {
+       "count": 0,
+       "expected": 1.1,
+       "P_at_least": 1.0,
+       "P_at_most": 0.3138106,
+       "inconsistent_with_calibration_at_5pct": false
+      },
+      "clim": {
+       "count": 1,
+       "expected": 1.1,
+       "P_at_least": 0.6861894,
+       "P_at_most": 0.6973569,
+       "inconsistent_with_calibration_at_5pct": false
+      }
+     }
+    },
+    "lower_tail_pit_below_0_1": {
+     "ar1": {
+      "count": 2,
+      "expected": 1.1,
+      "P_at_least": 0.3026431,
+      "P_at_most": 0.9104381
+     },
+     "ao": {
+      "count": 3,
+      "expected": 1.1,
+      "P_at_least": 0.0895619,
+      "P_at_most": 0.9814652
+     },
+     "clim": {
+      "count": 2,
+      "expected": 1.1,
+      "P_at_least": 0.3026431,
+      "P_at_most": 0.9104381
+     }
+    },
+    "origins_with_q90_at_cap": {
+     "ar1": 10,
+     "ao": 11,
+     "clim": 11
+    }
+   }
+  }
+ },
+ "reference_origin_2021_01": {
+  "note": "V0 at the 2021-01 origin (the demo window 2021-01..2024-12) under four fits and both cap sets, side by side. No fit is chosen as 'the' answer. The 2021-01 window is not one of the 11 evaluated origins. Fixed caps are retrospective: chosen after seeing 2021–24.",
+  "t0": "2021-01",
+  "n_paths": 10000,
+  "caps": {
+   "fixed_caps_retrospective": {
+    "cooling": 80000,
+    "excess": 800000,
+    "label": "retrospective: chosen after seeing 2021–24"
+   },
+   "pre_origin_caps": {
+    "cooling": 76973,
+    "excess": 1881805,
+    "n_windows": 685
+   }
+  },
+  "realised_stats": {
+   "D": 66191,
+   "A": 691184
+  },
+  "realised_scores_informational": {
+   "fixed_caps_retrospective": {
+    "cooling": 0.827387,
+    "excess": 0.86398
+   },
+   "pre_origin_caps": {
+    "cooling": 0.859924,
+    "excess": 0.367298
+   }
+  },
+  "fits": [
+   {
+    "key": "ar1_all_history",
+    "name": "AR(1), fitted on all history",
+    "model": "ar1",
+    "fit_sample": "1914-01..2020-12",
+    "n": 1284,
+    "parameters": {
+     "a": 0.0430361,
+     "b": 0.9864645,
+     "resid_sd": 0.817782
+    },
+    "x0_pct": 1.362,
+    "V0": {
+     "fixed_caps_retrospective": {
+      "cooling": 0.6629997,
+      "excess": 0.2489374
+     },
+     "pre_origin_caps": {
+      "cooling": 0.6833964,
+      "excess": 0.1327053
+     }
+    },
+    "mc_se_of_V0": {
+     "fixed_caps_retrospective": {
+      "cooling": 0.0021952,
+      "excess": 0.0034999
+     },
+     "pre_origin_caps": {
+      "cooling": 0.0021971,
+      "excess": 0.0022125
+     }
+    }
+   },
+   {
+    "key": "ar1_1997_2020",
+    "name": "AR(1), fitted on 1997-01..2020-12 (288 months)",
+    "model": "ar1",
+    "fit_sample": "1997-01..2020-12",
+    "n": 288,
+    "parameters": {
+     "a": 0.1324717,
+     "b": 0.9346882,
+     "resid_sd": 0.4173999
+    },
+    "x0_pct": 1.362,
+    "V0": {
+     "fixed_caps_retrospective": {
+      "cooling": 0.3194111,
+      "excess": 0.0076661
+     },
+     "pre_origin_caps": {
+      "cooling": 0.3319719,
+      "excess": 0.0032589
+     }
+    },
+    "mc_se_of_V0": {
+     "fixed_caps_retrospective": {
+      "cooling": 0.0009974,
+      "excess": 0.0002751
+     },
+     "pre_origin_caps": {
+      "cooling": 0.0010367,
+      "excess": 0.0001169
+     }
+    }
+   },
+   {
+    "key": "ao_all_history",
+    "name": "Atkeson-Ohanian random walk, fitted on all history",
+    "model": "ao",
+    "fit_sample": "1914-01..2020-12",
+    "n": 1284,
+    "parameters": {
+     "a": 0.0,
+     "b": 1.0,
+     "sigma_delta": 0.8202366
+    },
+    "x0_pct": 1.362,
+    "V0": {
+     "fixed_caps_retrospective": {
+      "cooling": 0.7005453,
+      "excess": 0.2443163
+     },
+     "pre_origin_caps": {
+      "cooling": 0.7184461,
+      "excess": 0.1443628
+     }
+    },
+    "mc_se_of_V0": {
+     "fixed_caps_retrospective": {
+      "cooling": 0.0024018,
+      "excess": 0.0036625
+     },
+     "pre_origin_caps": {
+      "cooling": 0.002379,
+      "excess": 0.0025794
+     }
+    }
+   },
+   {
+    "key": "ao_1997_2020",
+    "name": "Atkeson-Ohanian random walk, fitted on 1997-01..2020-12 (288 months)",
+    "model": "ao",
+    "fit_sample": "1997-01..2020-12",
+    "n": 288,
+    "parameters": {
+     "a": 0.0,
+     "b": 1.0,
+     "sigma_delta": 0.4236854
+    },
+    "x0_pct": 1.362,
+    "V0": {
+     "fixed_caps_retrospective": {
+      "cooling": 0.3971608,
+      "excess": 0.0669258
+     },
+     "pre_origin_caps": {
+      "cooling": 0.4124422,
+      "excess": 0.0300631
+     }
+    },
+    "mc_se_of_V0": {
+     "fixed_caps_retrospective": {
+      "cooling": 0.0018478,
+      "excess": 0.0018203
+     },
+     "pre_origin_caps": {
+      "cooling": 0.0019098,
+      "excess": 0.0008775
+     }
+    }
+   }
+  ]
+ },
+ "origins": [
+  {
+   "t0": "1975-01",
+   "window": "1975-01..1978-12",
+   "fit_ar1": {
+    "n": 732,
+    "first_obs": "1914-01",
+    "last_obs": "1974-12",
+    "a": 0.0501972,
+    "b": 0.9872515,
+    "resid_sd": 1.0287712,
+    "x0_pct": 12.3376
+   },
+   "fit_ao": {
+    "n": 732,
+    "n_changes": 731,
+    "first_obs": "1914-01",
+    "last_obs": "1974-12",
+    "sigma_delta": 1.030977,
+    "x0_pct": 12.3376
+   },
+   "climatology_windows": 685,
+   "caps_B": {
+    "cooling": 34878,
+    "excess": 507937,
+    "n_windows": 133
+   },
+   "realised_stats": {
+    "D": 69377,
+    "A": 1567417
+   }
+  },
+  {
+   "t0": "1979-01",
+   "window": "1979-01..1982-12",
+   "fit_ar1": {
+    "n": 780,
+    "first_obs": "1914-01",
+    "last_obs": "1978-12",
+    "a": 0.0506801,
+    "b": 0.986584,
+    "resid_sd": 1.0015339,
+    "x0_pct": 9.0177
+   },
+   "fit_ao": {
+    "n": 780,
+    "n_changes": 779,
+    "first_obs": "1914-01",
+    "last_obs": "1978-12",
+    "sigma_delta": 1.0041184,
+    "x0_pct": 9.0177
+   },
+   "climatology_windows": 733,
+   "caps_B": {
+    "cooling": 74728,
+    "excess": 1894675,
+    "n_windows": 181
+   },
+   "realised_stats": {
+    "D": 109267,
+    "A": 3039358
+   }
+  },
+  {
+   "t0": "1983-01",
+   "window": "1983-01..1986-12",
+   "fit_ar1": {
+    "n": 828,
+    "first_obs": "1914-01",
+    "last_obs": "1982-12",
+    "a": 0.0481467,
+    "b": 0.9869928,
+    "resid_sd": 0.9803321,
+    "x0_pct": 3.8297
+   },
+   "fit_ao": {
+    "n": 828,
+    "n_changes": 827,
+    "first_obs": "1914-01",
+    "last_obs": "1982-12",
+    "sigma_delta": 0.9829487,
+    "x0_pct": 3.8297
+   },
+   "climatology_windows": 781,
+   "caps_B": {
+    "cooling": 74728,
+    "excess": 2826719,
+    "n_windows": 229
+   },
+   "realised_stats": {
+    "D": 37030,
+    "A": 36826
+   }
+  },
+  {
+   "t0": "1987-01",
+   "window": "1987-01..1990-12",
+   "fit_ar1": {
+    "n": 876,
+    "first_obs": "1914-01",
+    "last_obs": "1986-12",
+    "a": 0.0446219,
+    "b": 0.9870258,
+    "resid_sd": 0.9560058,
+    "x0_pct": 1.0978
+   },
+   "fit_ao": {
+    "n": 876,
+    "n_changes": 875,
+    "first_obs": "1914-01",
+    "last_obs": "1986-12",
+    "sigma_delta": 0.9585586,
+    "x0_pct": 1.0978
+   },
+   "climatology_windows": 829,
+   "caps_B": {
+    "cooling": 91126,
+    "excess": 2770661,
+    "n_windows": 277
+   },
+   "realised_stats": {
+    "D": 10212,
+    "A": 300883
+   }
+  },
+  {
+   "t0": "1991-01",
+   "window": "1991-01..1994-12",
+   "fit_ar1": {
+    "n": 924,
+    "first_obs": "1914-01",
+    "last_obs": "1990-12",
+    "a": 0.0508198,
+    "b": 0.9869885,
+    "resid_sd": 0.933543,
+    "x0_pct": 6.1062
+   },
+   "fit_ao": {
+    "n": 924,
+    "n_changes": 923,
+    "first_obs": "1914-01",
+    "last_obs": "1990-12",
+    "sigma_delta": 0.936071,
+    "x0_pct": 6.1062
+   },
+   "climatology_windows": 877,
+   "caps_B": {
+    "cooling": 84908,
+    "excess": 2594136,
+    "n_windows": 325
+   },
+   "realised_stats": {
+    "D": 33630,
+    "A": 68437
+   }
+  },
+  {
+   "t0": "1995-01",
+   "window": "1995-01..1998-12",
+   "fit_ar1": {
+    "n": 972,
+    "first_obs": "1914-01",
+    "last_obs": "1994-12",
+    "a": 0.0472964,
+    "b": 0.9868725,
+    "resid_sd": 0.9115726,
+    "x0_pct": 2.6748
+   },
+   "fit_ao": {
+    "n": 972,
+    "n_changes": 971,
+    "first_obs": "1914-01",
+    "last_obs": "1994-12",
+    "sigma_delta": 0.9141131,
+    "x0_pct": 2.6748
+   },
+   "climatology_windows": 925,
+   "caps_B": {
+    "cooling": 83017,
+    "excess": 2421673,
+    "n_windows": 373
+   },
+   "realised_stats": {
+    "D": 19474,
+    "A": 0
+   }
+  },
+  {
+   "t0": "1999-01",
+   "window": "1999-01..2002-12",
+   "fit_ar1": {
+    "n": 1020,
+    "first_obs": "1914-01",
+    "last_obs": "1998-12",
+    "a": 0.045312,
+    "b": 0.9869341,
+    "resid_sd": 0.8904161,
+    "x0_pct": 1.6119
+   },
+   "fit_ao": {
+    "n": 1020,
+    "n_changes": 1019,
+    "first_obs": "1914-01",
+    "last_obs": "1998-12",
+    "sigma_delta": 0.8928948,
+    "x0_pct": 1.6119
+   },
+   "climatology_windows": 973,
+   "caps_B": {
+    "cooling": 76800,
+    "excess": 2217792,
+    "n_windows": 421
+   },
+   "realised_stats": {
+    "D": 26901,
+    "A": 0
+   }
+  },
+  {
+   "t0": "2003-01",
+   "window": "2003-01..2006-12",
+   "fit_ar1": {
+    "n": 1068,
+    "first_obs": "1914-01",
+    "last_obs": "2002-12",
+    "a": 0.0457236,
+    "b": 0.9868542,
+    "resid_sd": 0.8726598,
+    "x0_pct": 2.3769
+   },
+   "fit_ao": {
+    "n": 1068,
+    "n_changes": 1067,
+    "first_obs": "1914-01",
+    "last_obs": "2002-12",
+    "sigma_delta": 0.8751342,
+    "x0_pct": 2.3769
+   },
+   "climatology_windows": 1021,
+   "caps_B": {
+    "cooling": 74728,
+    "excess": 2043514,
+    "n_windows": 469
+   },
+   "realised_stats": {
+    "D": 33814,
+    "A": 16650
+   }
+  },
+  {
+   "t0": "2007-01",
+   "window": "2007-01..2010-12",
+   "fit_ar1": {
+    "n": 1116,
+    "first_obs": "1914-01",
+    "last_obs": "2006-12",
+    "a": 0.0461399,
+    "b": 0.9866786,
+    "resid_sd": 0.8597637,
+    "x0_pct": 2.5406
+   },
+   "fit_ao": {
+    "n": 1116,
+    "n_changes": 1115,
+    "first_obs": "1914-01",
+    "last_obs": "2006-12",
+    "sigma_delta": 0.8622581,
+    "x0_pct": 2.5406
+   },
+   "climatology_windows": 1069,
+   "caps_B": {
+    "cooling": 74728,
+    "excess": 2016635,
+    "n_windows": 517
+   },
+   "realised_stats": {
+    "D": 76973,
+    "A": 58001
+   }
+  },
+  {
+   "t0": "2011-01",
+   "window": "2011-01..2014-12",
+   "fit_ar1": {
+    "n": 1164,
+    "first_obs": "1914-01",
+    "last_obs": "2010-12",
+    "a": 0.0451237,
+    "b": 0.9864786,
+    "resid_sd": 0.8531957,
+    "x0_pct": 1.4957
+   },
+   "fit_ao": {
+    "n": 1164,
+    "n_changes": 1163,
+    "first_obs": "1914-01",
+    "last_obs": "2010-12",
+    "sigma_delta": 0.8557201,
+    "x0_pct": 1.4957
+   },
+   "climatology_windows": 1117,
+   "caps_B": {
+    "cooling": 76973,
+    "excess": 1978583,
+    "n_windows": 565
+   },
+   "realised_stats": {
+    "D": 31119,
+    "A": 0
+   }
+  },
+  {
+   "t0": "2015-01",
+   "window": "2015-01..2018-12",
+   "fit_ar1": {
+    "n": 1212,
+    "first_obs": "1914-01",
+    "last_obs": "2014-12",
+    "a": 0.04378,
+    "b": 0.9864988,
+    "resid_sd": 0.8384469,
+    "x0_pct": 0.7564
+   },
+   "fit_ao": {
+    "n": 1212,
+    "n_changes": 1211,
+    "first_obs": "1914-01",
+    "last_obs": "2014-12",
+    "sigma_delta": 0.8409271,
+    "x0_pct": 0.7564
+   },
+   "climatology_windows": 1165,
+   "caps_B": {
+    "cooling": 76973,
+    "excess": 1949868,
+    "n_windows": 613
+   },
+   "realised_stats": {
+    "D": 11045,
+    "A": 0
+   }
+  }
+ ],
+ "conclusions": [
+  "Lowest mean CRPS of the three models: cooling policy B: climatology; excess policy B: AR(1); cooling policy A: climatology; excess policy A: AR(1). These are averages over 11 origins.",
+  "AR(1) and AO score almost alike: their mean CRPS differ by at most 0.0098 in any of the 4 policy/product cells, and the fitted AR(1) coefficient b is 0.9865 to 0.9873 across origins, close to the random walk's 1.",
+  "In 12 of the 12 policy/product/model cells the mean V0 is above the mean realised score, i.e. the score forecasts ran high on average. Origins whose randomised PIT is below 0.1 (11 origins, 1.1 expected per model; a count of 4 or more has probability 0.0185 under calibration): cooling policy B: AR(1) 7, AO 5, climatology 2; excess policy B: AR(1) 4, AO 4, climatology 1; cooling policy A: AR(1) 7, AO 5, climatology 2; excess policy A: AR(1) 2, AO 3, climatology 2.",
+  "Cooling, policy B (pre-origin p90 caps): mean CRPS AR(1) 0.2265, AO 0.2357, climatology 0.1909; lowest mean CRPS: climatology. Lowest CRPS of the three at AR(1) 2, AO 1, climatology 8 of 11 origins. Mean V0 AR(1) 0.769, AO 0.774, climatology 0.679 against a mean realised score of 0.508.",
+  "  Pairwise CRPS, exact two-sided sign test: AR(1) lower than AO at 8 of 11 (p = 0.23); AR(1) lower than climatology at 3 of 11 (p = 0.23); AO lower than climatology at 3 of 11 (p = 0.23).",
+  "  Tail: randomised exceedances of the 90th percentile AR(1) 0, AO 0, climatology 0 (expected 1.1); literal 'realised above the 90th percentile' AR(1) 0, AO 0, climatology 0.",
+  "Excess, policy B (pre-origin p90 caps): mean CRPS AR(1) 0.0654, AO 0.0683, climatology 0.1509; lowest mean CRPS: AR(1). Lowest CRPS of the three at AR(1) 6, AO 4, climatology 1 of 11 origins. Mean V0 AR(1) 0.320, AO 0.343, climatology 0.311 against a mean realised score of 0.199.",
+  "  Pairwise CRPS, exact two-sided sign test: AR(1) lower than AO at 7 of 11 (p = 0.55); AR(1) lower than climatology at 10 of 11 (p = 0.01); AO lower than climatology at 9 of 11 (p = 0.07).",
+  "  Tail: randomised exceedances of the 90th percentile AR(1) 0, AO 0, climatology 0 (expected 1.1); literal 'realised above the 90th percentile' AR(1) 0, AO 0, climatology 0.",
+  "Cooling, policy A (retrospective: chosen after seeing 2021–24): mean CRPS AR(1) 0.2375, AO 0.2473, climatology 0.2033; lowest mean CRPS: climatology. Lowest CRPS of the three at AR(1) 2, AO 1, climatology 8 of 11 origins. Mean V0 AR(1) 0.753, AO 0.751, climatology 0.661 against a mean realised score of 0.488.",
+  "  Pairwise CRPS, exact two-sided sign test: AR(1) lower than AO at 8 of 11 (p = 0.23); AR(1) lower than climatology at 3 of 11 (p = 0.23); AO lower than climatology at 3 of 11 (p = 0.23).",
+  "  Tail: randomised exceedances of the 90th percentile AR(1) 0, AO 0, climatology 0 (expected 1.1); literal 'realised above the 90th percentile' AR(1) 0, AO 0, climatology 0.",
+  "Excess, policy A (retrospective: chosen after seeing 2021–24): mean CRPS AR(1) 0.1428, AO 0.1435, climatology 0.2125; lowest mean CRPS: AR(1). Lowest CRPS of the three at AR(1) 2, AO 7, climatology 2 of 11 origins. Mean V0 AR(1) 0.486, AO 0.485, climatology 0.426 against a mean realised score of 0.236.",
+  "  Pairwise CRPS, exact two-sided sign test: AR(1) lower than AO at 4 of 11 (p = 0.55); AR(1) lower than climatology at 9 of 11 (p = 0.07); AO lower than climatology at 9 of 11 (p = 0.07).",
+  "  Tail: randomised exceedances of the 90th percentile AR(1) 1, AO 0, climatology 1 (expected 1.1); literal 'realised above the 90th percentile' AR(1) 0, AO 0, climatology 0.",
+  "Where a model's 90th percentile of the score equals the cap (more than 10% of its mass at the cap) the literal 'realised above the 90th percentile' flag cannot fire, because no score exceeds the cap. Origins with that property: cooling policy B: AR(1) 11, AO 11, climatology 11 of 11; excess policy B: AR(1) 3, AO 3, climatology 10 of 11; cooling policy A: AR(1) 11, AO 11, climatology 11 of 11; excess policy A: AR(1) 10, AO 11, climatology 11 of 11. The randomised exceedance is the usable count there.",
+  "Of 12 pairwise sign tests, 1 reaches p <= 0.05 (excess policy B, AR(1) vs climatology). With 12 comparisons that are not independent, about 0.6 would cross 5% by chance alone, so a single small p-value here is not evidence that an ordering persists.",
+  "n = 11: cannot validate a 10% tail. With p = 0.1 and n = 11, each of 0, 1, 2 and 3 exceedances has probability above 5% under calibration (0: 0.314, 1: 0.384, 2: 0.213, 3: 0.071), so no count from 0 to 3 can be told apart from a calibrated forecast, and the upper tail only reaches P(X >= k) <= 5% at k = 4 (P(X >= 4) = 0.0185); a count of 4 or more is needed to question the 90th percentile at all, and nothing here can show it is right.",
+  "At the 2021-01 origin the four fits (AR(1) and AO, each on all history and on 1997-01..2020-12) give V0 of: cooling with fixed caps 8/80 (retrospective: chosen after seeing 2021–24), 0.319 to 0.701; cooling with 2021-01 pre-origin caps, 0.332 to 0.718; excess with fixed caps 8/80 (retrospective: chosen after seeing 2021–24), 0.008 to 0.249; excess with 2021-01 pre-origin caps, 0.003 to 0.144. They are shown side by side and none is chosen as the answer: the spread is the effect of the fit window and the model, before any question of which one is right.",
+  "These are descriptive results for 11 historical 48-month windows between 1975 and 2018. They show how the three forecasts scored on those windows. They do not show that any model forecasts the 2021–24 window, or any future window, better than another, and they do not validate a 90th-percentile tail."
+ ],
+ "rows": {
+  "B": {
+   "cooling": [
+    {"t0":"1975-01","cap":34878,"realised_stat":69377,"realised_score":1.0,"models":{"ar1":{"V0":0.9979611,"crps":1.96e-05,"pit":0.7698795,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false},"ao":{"V0":0.9880541,"crps":0.0005006,"pit":0.1597872,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false},"clim":{"V0":0.8646122,"crps":0.0268653,"pit":0.3175395,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false}}},
+    {"t0":"1979-01","cap":74728,"realised_stat":109267,"realised_score":1.0,"models":{"ar1":{"V0":0.8793798,"crps":0.0360321,"pit":0.7390777,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false},"ao":{"V0":0.8156925,"crps":0.0710743,"pit":0.8161849,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false},"clim":{"V0":0.7210083,"crps":0.1026114,"pit":0.6437375,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false}}},
+    {"t0":"1983-01","cap":74728,"realised_stat":37030,"realised_score":0.49553,"models":{"ar1":{"V0":0.8174533,"crps":0.2270231,"pit":0.0909,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":true},"ao":{"V0":0.8051155,"crps":0.2146145,"pit":0.1155,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false},"clim":{"V0":0.7131233,"crps":0.1816217,"pit":0.3265045,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false}}},
+    {"t0":"1987-01","cap":91126,"realised_stat":10212,"realised_score":0.112064,"models":{"ar1":{"V0":0.6724879,"crps":0.4339377,"pit":0.0,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":true},"ao":{"V0":0.7133032,"crps":0.4661463,"pit":0.0,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":true},"clim":{"V0":0.6606352,"crps":0.3661199,"pit":0.0349819,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":true}}},
+    {"t0":"1991-01","cap":84908,"realised_stat":33630,"realised_score":0.396075,"models":{"ar1":{"V0":0.76228,"crps":0.2518705,"pit":0.0506,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":true},"ao":{"V0":0.7308762,"crps":0.2147989,"pit":0.0918,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":true},"clim":{"V0":0.6645849,"crps":0.181609,"pit":0.2759407,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false}}},
+    {"t0":"1995-01","cap":83017,"realised_stat":19474,"realised_score":0.234578,"models":{"ar1":{"V0":0.7141271,"crps":0.3541168,"pit":0.0028,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":true},"ao":{"V0":0.7320452,"crps":0.3653936,"pit":0.0061,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":true},"clim":{"V0":0.6580291,"crps":0.2676383,"pit":0.1535135,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false}}},
+    {"t0":"1999-01","cap":76800,"realised_stat":26901,"realised_score":0.350273,"models":{"ar1":{"V0":0.7291333,"crps":0.257968,"pit":0.036,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":true},"ao":{"V0":0.7576751,"crps":0.2837855,"pit":0.0434833,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":true},"clim":{"V0":0.658428,"crps":0.1992528,"pit":0.2384378,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false}}},
+    {"t0":"2003-01","cap":74728,"realised_stat":33814,"realised_score":0.452494,"models":{"ar1":{"V0":0.7468449,"crps":0.1876856,"pit":0.1065,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false},"ao":{"V0":0.7600298,"crps":0.2002806,"pit":0.1266,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false},"clim":{"V0":0.6468745,"crps":0.1484521,"pit":0.34476,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false}}},
+    {"t0":"2007-01","cap":74728,"realised_stat":76973,"realised_score":1.0,"models":{"ar1":{"V0":0.7420335,"crps":0.1349578,"pit":0.7873706,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false},"ao":{"V0":0.7535799,"crps":0.1175922,"pit":0.7418804,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false},"clim":{"V0":0.6316311,"crps":0.1783499,"pit":0.6745629,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false}}},
+    {"t0":"2011-01","cap":76973,"realised_stat":31119,"realised_score":0.404284,"models":{"ar1":{"V0":0.7066841,"crps":0.188546,"pit":0.0891,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":true},"ao":{"V0":0.7352141,"crps":0.2126721,"pit":0.1033,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false},"clim":{"V0":0.6270102,"crps":0.1486741,"pit":0.3285586,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false}}},
+    {"t0":"2015-01","cap":76973,"realised_stat":11045,"realised_score":0.143491,"models":{"ar1":{"V0":0.6886692,"crps":0.4190755,"pit":0.0002,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":true},"ao":{"V0":0.723772,"crps":0.4457684,"pit":0.0,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":true},"clim":{"V0":0.6273693,"crps":0.2989546,"pit":0.0841202,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":true}}}
+   ],
+   "excess": [
+    {"t0":"1975-01","cap":507937,"realised_stat":1567417,"realised_score":1.0,"models":{"ar1":{"V0":0.9977384,"crps":1.44e-05,"pit":0.719916,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false},"ao":{"V0":0.9982449,"crps":7.2e-06,"pit":0.0934327,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":true},"clim":{"V0":0.4470015,"crps":0.309797,"pit":0.8940823,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false}}},
+    {"t0":"1979-01","cap":1894675,"realised_stat":3039358,"realised_score":1.0,"models":{"ar1":{"V0":0.7543086,"crps":0.0870307,"pit":0.7142228,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false},"ao":{"V0":0.8105215,"crps":0.050609,"pit":0.7265499,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false},"clim":{"V0":0.3255443,"crps":0.4674972,"pit":0.8908421,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false}}},
+    {"t0":"1983-01","cap":2826719,"realised_stat":36826,"realised_score":0.013027,"models":{"ar1":{"V0":0.2395064,"crps":0.0863167,"pit":0.2147,"q90":0.687735,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false},"ao":{"V0":0.2761501,"crps":0.0998371,"pit":0.2399,"q90":0.848764,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false},"clim":{"V0":0.2892153,"crps":0.0992216,"pit":0.3956466,"q90":0.987801,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false}}},
+    {"t0":"1987-01","cap":2770661,"realised_stat":300883,"realised_score":0.108596,"models":{"ar1":{"V0":0.1184877,"crps":0.0484127,"pit":0.6897,"q90":0.388001,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false},"ao":{"V0":0.1242345,"crps":0.0561382,"pit":0.7215,"q90":0.443234,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false},"clim":{"V0":0.3014945,"crps":0.0987212,"pit":0.4873341,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false}}},
+    {"t0":"1991-01","cap":2594136,"realised_stat":68437,"realised_score":0.026381,"models":{"ar1":{"V0":0.4206712,"crps":0.2106464,"pit":0.0604,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":true},"ao":{"V0":0.4877822,"crps":0.2558997,"pit":0.0687,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":true},"clim":{"V0":0.2996693,"crps":0.0999767,"pit":0.4002281,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false}}},
+    {"t0":"1995-01","cap":2421673,"realised_stat":0,"realised_score":0.0,"models":{"ar1":{"V0":0.1931488,"crps":0.0663755,"pit":0.0440685,"q90":0.58991,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":true},"ao":{"V0":0.2122747,"crps":0.0665823,"pit":0.2120209,"q90":0.72109,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false},"clim":{"V0":0.303135,"crps":0.1100443,"pit":0.0551043,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":true}}},
+    {"t0":"1999-01","cap":2217792,"realised_stat":0,"realised_score":0.0,"models":{"ar1":{"V0":0.149704,"crps":0.0420871,"pit":0.0124124,"q90":0.491461,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":true},"ao":{"V0":0.1558266,"crps":0.0382358,"pit":0.0989775,"q90":0.565248,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":true},"clim":{"V0":0.3037513,"crps":0.1073648,"pit":0.1631913,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false}}},
+    {"t0":"2003-01","cap":2043514,"realised_stat":16650,"realised_score":0.008147,"models":{"ar1":{"V0":0.1928663,"crps":0.0583173,"pit":0.321,"q90":0.618627,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false},"ao":{"V0":0.2064194,"crps":0.0590246,"pit":0.3763,"q90":0.718717,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false},"clim":{"V0":0.3026864,"crps":0.1013754,"pit":0.3525955,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false}}},
+    {"t0":"2007-01","cap":2016635,"realised_stat":58001,"realised_score":0.028761,"models":{"ar1":{"V0":0.1984516,"crps":0.0555873,"pit":0.411,"q90":0.631947,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false},"ao":{"V0":0.2190875,"crps":0.0610882,"pit":0.4491,"q90":0.77757,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false},"clim":{"V0":0.2912103,"crps":0.0906533,"pit":0.4593078,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false}}},
+    {"t0":"2011-01","cap":1978583,"realised_stat":0,"realised_score":0.0,"models":{"ar1":{"V0":0.1455186,"crps":0.0390872,"pit":0.0057406,"q90":0.489252,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":true},"ao":{"V0":0.1606218,"crps":0.0395186,"pit":0.1241877,"q90":0.596778,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false},"clim":{"V0":0.2824731,"crps":0.0907586,"pit":0.1741254,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false}}},
+    {"t0":"2015-01","cap":1949868,"realised_stat":0,"realised_score":0.0,"models":{"ar1":{"V0":0.1103911,"crps":0.0254326,"pit":0.2656882,"q90":0.373523,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false},"ao":{"V0":0.1200468,"crps":0.0239838,"pit":0.0355369,"q90":0.443774,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":true},"clim":{"V0":0.2732548,"crps":0.0849159,"pit":0.2482928,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false}}}
+   ]
+  },
+  "A": {
+   "cooling": [
+    {"t0":"1975-01","cap":80000,"realised_stat":69377,"realised_score":0.867212,"models":{"ar1":{"V0":0.8953241,"crps":0.0665332,"pit":0.2957,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false},"ao":{"V0":0.7981729,"crps":0.0682091,"pit":0.4974078,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false},"clim":{"V0":0.6965521,"crps":0.1161596,"pit":0.4846715,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false}}},
+    {"t0":"1979-01","cap":80000,"realised_stat":109267,"realised_score":1.0,"models":{"ar1":{"V0":0.8541843,"crps":0.0503509,"pit":0.7039708,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false},"ao":{"V0":0.7881843,"crps":0.0902661,"pit":0.7306124,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false},"clim":{"V0":0.7019763,"crps":0.1171311,"pit":0.811228,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false}}},
+    {"t0":"1983-01","cap":80000,"realised_stat":37030,"realised_score":0.462875,"models":{"ar1":{"V0":0.7867863,"crps":0.2202524,"pit":0.0909,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":true},"ao":{"V0":0.7768107,"crps":0.2097837,"pit":0.1155,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false},"clim":{"V0":0.6937006,"crps":0.1812208,"pit":0.3265045,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false}}},
+    {"t0":"1987-01","cap":80000,"realised_stat":10212,"realised_score":0.12765,"models":{"ar1":{"V0":0.7394074,"crps":0.4891032,"pit":0.0,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":true},"ao":{"V0":0.7719837,"crps":0.519069,"pit":0.0,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":true},"clim":{"V0":0.7041936,"crps":0.4001947,"pit":0.0349819,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":true}}},
+    {"t0":"1991-01","cap":80000,"realised_stat":33630,"realised_score":0.420375,"models":{"ar1":{"V0":0.7906693,"crps":0.2618034,"pit":0.0506,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":true},"ao":{"V0":0.757651,"crps":0.2226467,"pit":0.0918,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":true},"clim":{"V0":0.6841598,"crps":0.185422,"pit":0.2759407,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false}}},
+    {"t0":"1995-01","cap":80000,"realised_stat":19474,"realised_score":0.243425,"models":{"ar1":{"V0":0.7329078,"crps":0.3657073,"pit":0.0028,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":true},"ao":{"V0":0.748966,"crps":0.376143,"pit":0.0061,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":true},"clim":{"V0":0.6702991,"crps":0.2735565,"pit":0.1535135,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false}}},
+    {"t0":"1999-01","cap":80000,"realised_stat":26901,"realised_score":0.336262,"models":{"ar1":{"V0":0.7082443,"crps":0.2493647,"pit":0.036,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":true},"ao":{"V0":0.7394253,"crps":0.2760719,"pit":0.0434274,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":true},"clim":{"V0":0.6462862,"crps":0.1963206,"pit":0.2384378,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false}}},
+    {"t0":"2003-01","cap":80000,"realised_stat":33814,"realised_score":0.422675,"models":{"ar1":{"V0":0.7118654,"crps":0.1784077,"pit":0.1065,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false},"ao":{"V0":0.7296543,"crps":0.1929875,"pit":0.1266,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false},"clim":{"V0":0.6274272,"crps":0.1468435,"pit":0.34476,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false}}},
+    {"t0":"2007-01","cap":80000,"realised_stat":76973,"realised_score":0.962162,"models":{"ar1":{"V0":0.7073373,"crps":0.1443321,"pit":0.7825,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false},"ao":{"V0":0.7226579,"crps":0.1264982,"pit":0.7124,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false},"clim":{"V0":0.6121475,"crps":0.182267,"pit":0.6744621,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false}}},
+    {"t0":"2011-01","cap":80000,"realised_stat":31119,"realised_score":0.388987,"models":{"ar1":{"V0":0.6866017,"crps":0.182585,"pit":0.0891,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":true},"ao":{"V0":0.7174554,"crps":0.207302,"pit":0.1033,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false},"clim":{"V0":0.6149772,"crps":0.1466612,"pit":0.3285586,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false}}},
+    {"t0":"2015-01","cap":80000,"realised_stat":11045,"realised_score":0.138062,"models":{"ar1":{"V0":0.6684222,"crps":0.4041124,"pit":0.0002,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":true},"ao":{"V0":0.7060066,"crps":0.4313499,"pit":0.0,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":true},"clim":{"V0":0.6148411,"crps":0.2909638,"pit":0.0841202,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":true}}}
+   ],
+   "excess": [
+    {"t0":"1975-01","cap":800000,"realised_stat":1567417,"realised_score":1.0,"models":{"ar1":{"V0":0.9896829,"crps":0.000252,"pit":0.0665064,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":true},"ao":{"V0":0.9939594,"crps":7.88e-05,"pit":0.7546441,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false},"clim":{"V0":0.3926379,"crps":0.3766092,"pit":0.7215074,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false}}},
+    {"t0":"1979-01","cap":800000,"realised_stat":3039358,"realised_score":1.0,"models":{"ar1":{"V0":0.9188725,"crps":0.0106004,"pit":0.9350529,"q90":1.0,"above_q90":false,"pit_above_0_9":true,"pit_below_0_1":false},"ao":{"V0":0.9326068,"crps":0.0070352,"pit":0.3534396,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false},"clim":{"V0":0.4324106,"crps":0.3289002,"pit":0.9411777,"q90":1.0,"above_q90":false,"pit_above_0_9":true,"pit_below_0_1":false}}},
+    {"t0":"1983-01","cap":800000,"realised_stat":36826,"realised_score":0.046032,"models":{"ar1":{"V0":0.5028155,"crps":0.24176,"pit":0.2147,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false},"ao":{"V0":0.516388,"crps":0.2521672,"pit":0.2399,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false},"clim":{"V0":0.4672944,"crps":0.2095527,"pit":0.3956466,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false}}},
+    {"t0":"1987-01","cap":800000,"realised_stat":300883,"realised_score":0.376103,"models":{"ar1":{"V0":0.2955488,"crps":0.1584327,"pit":0.6897,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false},"ao":{"V0":0.2701424,"crps":0.1801862,"pit":0.7215,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false},"clim":{"V0":0.4821808,"crps":0.1939977,"pit":0.4873341,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false}}},
+    {"t0":"1991-01","cap":800000,"realised_stat":68437,"realised_score":0.085546,"models":{"ar1":{"V0":0.7289884,"crps":0.4682649,"pit":0.0604,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":true},"ao":{"V0":0.7471107,"crps":0.4912131,"pit":0.0687,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":true},"clim":{"V0":0.4622813,"crps":0.1941854,"pit":0.4002281,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false}}},
+    {"t0":"1995-01","cap":800000,"realised_stat":0,"realised_score":0.0,"models":{"ar1":{"V0":0.3980302,"crps":0.1770932,"pit":0.1061522,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false},"ao":{"V0":0.3885737,"crps":0.1633404,"pit":0.2010418,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false},"clim":{"V0":0.4566702,"crps":0.2185103,"pit":0.0413641,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":true}}},
+    {"t0":"1999-01","cap":800000,"realised_stat":0,"realised_score":0.0,"models":{"ar1":{"V0":0.3040681,"crps":0.107073,"pit":0.1499858,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false},"ao":{"V0":0.2862268,"crps":0.0913451,"pit":0.2554105,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false},"clim":{"V0":0.4343441,"crps":0.1977586,"pit":0.0153052,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":true}}},
+    {"t0":"2003-01","cap":800000,"realised_stat":16650,"realised_score":0.020812,"models":{"ar1":{"V0":0.3531367,"crps":0.1335445,"pit":0.321,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false},"ao":{"V0":0.3484013,"crps":0.1269783,"pit":0.3763,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false},"clim":{"V0":0.4139244,"crps":0.1721847,"pit":0.3525955,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false}}},
+    {"t0":"2007-01","cap":800000,"realised_stat":58001,"realised_score":0.072501,"models":{"ar1":{"V0":0.3602616,"crps":0.1241497,"pit":0.411,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false},"ao":{"V0":0.3621513,"crps":0.1268712,"pit":0.4491,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false},"clim":{"V0":0.3955797,"crps":0.1500038,"pit":0.4593078,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false}}},
+    {"t0":"2011-01","cap":800000,"realised_stat":0,"realised_score":0.0,"models":{"ar1":{"V0":0.274876,"crps":0.0902031,"pit":0.143852,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false},"ao":{"V0":0.2768214,"crps":0.0859442,"pit":0.0328634,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":true},"clim":{"V0":0.3812245,"crps":0.1534601,"pit":0.2178021,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false}}},
+    {"t0":"2015-01","cap":800000,"realised_stat":0,"realised_score":0.0,"models":{"ar1":{"V0":0.2167083,"crps":0.0593649,"pit":0.373104,"q90":0.910401,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false},"ao":{"V0":0.2126112,"crps":0.0531265,"pit":0.0006688,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":true},"clim":{"V0":0.3666058,"crps":0.1423645,"pit":0.3003302,"q90":1.0,"above_q90":false,"pit_above_0_9":false,"pit_below_0_1":false}}}
+   ]
+  }
+ }
+}

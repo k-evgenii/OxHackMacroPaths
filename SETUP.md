@@ -56,7 +56,6 @@ Add tasks to `pixi.toml` so the keeper owner and the data owner share commands:
 
 ```toml
 [tasks]
-prepare  = "python data/prepare.py"
 vectors  = "python tests/make_vectors.py"
 forecast = "python forecast/ar1.py"
 ```
@@ -170,7 +169,7 @@ No API key needed. Inside `pixi shell`:
 
 ```bash
 cd data
-for S in CPIAUCNS UNRATE FEDFUNDS DFF DGS10 DGS2 T10Y2Y T5YIE ICSA; do
+for S in CPIAUCNS GASREGW; do
   curl -fsSL "https://fred.stlouisfed.org/graph/fredgraph.csv?id=$S" -o "$S.csv"
 done
 cd ..

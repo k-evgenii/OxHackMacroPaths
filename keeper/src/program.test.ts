@@ -4,8 +4,9 @@ import assert from "node:assert/strict";
 import { Keypair, PublicKey } from "@solana/web3.js";
 import anchor, { type Idl } from "@anchor-lang/core";
 
+import { readFileSync } from "node:fs";
 import { accountMetas, big, enumName, instruction, parsePlay, play, positionPda, requireProgram, type SessionFile } from "./program.js";
-import { parseSides } from "./ops.js";
+import { DEFAULT_SEED, describeSession, parseSides, vaultLine } from "./ops.js";
 
 const { BN, BorshCoder } = anchor;
 const PROGRAM = "FvT786RtMTtbdXWemA9zgA9rfwhvxFsKY1ypiMMNwMbS";
@@ -38,6 +39,33 @@ const idl = {
     },
   ],
 } as unknown as Idl;
+
+test("describeSession names scores, budgets, claims and the four side totals", () => {
+  const vectors = JSON.parse(readFileSync(new URL("../../tests/vectors.json", import.meta.url), "utf8"));
+  const sides = parseSides(DEFAULT_SEED, parsePlay);
+  const s1 = BigInt(vectors.final.s1);
+  const s2 = BigInt(vectors.final.s2);
+  const n = Number(vectors.commitment.N);
+  const text = describeSession({
+    state: { Settled: {} },
+    next_index: n,
+    n_obs: n,
+    side_totals: sides,
+    matched: [sides[0], sides[2]],
+    scores: [s1, s2],
+    p_budget: sides,
+    r_budget: sides,
+    position_count: 1,
+    claimed_count: 1,
+  }).join("\n");
+  const scoreLine = `${(Number(s1) / 1e6).toFixed(6)}, ${(Number(s2) / 1e6).toFixed(6)}`;
+  assert.match(text, new RegExp(`scores\\s+${scoreLine.replaceAll(".", "\\.")}`));
+  assert.match(text, /side totals\s+90, 100, 90, 100 PLAY/);
+  assert.match(text, /p_budget\s+90, 100, 90, 100 PLAY/);
+  assert.match(text, /r_budget\s+90, 100, 90, 100 PLAY/);
+  assert.match(text, /claimed_count\/position_count 1\/1/);
+  assert.equal(vaultLine(0n, 0n), "vaults       0, 0 PLAY");
+});
 
 test("play / parsePlay: 6-decimal base units", () => {
   assert.equal(play(90_000_000n), "90");

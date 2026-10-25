@@ -1,0 +1,2180 @@
+{
+ "version": 1,
+ "manifest_version": 1,
+ "labels": {
+  "excess": "executable on chain (Excess Inflation, product 1)",
+  "fuel": "research product, not executable this weekend",
+  "cash": "keep the budget as a cash reserve"
+ },
+ "prices": {
+  "excess": 0.057153,
+  "fuel": 0.108466,
+  "source": "forecast/table.json quotes: clamp(V0 + 0.5*sigma0, 0.05, 0.95)",
+  "note": "the matched pool's implicit 0.5 is not used"
+ },
+ "caps": {
+  "cooling": 76973,
+  "excess": 1883141,
+  "fuel": 36411
+ },
+ "thresholds": {
+  "excess_k_1e4pp": 40000,
+  "fuel_k_1e4usd": 35000
+ },
+ "objective": "TailLoss95 = mean of the largest ceil(0.05*N) shortfalls U_k = max(L_k - (B - c) - H_k, 0); ties -> lower stake, then cash, excess, fuel",
+ "scenario_note": "318 overlapping 48-month windows 1990-08..2017-01 (ending <= 2020-12); an empirical decision score, not independent episodes or a calibrated probability",
+ "defaults": {
+  "q": 100.0,
+  "G": 3.5,
+  "B": 200.0
+ },
+ "scenarios": [
+  {
+   "start": "1990-08",
+   "excess_score": 0.091827,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1990-09",
+   "excess_score": 0.083235,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1990-10",
+   "excess_score": 0.071765,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1990-11",
+   "excess_score": 0.059606,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1990-12",
+   "excess_score": 0.047526,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1991-01",
+   "excess_score": 0.036341,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1991-02",
+   "excess_score": 0.027572,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1991-03",
+   "excess_score": 0.020602,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1991-04",
+   "excess_score": 0.015849,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1991-05",
+   "excess_score": 0.011136,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1991-06",
+   "excess_score": 0.006073,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1991-07",
+   "excess_score": 0.002377,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1991-08",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1991-09",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1991-10",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1991-11",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1991-12",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1992-01",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1992-02",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1992-03",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1992-04",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1992-05",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1992-06",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1992-07",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1992-08",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1992-09",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1992-10",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1992-11",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1992-12",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1993-01",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1993-02",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1993-03",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1993-04",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1993-05",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1993-06",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1993-07",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1993-08",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1993-09",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1993-10",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1993-11",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1993-12",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1994-01",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1994-02",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1994-03",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1994-04",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1994-05",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1994-06",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1994-07",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1994-08",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1994-09",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1994-10",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1994-11",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1994-12",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1995-01",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1995-02",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1995-03",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1995-04",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1995-05",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1995-06",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1995-07",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1995-08",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1995-09",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1995-10",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1995-11",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1995-12",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1996-01",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1996-02",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1996-03",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1996-04",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1996-05",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1996-06",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1996-07",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1996-08",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1996-09",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1996-10",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1996-11",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1996-12",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1997-01",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1997-02",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1997-03",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1997-04",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1997-05",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1997-06",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1997-07",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1997-08",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1997-09",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1997-10",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1997-11",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1997-12",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1998-01",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1998-02",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1998-03",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1998-04",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1998-05",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1998-06",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1998-07",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1998-08",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1998-09",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1998-10",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1998-11",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1998-12",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1999-01",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1999-02",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1999-03",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1999-04",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1999-05",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1999-06",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1999-07",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1999-08",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1999-09",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1999-10",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1999-11",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "1999-12",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2000-01",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2000-02",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2000-03",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2000-04",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2000-05",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2000-06",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2000-07",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2000-08",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2000-09",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2000-10",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2000-11",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2000-12",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2001-01",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2001-02",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2001-03",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2001-04",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2001-05",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2001-06",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2001-07",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2001-08",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2001-09",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2001-10",
+   "excess_score": 0.003646,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2001-11",
+   "excess_score": 0.005492,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2001-12",
+   "excess_score": 0.005492,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2002-01",
+   "excess_score": 0.005492,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2002-02",
+   "excess_score": 0.005492,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2002-03",
+   "excess_score": 0.005492,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2002-04",
+   "excess_score": 0.005492,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2002-05",
+   "excess_score": 0.005492,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2002-06",
+   "excess_score": 0.006377,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2002-07",
+   "excess_score": 0.00807,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2002-08",
+   "excess_score": 0.008841,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2002-09",
+   "excess_score": 0.008841,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2002-10",
+   "excess_score": 0.008841,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2002-11",
+   "excess_score": 0.008841,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2002-12",
+   "excess_score": 0.008841,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2003-01",
+   "excess_score": 0.008841,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2003-02",
+   "excess_score": 0.008841,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2003-03",
+   "excess_score": 0.008841,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2003-04",
+   "excess_score": 0.008841,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2003-05",
+   "excess_score": 0.008841,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2003-06",
+   "excess_score": 0.008841,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2003-07",
+   "excess_score": 0.008841,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2003-08",
+   "excess_score": 0.008841,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2003-09",
+   "excess_score": 0.008841,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2003-10",
+   "excess_score": 0.008841,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2003-11",
+   "excess_score": 0.008841,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2003-12",
+   "excess_score": 0.010467,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2004-01",
+   "excess_score": 0.010898,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2004-02",
+   "excess_score": 0.012386,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2004-03",
+   "excess_score": 0.012527,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2004-04",
+   "excess_score": 0.012527,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2004-05",
+   "excess_score": 0.012527,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2004-06",
+   "excess_score": 0.013459,
+   "fuel_score": 0.072972,
+   "fuel_overrun_per_gallon": 0.2657
+  },
+  {
+   "start": "2004-07",
+   "excess_score": 0.018884,
+   "fuel_score": 0.225179,
+   "fuel_overrun_per_gallon": 0.8199
+  },
+  {
+   "start": "2004-08",
+   "excess_score": 0.027381,
+   "fuel_score": 0.37939,
+   "fuel_overrun_per_gallon": 1.3814
+  },
+  {
+   "start": "2004-09",
+   "excess_score": 0.034666,
+   "fuel_score": 0.455878,
+   "fuel_overrun_per_gallon": 1.6599
+  },
+  {
+   "start": "2004-10",
+   "excess_score": 0.039641,
+   "fuel_score": 0.511521,
+   "fuel_overrun_per_gallon": 1.8625
+  },
+  {
+   "start": "2004-11",
+   "excess_score": 0.039641,
+   "fuel_score": 0.511521,
+   "fuel_overrun_per_gallon": 1.8625
+  },
+  {
+   "start": "2004-12",
+   "excess_score": 0.039641,
+   "fuel_score": 0.511521,
+   "fuel_overrun_per_gallon": 1.8625
+  },
+  {
+   "start": "2005-01",
+   "excess_score": 0.039641,
+   "fuel_score": 0.511521,
+   "fuel_overrun_per_gallon": 1.8625
+  },
+  {
+   "start": "2005-02",
+   "excess_score": 0.039641,
+   "fuel_score": 0.511521,
+   "fuel_overrun_per_gallon": 1.8625
+  },
+  {
+   "start": "2005-03",
+   "excess_score": 0.039641,
+   "fuel_score": 0.511521,
+   "fuel_overrun_per_gallon": 1.8625
+  },
+  {
+   "start": "2005-04",
+   "excess_score": 0.039641,
+   "fuel_score": 0.511521,
+   "fuel_overrun_per_gallon": 1.8625
+  },
+  {
+   "start": "2005-05",
+   "excess_score": 0.039641,
+   "fuel_score": 0.511521,
+   "fuel_overrun_per_gallon": 1.8625
+  },
+  {
+   "start": "2005-06",
+   "excess_score": 0.039641,
+   "fuel_score": 0.511521,
+   "fuel_overrun_per_gallon": 1.8625
+  },
+  {
+   "start": "2005-07",
+   "excess_score": 0.039641,
+   "fuel_score": 0.511521,
+   "fuel_overrun_per_gallon": 1.8625
+  },
+  {
+   "start": "2005-08",
+   "excess_score": 0.039641,
+   "fuel_score": 0.511521,
+   "fuel_overrun_per_gallon": 1.8625
+  },
+  {
+   "start": "2005-09",
+   "excess_score": 0.039641,
+   "fuel_score": 0.511521,
+   "fuel_overrun_per_gallon": 1.8625
+  },
+  {
+   "start": "2005-10",
+   "excess_score": 0.035995,
+   "fuel_score": 0.511521,
+   "fuel_overrun_per_gallon": 1.8625
+  },
+  {
+   "start": "2005-11",
+   "excess_score": 0.034148,
+   "fuel_score": 0.511521,
+   "fuel_overrun_per_gallon": 1.8625
+  },
+  {
+   "start": "2005-12",
+   "excess_score": 0.034148,
+   "fuel_score": 0.511521,
+   "fuel_overrun_per_gallon": 1.8625
+  },
+  {
+   "start": "2006-01",
+   "excess_score": 0.034148,
+   "fuel_score": 0.511521,
+   "fuel_overrun_per_gallon": 1.8625
+  },
+  {
+   "start": "2006-02",
+   "excess_score": 0.034148,
+   "fuel_score": 0.511521,
+   "fuel_overrun_per_gallon": 1.8625
+  },
+  {
+   "start": "2006-03",
+   "excess_score": 0.034148,
+   "fuel_score": 0.511521,
+   "fuel_overrun_per_gallon": 1.8625
+  },
+  {
+   "start": "2006-04",
+   "excess_score": 0.034148,
+   "fuel_score": 0.511521,
+   "fuel_overrun_per_gallon": 1.8625
+  },
+  {
+   "start": "2006-05",
+   "excess_score": 0.034148,
+   "fuel_score": 0.511521,
+   "fuel_overrun_per_gallon": 1.8625
+  },
+  {
+   "start": "2006-06",
+   "excess_score": 0.033264,
+   "fuel_score": 0.511521,
+   "fuel_overrun_per_gallon": 1.8625
+  },
+  {
+   "start": "2006-07",
+   "excess_score": 0.031571,
+   "fuel_score": 0.511521,
+   "fuel_overrun_per_gallon": 1.8625
+  },
+  {
+   "start": "2006-08",
+   "excess_score": 0.0308,
+   "fuel_score": 0.511521,
+   "fuel_overrun_per_gallon": 1.8625
+  },
+  {
+   "start": "2006-09",
+   "excess_score": 0.0308,
+   "fuel_score": 0.511521,
+   "fuel_overrun_per_gallon": 1.8625
+  },
+  {
+   "start": "2006-10",
+   "excess_score": 0.0308,
+   "fuel_score": 0.511521,
+   "fuel_overrun_per_gallon": 1.8625
+  },
+  {
+   "start": "2006-11",
+   "excess_score": 0.0308,
+   "fuel_score": 0.511521,
+   "fuel_overrun_per_gallon": 1.8625
+  },
+  {
+   "start": "2006-12",
+   "excess_score": 0.0308,
+   "fuel_score": 0.511521,
+   "fuel_overrun_per_gallon": 1.8625
+  },
+  {
+   "start": "2007-01",
+   "excess_score": 0.0308,
+   "fuel_score": 0.511521,
+   "fuel_overrun_per_gallon": 1.8625
+  },
+  {
+   "start": "2007-02",
+   "excess_score": 0.0308,
+   "fuel_score": 0.511521,
+   "fuel_overrun_per_gallon": 1.8625
+  },
+  {
+   "start": "2007-03",
+   "excess_score": 0.0308,
+   "fuel_score": 0.511521,
+   "fuel_overrun_per_gallon": 1.8625
+  },
+  {
+   "start": "2007-04",
+   "excess_score": 0.0308,
+   "fuel_score": 0.528329,
+   "fuel_overrun_per_gallon": 1.9237
+  },
+  {
+   "start": "2007-05",
+   "excess_score": 0.0308,
+   "fuel_score": 0.610584,
+   "fuel_overrun_per_gallon": 2.2232
+  },
+  {
+   "start": "2007-06",
+   "excess_score": 0.0308,
+   "fuel_score": 0.722144,
+   "fuel_overrun_per_gallon": 2.6294
+  },
+  {
+   "start": "2007-07",
+   "excess_score": 0.0308,
+   "fuel_score": 0.77158,
+   "fuel_overrun_per_gallon": 2.8094
+  },
+  {
+   "start": "2007-08",
+   "excess_score": 0.0308,
+   "fuel_score": 0.812831,
+   "fuel_overrun_per_gallon": 2.9596
+  },
+  {
+   "start": "2007-09",
+   "excess_score": 0.0308,
+   "fuel_score": 0.851116,
+   "fuel_overrun_per_gallon": 3.099
+  },
+  {
+   "start": "2007-10",
+   "excess_score": 0.0308,
+   "fuel_score": 0.881656,
+   "fuel_overrun_per_gallon": 3.2102
+  },
+  {
+   "start": "2007-11",
+   "excess_score": 0.0308,
+   "fuel_score": 0.881656,
+   "fuel_overrun_per_gallon": 3.2102
+  },
+  {
+   "start": "2007-12",
+   "excess_score": 0.029174,
+   "fuel_score": 0.881656,
+   "fuel_overrun_per_gallon": 3.2102
+  },
+  {
+   "start": "2008-01",
+   "excess_score": 0.028742,
+   "fuel_score": 0.881656,
+   "fuel_overrun_per_gallon": 3.2102
+  },
+  {
+   "start": "2008-02",
+   "excess_score": 0.027254,
+   "fuel_score": 0.881656,
+   "fuel_overrun_per_gallon": 3.2102
+  },
+  {
+   "start": "2008-03",
+   "excess_score": 0.027114,
+   "fuel_score": 0.903408,
+   "fuel_overrun_per_gallon": 3.2894
+  },
+  {
+   "start": "2008-04",
+   "excess_score": 0.027114,
+   "fuel_score": 1.0,
+   "fuel_overrun_per_gallon": 3.6411
+  },
+  {
+   "start": "2008-05",
+   "excess_score": 0.027114,
+   "fuel_score": 1.0,
+   "fuel_overrun_per_gallon": 4.0415
+  },
+  {
+   "start": "2008-06",
+   "excess_score": 0.026182,
+   "fuel_score": 1.0,
+   "fuel_overrun_per_gallon": 4.008
+  },
+  {
+   "start": "2008-07",
+   "excess_score": 0.020756,
+   "fuel_score": 0.959188,
+   "fuel_overrun_per_gallon": 3.4925
+  },
+  {
+   "start": "2008-08",
+   "excess_score": 0.012259,
+   "fuel_score": 0.804976,
+   "fuel_overrun_per_gallon": 2.931
+  },
+  {
+   "start": "2008-09",
+   "excess_score": 0.004975,
+   "fuel_score": 0.789321,
+   "fuel_overrun_per_gallon": 2.874
+  },
+  {
+   "start": "2008-10",
+   "excess_score": 0.0,
+   "fuel_score": 0.829392,
+   "fuel_overrun_per_gallon": 3.0199
+  },
+  {
+   "start": "2008-11",
+   "excess_score": 0.0,
+   "fuel_score": 0.896844,
+   "fuel_overrun_per_gallon": 3.2655
+  },
+  {
+   "start": "2008-12",
+   "excess_score": 0.0,
+   "fuel_score": 0.896844,
+   "fuel_overrun_per_gallon": 3.2655
+  },
+  {
+   "start": "2009-01",
+   "excess_score": 0.0,
+   "fuel_score": 0.896844,
+   "fuel_overrun_per_gallon": 3.2655
+  },
+  {
+   "start": "2009-02",
+   "excess_score": 0.0,
+   "fuel_score": 0.896844,
+   "fuel_overrun_per_gallon": 3.2655
+  },
+  {
+   "start": "2009-03",
+   "excess_score": 0.0,
+   "fuel_score": 0.943533,
+   "fuel_overrun_per_gallon": 3.4355
+  },
+  {
+   "start": "2009-04",
+   "excess_score": 0.0,
+   "fuel_score": 1.0,
+   "fuel_overrun_per_gallon": 3.6467
+  },
+  {
+   "start": "2009-05",
+   "excess_score": 0.0,
+   "fuel_score": 1.0,
+   "fuel_overrun_per_gallon": 3.7169
+  },
+  {
+   "start": "2009-06",
+   "excess_score": 0.0,
+   "fuel_score": 1.0,
+   "fuel_overrun_per_gallon": 3.8316
+  },
+  {
+   "start": "2009-07",
+   "excess_score": 0.0,
+   "fuel_score": 1.0,
+   "fuel_overrun_per_gallon": 3.9576
+  },
+  {
+   "start": "2009-08",
+   "excess_score": 0.0,
+   "fuel_score": 1.0,
+   "fuel_overrun_per_gallon": 4.0486
+  },
+  {
+   "start": "2009-09",
+   "excess_score": 0.0,
+   "fuel_score": 1.0,
+   "fuel_overrun_per_gallon": 4.1223
+  },
+  {
+   "start": "2009-10",
+   "excess_score": 0.0,
+   "fuel_score": 1.0,
+   "fuel_overrun_per_gallon": 4.1547
+  },
+  {
+   "start": "2009-11",
+   "excess_score": 0.0,
+   "fuel_score": 1.0,
+   "fuel_overrun_per_gallon": 4.1547
+  },
+  {
+   "start": "2009-12",
+   "excess_score": 0.0,
+   "fuel_score": 1.0,
+   "fuel_overrun_per_gallon": 4.1547
+  },
+  {
+   "start": "2010-01",
+   "excess_score": 0.0,
+   "fuel_score": 1.0,
+   "fuel_overrun_per_gallon": 4.1547
+  },
+  {
+   "start": "2010-02",
+   "excess_score": 0.0,
+   "fuel_score": 1.0,
+   "fuel_overrun_per_gallon": 4.1547
+  },
+  {
+   "start": "2010-03",
+   "excess_score": 0.0,
+   "fuel_score": 1.0,
+   "fuel_overrun_per_gallon": 4.1547
+  },
+  {
+   "start": "2010-04",
+   "excess_score": 0.0,
+   "fuel_score": 1.0,
+   "fuel_overrun_per_gallon": 4.1879
+  },
+  {
+   "start": "2010-05",
+   "excess_score": 0.0,
+   "fuel_score": 1.0,
+   "fuel_overrun_per_gallon": 4.3486
+  },
+  {
+   "start": "2010-06",
+   "excess_score": 0.0,
+   "fuel_score": 1.0,
+   "fuel_overrun_per_gallon": 4.5213
+  },
+  {
+   "start": "2010-07",
+   "excess_score": 0.0,
+   "fuel_score": 1.0,
+   "fuel_overrun_per_gallon": 4.7129
+  },
+  {
+   "start": "2010-08",
+   "excess_score": 0.0,
+   "fuel_score": 1.0,
+   "fuel_overrun_per_gallon": 4.8241
+  },
+  {
+   "start": "2010-09",
+   "excess_score": 0.0,
+   "fuel_score": 1.0,
+   "fuel_overrun_per_gallon": 4.8241
+  },
+  {
+   "start": "2010-10",
+   "excess_score": 0.0,
+   "fuel_score": 1.0,
+   "fuel_overrun_per_gallon": 4.8241
+  },
+  {
+   "start": "2010-11",
+   "excess_score": 0.0,
+   "fuel_score": 1.0,
+   "fuel_overrun_per_gallon": 4.8241
+  },
+  {
+   "start": "2010-12",
+   "excess_score": 0.0,
+   "fuel_score": 1.0,
+   "fuel_overrun_per_gallon": 4.8241
+  },
+  {
+   "start": "2011-01",
+   "excess_score": 0.0,
+   "fuel_score": 1.0,
+   "fuel_overrun_per_gallon": 4.8241
+  },
+  {
+   "start": "2011-02",
+   "excess_score": 0.0,
+   "fuel_score": 1.0,
+   "fuel_overrun_per_gallon": 4.8241
+  },
+  {
+   "start": "2011-03",
+   "excess_score": 0.0,
+   "fuel_score": 1.0,
+   "fuel_overrun_per_gallon": 4.8241
+  },
+  {
+   "start": "2011-04",
+   "excess_score": 0.0,
+   "fuel_score": 1.0,
+   "fuel_overrun_per_gallon": 4.7629
+  },
+  {
+   "start": "2011-05",
+   "excess_score": 0.0,
+   "fuel_score": 1.0,
+   "fuel_overrun_per_gallon": 4.4634
+  },
+  {
+   "start": "2011-06",
+   "excess_score": 0.0,
+   "fuel_score": 1.0,
+   "fuel_overrun_per_gallon": 4.0572
+  },
+  {
+   "start": "2011-07",
+   "excess_score": 0.0,
+   "fuel_score": 1.0,
+   "fuel_overrun_per_gallon": 3.8772
+  },
+  {
+   "start": "2011-08",
+   "excess_score": 0.0,
+   "fuel_score": 1.0,
+   "fuel_overrun_per_gallon": 3.727
+  },
+  {
+   "start": "2011-09",
+   "excess_score": 0.0,
+   "fuel_score": 0.985306,
+   "fuel_overrun_per_gallon": 3.5876
+  },
+  {
+   "start": "2011-10",
+   "excess_score": 0.0,
+   "fuel_score": 0.954766,
+   "fuel_overrun_per_gallon": 3.4764
+  },
+  {
+   "start": "2011-11",
+   "excess_score": 0.0,
+   "fuel_score": 0.954766,
+   "fuel_overrun_per_gallon": 3.4764
+  },
+  {
+   "start": "2011-12",
+   "excess_score": 0.0,
+   "fuel_score": 0.954766,
+   "fuel_overrun_per_gallon": 3.4764
+  },
+  {
+   "start": "2012-01",
+   "excess_score": 0.0,
+   "fuel_score": 0.954766,
+   "fuel_overrun_per_gallon": 3.4764
+  },
+  {
+   "start": "2012-02",
+   "excess_score": 0.0,
+   "fuel_score": 0.954766,
+   "fuel_overrun_per_gallon": 3.4764
+  },
+  {
+   "start": "2012-03",
+   "excess_score": 0.0,
+   "fuel_score": 0.933014,
+   "fuel_overrun_per_gallon": 3.3972
+  },
+  {
+   "start": "2012-04",
+   "excess_score": 0.0,
+   "fuel_score": 0.836423,
+   "fuel_overrun_per_gallon": 3.0455
+  },
+  {
+   "start": "2012-05",
+   "excess_score": 0.0,
+   "fuel_score": 0.726456,
+   "fuel_overrun_per_gallon": 2.6451
+  },
+  {
+   "start": "2012-06",
+   "excess_score": 0.0,
+   "fuel_score": 0.662684,
+   "fuel_overrun_per_gallon": 2.4129
+  },
+  {
+   "start": "2012-07",
+   "excess_score": 0.0,
+   "fuel_score": 0.652055,
+   "fuel_overrun_per_gallon": 2.3742
+  },
+  {
+   "start": "2012-08",
+   "excess_score": 0.0,
+   "fuel_score": 0.652055,
+   "fuel_overrun_per_gallon": 2.3742
+  },
+  {
+   "start": "2012-09",
+   "excess_score": 0.0,
+   "fuel_score": 0.591222,
+   "fuel_overrun_per_gallon": 2.1527
+  },
+  {
+   "start": "2012-10",
+   "excess_score": 0.0,
+   "fuel_score": 0.495509,
+   "fuel_overrun_per_gallon": 1.8042
+  },
+  {
+   "start": "2012-11",
+   "excess_score": 0.0,
+   "fuel_score": 0.428057,
+   "fuel_overrun_per_gallon": 1.5586
+  },
+  {
+   "start": "2012-12",
+   "excess_score": 0.0,
+   "fuel_score": 0.428057,
+   "fuel_overrun_per_gallon": 1.5586
+  },
+  {
+   "start": "2013-01",
+   "excess_score": 0.0,
+   "fuel_score": 0.428057,
+   "fuel_overrun_per_gallon": 1.5586
+  },
+  {
+   "start": "2013-02",
+   "excess_score": 0.0,
+   "fuel_score": 0.428057,
+   "fuel_overrun_per_gallon": 1.5586
+  },
+  {
+   "start": "2013-03",
+   "excess_score": 0.0,
+   "fuel_score": 0.381368,
+   "fuel_overrun_per_gallon": 1.3886
+  },
+  {
+   "start": "2013-04",
+   "excess_score": 0.0,
+   "fuel_score": 0.323363,
+   "fuel_overrun_per_gallon": 1.1774
+  },
+  {
+   "start": "2013-05",
+   "excess_score": 0.0,
+   "fuel_score": 0.304083,
+   "fuel_overrun_per_gallon": 1.1072
+  },
+  {
+   "start": "2013-06",
+   "excess_score": 0.0,
+   "fuel_score": 0.272582,
+   "fuel_overrun_per_gallon": 0.9925
+  },
+  {
+   "start": "2013-07",
+   "excess_score": 0.0,
+   "fuel_score": 0.237977,
+   "fuel_overrun_per_gallon": 0.8665
+  },
+  {
+   "start": "2013-08",
+   "excess_score": 0.0,
+   "fuel_score": 0.212985,
+   "fuel_overrun_per_gallon": 0.7755
+  },
+  {
+   "start": "2013-09",
+   "excess_score": 0.0,
+   "fuel_score": 0.192743,
+   "fuel_overrun_per_gallon": 0.7018
+  },
+  {
+   "start": "2013-10",
+   "excess_score": 0.0,
+   "fuel_score": 0.183845,
+   "fuel_overrun_per_gallon": 0.6694
+  },
+  {
+   "start": "2013-11",
+   "excess_score": 0.0,
+   "fuel_score": 0.183845,
+   "fuel_overrun_per_gallon": 0.6694
+  },
+  {
+   "start": "2013-12",
+   "excess_score": 0.0,
+   "fuel_score": 0.183845,
+   "fuel_overrun_per_gallon": 0.6694
+  },
+  {
+   "start": "2014-01",
+   "excess_score": 0.0,
+   "fuel_score": 0.183845,
+   "fuel_overrun_per_gallon": 0.6694
+  },
+  {
+   "start": "2014-02",
+   "excess_score": 0.0,
+   "fuel_score": 0.183845,
+   "fuel_overrun_per_gallon": 0.6694
+  },
+  {
+   "start": "2014-03",
+   "excess_score": 0.0,
+   "fuel_score": 0.183845,
+   "fuel_overrun_per_gallon": 0.6694
+  },
+  {
+   "start": "2014-04",
+   "excess_score": 0.0,
+   "fuel_score": 0.174727,
+   "fuel_overrun_per_gallon": 0.6362
+  },
+  {
+   "start": "2014-05",
+   "excess_score": 0.0,
+   "fuel_score": 0.130592,
+   "fuel_overrun_per_gallon": 0.4755
+  },
+  {
+   "start": "2014-06",
+   "excess_score": 0.0,
+   "fuel_score": 0.083161,
+   "fuel_overrun_per_gallon": 0.3028
+  },
+  {
+   "start": "2014-07",
+   "excess_score": 0.0,
+   "fuel_score": 0.03054,
+   "fuel_overrun_per_gallon": 0.1112
+  },
+  {
+   "start": "2014-08",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2014-09",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2014-10",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2014-11",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2014-12",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2015-01",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2015-02",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2015-03",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2015-04",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2015-05",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2015-06",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2015-07",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2015-08",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2015-09",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2015-10",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2015-11",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2015-12",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2016-01",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2016-02",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2016-03",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2016-04",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2016-05",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2016-06",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2016-07",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2016-08",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2016-09",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2016-10",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2016-11",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2016-12",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  },
+  {
+   "start": "2017-01",
+   "excess_score": 0.0,
+   "fuel_score": 0.0,
+   "fuel_overrun_per_gallon": 0.0
+  }
+ ],
+ "showcase": {
+  "start": "2021-01",
+  "excess_score": 0.367037,
+  "fuel_score": 1.0,
+  "fuel_overrun_per_gallon": 7.2833,
+  "excess_stat_1e4ppmonths": 691184,
+  "fuel_stat_1e4usdmonths": 72833,
+  "under_recommended": {
+   "overrun": 728.3299999999999,
+   "stake": 40.0,
+   "units": 368.77915660206884,
+   "payout": 368.77915660206884,
+   "remaining_cash": 160.0,
+   "shortfall": 199.5508433979311,
+   "cash_baseline_shortfall": 528.3299999999999
+  }
+ },
+ "default_recommendation": {
+  "product": "fuel",
+  "stake": 40.0,
+  "units": 368.77915660206884,
+  "tail_loss_95": 0.0,
+  "mean_shortfall": 0.0,
+  "max_shortfall": 0.0,
+  "cap_binding_freq": 0.10062893081761007,
+  "expected_end_cash": 255.63798040298283
+ },
+ "default_table": [
+  {
+   "product": "fuel",
+   "stake": 40.0,
+   "units": 368.77915660206884,
+   "tail_loss_95": 0.0,
+   "mean_shortfall": 0.0,
+   "max_shortfall": 0.0,
+   "cap_binding_freq": 0.10062893081761007,
+   "expected_end_cash": 255.63798040298283
+  },
+  {
+   "product": "fuel",
+   "stake": 60.0,
+   "units": 553.1687349031032,
+   "tail_loss_95": 0.0,
+   "mean_shortfall": 0.0,
+   "max_shortfall": 0.0,
+   "cap_binding_freq": 0.10062893081761007,
+   "expected_end_cash": 283.45697060447424
+  },
+  {
+   "product": "fuel",
+   "stake": 80.0,
+   "units": 737.5583132041377,
+   "tail_loss_95": 0.0,
+   "mean_shortfall": 0.0,
+   "max_shortfall": 0.0,
+   "cap_binding_freq": 0.10062893081761007,
+   "expected_end_cash": 311.27596080596567
+  },
+  {
+   "product": "fuel",
+   "stake": 100.0,
+   "units": 921.947891505172,
+   "tail_loss_95": 0.0,
+   "mean_shortfall": 0.0,
+   "max_shortfall": 0.0,
+   "cap_binding_freq": 0.10062893081761007,
+   "expected_end_cash": 339.0949510074571
+  },
+  {
+   "product": "fuel",
+   "stake": 120.0,
+   "units": 1106.3374698062064,
+   "tail_loss_95": 0.0,
+   "mean_shortfall": 0.0,
+   "max_shortfall": 0.0,
+   "cap_binding_freq": 0.10062893081761007,
+   "expected_end_cash": 366.91394120894853
+  },
+  {
+   "product": "fuel",
+   "stake": 140.0,
+   "units": 1290.727048107241,
+   "tail_loss_95": 0.0,
+   "mean_shortfall": 0.0,
+   "max_shortfall": 0.0,
+   "cap_binding_freq": 0.10062893081761007,
+   "expected_end_cash": 394.73293141043996
+  },
+  {
+   "product": "fuel",
+   "stake": 160.0,
+   "units": 1475.1166264082754,
+   "tail_loss_95": 0.0,
+   "mean_shortfall": 0.0,
+   "max_shortfall": 0.0,
+   "cap_binding_freq": 0.10062893081761007,
+   "expected_end_cash": 422.5519216119314
+  },
+  {
+   "product": "fuel",
+   "stake": 180.0,
+   "units": 1659.5062047093097,
+   "tail_loss_95": 0.0,
+   "mean_shortfall": 0.0,
+   "max_shortfall": 0.0,
+   "cap_binding_freq": 0.10062893081761007,
+   "expected_end_cash": 450.3709118134228
+  },
+  {
+   "product": "fuel",
+   "stake": 200.0,
+   "units": 1843.895783010344,
+   "tail_loss_95": 0.0,
+   "mean_shortfall": 0.0,
+   "max_shortfall": 0.0,
+   "cap_binding_freq": 0.10062893081761007,
+   "expected_end_cash": 478.18990201491414
+  },
+  {
+   "product": "fuel",
+   "stake": 20.0,
+   "units": 184.38957830103442,
+   "tail_loss_95": 97.48042169896557,
+   "mean_shortfall": 6.475418467509224,
+   "max_shortfall": 118.02042169896555,
+   "cap_binding_freq": 0.10062893081761007,
+   "expected_end_cash": 227.81899020149143
+  },
+  {
+   "product": "cash",
+   "stake": 0.0,
+   "units": 0.0,
+   "tail_loss_95": 261.87,
+   "mean_shortfall": 34.10094339622642,
+   "max_shortfall": 282.40999999999997,
+   "cap_binding_freq": 0.0,
+   "expected_end_cash": 200.0
+  },
+  {
+   "product": "excess",
+   "stake": 20.0,
+   "units": 349.9378860252305,
+   "tail_loss_95": 281.87,
+   "mean_shortfall": 37.70421457101742,
+   "max_shortfall": 302.40999999999997,
+   "cap_binding_freq": 0.0,
+   "expected_end_cash": 182.6153631315347
+  },
+  {
+   "product": "excess",
+   "stake": 40.0,
+   "units": 699.875772050461,
+   "tail_loss_95": 301.87,
+   "mean_shortfall": 41.58860722575516,
+   "max_shortfall": 322.40999999999997,
+   "cap_binding_freq": 0.0,
+   "expected_end_cash": 165.23072626306944
+  },
+  {
+   "product": "excess",
+   "stake": 60.0,
+   "units": 1049.8136580756916,
+   "tail_loss_95": 321.87,
+   "mean_shortfall": 46.138750591345506,
+   "max_shortfall": 342.40999999999997,
+   "cap_binding_freq": 0.0,
+   "expected_end_cash": 147.84608939460415
+  },
+  {
+   "product": "excess",
+   "stake": 80.0,
+   "units": 1399.751544100922,
+   "tail_loss_95": 341.87,
+   "mean_shortfall": 50.85664649076676,
+   "max_shortfall": 362.40999999999997,
+   "cap_binding_freq": 0.0,
+   "expected_end_cash": 130.46145252613888
+  },
+  {
+   "product": "excess",
+   "stake": 100.0,
+   "units": 1749.6894301261525,
+   "tail_loss_95": 361.87,
+   "mean_shortfall": 55.68440171790891,
+   "max_shortfall": 382.40999999999997,
+   "cap_binding_freq": 0.0,
+   "expected_end_cash": 113.07681565767359
+  },
+  {
+   "product": "excess",
+   "stake": 120.0,
+   "units": 2099.627316151383,
+   "tail_loss_95": 381.87,
+   "mean_shortfall": 60.63990503147956,
+   "max_shortfall": 402.40999999999997,
+   "cap_binding_freq": 0.0,
+   "expected_end_cash": 95.69217878920831
+  },
+  {
+   "product": "excess",
+   "stake": 140.0,
+   "units": 2449.5652021766136,
+   "tail_loss_95": 401.87,
+   "mean_shortfall": 65.89999402519574,
+   "max_shortfall": 422.40999999999997,
+   "cap_binding_freq": 0.0,
+   "expected_end_cash": 78.30754192074302
+  },
+  {
+   "product": "excess",
+   "stake": 160.0,
+   "units": 2799.503088201844,
+   "tail_loss_95": 421.87,
+   "mean_shortfall": 71.52033459123898,
+   "max_shortfall": 442.40999999999997,
+   "cap_binding_freq": 0.0,
+   "expected_end_cash": 60.92290505227775
+  },
+  {
+   "product": "excess",
+   "stake": 180.0,
+   "units": 3149.4409742270745,
+   "tail_loss_95": 441.87,
+   "mean_shortfall": 77.22006495804543,
+   "max_shortfall": 462.40999999999997,
+   "cap_binding_freq": 0.0,
+   "expected_end_cash": 43.53826818381247
+  },
+  {
+   "product": "excess",
+   "stake": 200.0,
+   "units": 3499.378860252305,
+   "tail_loss_95": 461.87,
+   "mean_shortfall": 83.01953059629085,
+   "max_shortfall": 482.40999999999997,
+   "cap_binding_freq": 0.0,
+   "expected_end_cash": 26.153631315347184
+  }
+ ]
+}
