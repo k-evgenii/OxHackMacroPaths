@@ -1,4 +1,11 @@
-// Placeholder. Agent 3 (fe/03-shell) owns and replaces this file.
+import { Prefetch } from "@/components/shell/Prefetch";
+import { healthQuery, sessionsQuery } from "@/lib/hooks/queries";
+import { Overview } from "@/components/shell/Overview";
+
 export default function Home() {
-  return <main style={{ padding: 24 }}>MacroPaths: skeleton.</main>;
+  return (
+    <Prefetch queries={[healthQuery(), sessionsQuery()]}>
+      <Overview />
+    </Prefetch>
+  );
 }
