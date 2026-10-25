@@ -1,0 +1,21 @@
+{
+  "_synthetic": "SYNTHETIC test data for frontend v2 scenarios; not an on-chain read.",
+  "items": [
+    {
+      "id": "51hmCVPi53e7teKXkAb2hAryyuT1bhWtYMZNKULMwbYHMdKg6Km3oi3nEzEVzByzHANfjj827b1yzCCYa7QywJxG:0:top:Refund",
+      "signature": "51hmCVPi53e7teKXkAb2hAryyuT1bhWtYMZNKULMwbYHMdKg6Km3oi3nEzEVzByzHANfjj827b1yzCCYa7QywJxG",
+      "instructionIndex": 0,
+      "innerInstructionIndex": null,
+      "session": "C5HjXWwK1ywUCroZKjwTPJ466LgjeSy8fQKXaX1pQTSV",
+      "product": null,
+      "slot": 700,
+      "blockTime": null,
+      "kind": "Refund",
+      "amount": "13848520",
+      "mint": "AvVf2k9ixDvLjGnjCD4MDGTVBFfrhvzGgzwvptweaPWW"
+    }
+  ],
+  "nextBefore": null,
+  "pending": [],
+  "retryCursor": null
+}

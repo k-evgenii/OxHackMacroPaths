@@ -1,0 +1,853 @@
+{
+  "events": [
+    {
+      "type": "Settled",
+      "signature": "3hq1yZunZwcaK6vsZgJ1ggVsQ6PS1eT57FuhBkpgXipvGgoyAaNG1JAkNua6a1j1izUWQjf5Kg58ySoxNZy7E2Xv",
+      "slot": 514794522,
+      "blockTime": 1792889392,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "scores": [
+          "827387",
+          "863980"
+        ],
+        "matched": [
+          "90000000",
+          "90000000"
+        ],
+        "pBudget": [
+          "148929660",
+          "31070340",
+          "155516400",
+          "24483600"
+        ],
+        "rBudget": [
+          "0",
+          "10000000",
+          "0",
+          "10000000"
+        ]
+      }
+    },
+    {
+      "type": "Observed",
+      "signature": "4vWs7z2LnXRVEppvYz2pec6jaDmGEzQxsfRvdxZdoJyCcUx46zHKMGKGEPbKzdK4g7ofcebGoHvCEGt2HjZqEZXv",
+      "slot": 514794498,
+      "blockTime": 1792889386,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "index": 47,
+        "periodId": 202412,
+        "value": "28880",
+        "peak": "90597",
+        "maxDecline": "66191",
+        "excessAcc": "691184",
+        "commitment": "b5a06c8e2aa10b7fe1339666afb92af7a30cf98e318efde9acdc4a6c5733abef"
+      }
+    },
+    {
+      "type": "Observed",
+      "signature": "3DHKQGQjZHJCHQpj1dnZiH4frh3c2kwP3dkS8TqRys7mPcHYoTZe2jBHeDQrxRqx28o31YSb8vUWHgC7digxk5y4",
+      "slot": 514794482,
+      "blockTime": 1792889382,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "index": 46,
+        "periodId": 202411,
+        "value": "27493",
+        "peak": "90597",
+        "maxDecline": "66191",
+        "excessAcc": "691184",
+        "commitment": "d38a6b4e0d12f1563e5227ab6e9d88dc20b39f6502c4b2f53730e1b941f80e4e"
+      }
+    },
+    {
+      "type": "Observed",
+      "signature": "5Nv2DKD4wv6nV6LLyCFYPjgPttcxGhwEAWCnPwuuLy7gxuSv6FmnGcu19GjTE7QFRQ8GEg3qiBGyW8gSShsefPL",
+      "slot": 514794466,
+      "blockTime": 1792889378,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "index": 45,
+        "periodId": 202410,
+        "value": "25979",
+        "peak": "90597",
+        "maxDecline": "66191",
+        "excessAcc": "691184",
+        "commitment": "d73dea6e12b7f246a2e3b2604c9606587e33a5d1dc6655d8f8cec90e473c0e13"
+      }
+    },
+    {
+      "type": "Observed",
+      "signature": "5KTghkPKtv4d3YZ4iACHiUbecgqu8TpAvjvKom8EtVTZjdc5Zug3GLnEEv2KDbXGrHTWnAa2vRBSZwUWA26CbB8b",
+      "slot": 514794449,
+      "blockTime": 1792889375,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "index": 44,
+        "periodId": 202409,
+        "value": "24406",
+        "peak": "90597",
+        "maxDecline": "66191",
+        "excessAcc": "691184",
+        "commitment": "827d48a7b6f0f7b373846763698fb6519f3cf55ab0971f0837ad2c635956b621"
+      }
+    },
+    {
+      "type": "Observed",
+      "signature": "4KwUz8kAcRyjUt5GeW6b5aXDVQEYZerV9oSCp7pyz6ZEgHJD8QPaGZeWqyF5raAc3vxTjHPNrhbSU6jWaFQycNpP",
+      "slot": 514794430,
+      "blockTime": 1792889370,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "index": 43,
+        "periodId": 202408,
+        "value": "25307",
+        "peak": "90597",
+        "maxDecline": "65290",
+        "excessAcc": "691184",
+        "commitment": "cdcac6ba71ba8dc5699cf4ab8829692ce1813851fa8718dd1db753310ab5815c"
+      }
+    },
+    {
+      "type": "Observed",
+      "signature": "3KGN3aNdj1H6btBBToFRau5W4r9h5YZEfJRtPz1S1QH6JZy3L84yd1b7HBfqvJYs28Uhv2dmdTToCAtFQCcHdKjv",
+      "slot": 514794414,
+      "blockTime": 1792889366,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "index": 42,
+        "periodId": 202407,
+        "value": "28947",
+        "peak": "90597",
+        "maxDecline": "61650",
+        "excessAcc": "691184",
+        "commitment": "146a1ae2174c28996b578f4224b20724f2b3ac3acf3bf961434c48acdb6a13cf"
+      }
+    },
+    {
+      "type": "Observed",
+      "signature": "4yxh5uiQFycaUvss6XTs4hNR3fEKZjrQuS65ukYebvRhCGdjnnaKsCfeZSFHtGQnRBM1ju4c85FXnM6LD98XBNdX",
+      "slot": 514794398,
+      "blockTime": 1792889363,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "index": 41,
+        "periodId": 202406,
+        "value": "29713",
+        "peak": "90597",
+        "maxDecline": "60906",
+        "excessAcc": "691184",
+        "commitment": "2bf2c46ae7c556086b7170510ea4fc85cce31ed5aee8242aa5dd3e0ff3e93c05"
+      }
+    },
+    {
+      "type": "Observed",
+      "signature": "36BGE7Bs4Go8o2RTUt1aGA7T5J6DWmQdThRGaUyM6tGcwnrRxvLUgpXPXrCSoSg2kD6LPpivaLrvyYBeeHpxMxpr",
+      "slot": 514794382,
+      "blockTime": 1792889359,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "index": 40,
+        "periodId": 202405,
+        "value": "32690",
+        "peak": "90597",
+        "maxDecline": "60906",
+        "excessAcc": "691184",
+        "commitment": "ea4cd88243e0d3c1af100643ed3ee35a32f399c03d9af3a5cfb18733bc9d9af4"
+      }
+    },
+    {
+      "type": "Observed",
+      "signature": "3YzLsfEPaE4mYTDYAFHrgJ1Gg6gktNjDAPsNjxeaDPMF7CbrovsR2oB6b1uNjxnEEHbqdiNvFgQMoNwb7aTH7Tc3",
+      "slot": 514794366,
+      "blockTime": 1792889355,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "index": 39,
+        "periodId": 202404,
+        "value": "33573",
+        "peak": "90597",
+        "maxDecline": "60906",
+        "excessAcc": "691184",
+        "commitment": "6801fa3f3cc6f5f4edfcec60cc9119baabae34d93a7559e43b4bd27ffffc660b"
+      }
+    },
+    {
+      "type": "Observed",
+      "signature": "3zz9ZJhx4LJp6fAtPqsN3g4D5qsnddtgsP5JPHPu9HWRDfVzkHf4a2HebXhmsaSjRLn5pei4dMbibH1mHU84DFyp",
+      "slot": 514794352,
+      "blockTime": 1792889351,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "index": 38,
+        "periodId": 202403,
+        "value": "34773",
+        "peak": "90597",
+        "maxDecline": "60906",
+        "excessAcc": "691184",
+        "commitment": "8a72e76a49ceb4221d84f834b58a2fa46251c23a03182386bff1013b57e9a5a0"
+      }
+    },
+    {
+      "type": "Observed",
+      "signature": "3Waaca5qEjFudRabP3D4reUbN8uiyfnrVWtNN91WCdXbUPJ1ezLZ1Q8Hy9H42yVSRNwCoRAUtVL4FLJ1xhr5qhVr",
+      "slot": 514794339,
+      "blockTime": 1792889348,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "index": 37,
+        "periodId": 202402,
+        "value": "31531",
+        "peak": "90597",
+        "maxDecline": "60906",
+        "excessAcc": "691184",
+        "commitment": "d276e698e58638d5e8942a3f1c8076396e9942884826f1d227d8b7042809a03a"
+      }
+    },
+    {
+      "type": "Observed",
+      "signature": "5FtC3YFJJkgctPk6TfL256v4pXNxphGhtJr9p11gi76rFKjyeorwwjjgnGhbocexgMjimUd1N1MhzpEoPVwUcFYa",
+      "slot": 514794330,
+      "blockTime": 1792889346,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "index": 36,
+        "periodId": 202401,
+        "value": "30908",
+        "peak": "90597",
+        "maxDecline": "60906",
+        "excessAcc": "691184",
+        "commitment": "10bd55246352c4a54d4f3ac8fcfe0a1912044395f6bfc736185fc0c04b2af2cb"
+      }
+    },
+    {
+      "type": "Observed",
+      "signature": "mxyNAed4tToS73Dkvzu8sjpsRhskm763icmctCH74AiwAFCuy7ASQs44T2aC89Kzmt3TUYU1weKBZ2kLYFKM1fg",
+      "slot": 514794314,
+      "blockTime": 1792889342,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "index": 35,
+        "periodId": 202312,
+        "value": "33521",
+        "peak": "90597",
+        "maxDecline": "60906",
+        "excessAcc": "691184",
+        "commitment": "40f9cd368dcd65f32949bf3d52d11849d8d799e18d09586681e772d5fbf8a267"
+      }
+    },
+    {
+      "type": "Observed",
+      "signature": "3w2kGHE7M6KqxGPwXPK9LDJJpMrvV9zuX8UJCpoiBQAHxcw6ifiJPu7YvZWX6E5twUKYdaH7QqC8v62WNLXXXwT3",
+      "slot": 514794292,
+      "blockTime": 1792889337,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "index": 34,
+        "periodId": 202311,
+        "value": "31372",
+        "peak": "90597",
+        "maxDecline": "60906",
+        "excessAcc": "691184",
+        "commitment": "73b7cc41663b29c769237146c502d167865662ce56a747853c2f49f69d0f18f7"
+      }
+    },
+    {
+      "type": "Observed",
+      "signature": "29WEcSDGenpxxUQQjVLYHpP3x3o2c4te5WFwv3ABWnx98oYXf7KpvqG9GFw3NSsQzDCyejXgRc76NBAVyKn7P1W8",
+      "slot": 514794276,
+      "blockTime": 1792889333,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "index": 33,
+        "periodId": 202310,
+        "value": "32411",
+        "peak": "90597",
+        "maxDecline": "60906",
+        "excessAcc": "691184",
+        "commitment": "2d9d0bbb9d19271bf8dc9ec859c99a61106df006114fad8e3b784e56a72b2d98"
+      }
+    },
+    {
+      "type": "Observed",
+      "signature": "2rFtfrAuUPqJuMQGUWgPwM5ZZTZLUtZLcZyPCSNNgzfgTwmPXKXgrvh4iA4YAndQ7KiV7FU781xnCbTJ5K7S7E7P",
+      "slot": 514794258,
+      "blockTime": 1792889329,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "index": 32,
+        "periodId": 202309,
+        "value": "36996",
+        "peak": "90597",
+        "maxDecline": "60906",
+        "excessAcc": "691184",
+        "commitment": "1d6df1836b7acc3d9765bfe19823eced5fd73bdbca55ac7eb249da4fa43d71a9"
+      }
+    },
+    {
+      "type": "Observed",
+      "signature": "66p9TQ38NNy88p7HyxNYM2abPWSfvyuTw4QPdRGTgbsGjVcvSF95rCxm9TPN9jHJmZVPuByWs7mbZSSPj9TGKiQD",
+      "slot": 514794241,
+      "blockTime": 1792889325,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "index": 31,
+        "periodId": 202308,
+        "value": "36651",
+        "peak": "90597",
+        "maxDecline": "60906",
+        "excessAcc": "691184",
+        "commitment": "9d12db5ae04c4181f0765b264f9568cce2794fef498c490d7d1b15c4d014844d"
+      }
+    },
+    {
+      "type": "Observed",
+      "signature": "3RBcN46oJdRnsomJjJ7pzBJQSs5b9G6Ep8hB3Ktt5qomxdJnPDdMwGHuob5mGNRnCjvCCpkCovcc6HxDKmoxnbEH",
+      "slot": 514794224,
+      "blockTime": 1792889321,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "index": 30,
+        "periodId": 202307,
+        "value": "31777",
+        "peak": "90597",
+        "maxDecline": "60906",
+        "excessAcc": "691184",
+        "commitment": "1c3e408e2c96f17dc5819cfbccb8614cbfc04fe857d661d6a55c6ad0651d3a53"
+      }
+    },
+    {
+      "type": "Observed",
+      "signature": "4AxUrMssasoZb3eMw7xkbGR1EexvXH6jbGr4UnUGj43bDsXgpmpcXnPbAgJrXPtp8EkE2CSPS7scKgenavAM3aZm",
+      "slot": 514794207,
+      "blockTime": 1792889317,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "index": 29,
+        "periodId": 202306,
+        "value": "29691",
+        "peak": "90597",
+        "maxDecline": "60906",
+        "excessAcc": "691184",
+        "commitment": "b382282d5df4f57e4a5ee03548c709f08da326d99c4b64f5fdf6b0be70dc816d"
+      }
+    },
+    {
+      "type": "Observed",
+      "signature": "2KyrXhcoRwaFRcDJ2vds78Uyof3ivxjU9L3DubotQHfU3RZbX6SUd7EG38UChwu9A7JoPSdRaJmkV9Y92FzHi8gt",
+      "slot": 514794184,
+      "blockTime": 1792889312,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "index": 28,
+        "periodId": 202305,
+        "value": "40476",
+        "peak": "90597",
+        "maxDecline": "50121",
+        "excessAcc": "691184",
+        "commitment": "9785ae50043329979744e7b0cfffec171ea2f50403987a202a570b7bebe1bb0e"
+      }
+    },
+    {
+      "type": "Observed",
+      "signature": "5WtK6esp1DEw4d1D8izkaWsEV1nxb1jMo8HtM1FnHBb7wndNDKgpysg1RU1DXyhdmFDaeDsXwRE4p2QmYQPo34e3",
+      "slot": 514794176,
+      "blockTime": 1792889310,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "index": 27,
+        "periodId": 202304,
+        "value": "49303",
+        "peak": "90597",
+        "maxDecline": "41294",
+        "excessAcc": "690708",
+        "commitment": "b1538d21cbfe8c63b7ab7a5f103fb4ad5db5b6eaac0020a3818dfc5d1f5f5552"
+      }
+    },
+    {
+      "type": "Observed",
+      "signature": "46w16q7LeDr8yEinXjnPKVqwUkuaV7xrLeRdY4fmTKtB6ab7Q6uVgYd4EBK7GY2QAXtPho7wbu54hrtz2noSPY6A",
+      "slot": 514794167,
+      "blockTime": 1792889308,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "index": 26,
+        "periodId": 202303,
+        "value": "49849",
+        "peak": "90597",
+        "maxDecline": "40748",
+        "excessAcc": "681405",
+        "commitment": "6fe5d2ba3dd8ea507e7f41036a6422bf0210b6595617ee979d4d0dba98b7c8f7"
+      }
+    },
+    {
+      "type": "Observed",
+      "signature": "5VhJN8NmNDdYrYLnFFERX8o4oANzowFyqS1d5JMc2nYZck9koHFTTbNk9uZbtPpXCeSmnFrPCG2ujTdQrxwUx5vh",
+      "slot": 514794151,
+      "blockTime": 1792889304,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "index": 25,
+        "periodId": 202302,
+        "value": "60356",
+        "peak": "90597",
+        "maxDecline": "30241",
+        "excessAcc": "671556",
+        "commitment": "cce1effcdd4936bef153f82b04d9a6261cfe25d8491ad42be3b6ce9029c4ef19"
+      }
+    },
+    {
+      "type": "Observed",
+      "signature": "2hxhX9AqF7EQTjeUQUA3LhyvkwELCTV5ACT46iTGwfPkxbR5zDsNRCxvmsC6iYV6pbh8nfoGf9jkxN8YGCsXroM5",
+      "slot": 514794134,
+      "blockTime": 1792889300,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "index": 24,
+        "periodId": 202301,
+        "value": "64101",
+        "peak": "90597",
+        "maxDecline": "26496",
+        "excessAcc": "651200",
+        "commitment": "aef715bb24ad6d85231190031055ae42ff1a4f8a29e6c5780bcf4caaad34739b"
+      }
+    },
+    {
+      "type": "Observed",
+      "signature": "5tMWie4Vsk6kQzDVWdhSnEMC2Vq2jKsWEryRrzG5WbFZPP8KjLYQRwYmSwhrrqYoP563XAcdf5FGMpyNmMDLwFTE",
+      "slot": 514794116,
+      "blockTime": 1792889296,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "index": 23,
+        "periodId": 202212,
+        "value": "64544",
+        "peak": "90597",
+        "maxDecline": "26053",
+        "excessAcc": "627099",
+        "commitment": "d566b850ccca82aa66366de7d78956c411199e0b869c97e788e051e403b43626"
+      }
+    },
+    {
+      "type": "Observed",
+      "signature": "5WhdbcLs9SLprfQSGgHdyyYNGETxS1b25u1BTk7kY2ojsTDzA5Mc5t3UKFtkpB2FVRhGdLUpnFTBd3Sebi9nHd75",
+      "slot": 514794098,
+      "blockTime": 1792889291,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "index": 22,
+        "periodId": 202211,
+        "value": "71103",
+        "peak": "90597",
+        "maxDecline": "19494",
+        "excessAcc": "602555",
+        "commitment": "8013dc56874a66bb2aca39b2c02c1280e7aad4bd26c5278d8e5814838186895d"
+      }
+    },
+    {
+      "type": "Observed",
+      "signature": "5FpJtv5nbRLxyh9cMJv1Pu2dYdAPgSw5xiRNhgP2jzERrkhqkECeEUjzkitPyzP2RhLufibyi661ERMbb7MKDmuN",
+      "slot": 514794078,
+      "blockTime": 1792889287,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "index": 21,
+        "periodId": 202210,
+        "value": "77454",
+        "peak": "90597",
+        "maxDecline": "13143",
+        "excessAcc": "571452",
+        "commitment": "5dc113c9dcf89c6c9cdb187b4cb8d498f67034712a6ca61241a10e5bd75f2070"
+      }
+    },
+    {
+      "type": "Observed",
+      "signature": "3TuyLkjT2cNZ4Aghij6bWJ8qBTX3NQfZxgMS4Taftz4Qcf32jV7Hna15tmRdttnaaGwVB9XuVL9Y32mzYjodb5rB",
+      "slot": 514794061,
+      "blockTime": 1792889283,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "index": 20,
+        "periodId": 202209,
+        "value": "82016",
+        "peak": "90597",
+        "maxDecline": "8581",
+        "excessAcc": "533998",
+        "commitment": "8c70abec692add9b3e5a041dc1aeb6391847590cf232a1edeaff37b88b6aad0f"
+      }
+    },
+    {
+      "type": "Observed",
+      "signature": "4hhnPJDBNRJpjY7zeoXhjwsPKHUMx9KEvb3yHhC2WrxsmsxCVLc7pYM2cZMSLZH7QpCjtMXosRVYi3UYX9hkKEy6",
+      "slot": 514794044,
+      "blockTime": 1792889279,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "index": 19,
+        "periodId": 202208,
+        "value": "82626",
+        "peak": "90597",
+        "maxDecline": "7971",
+        "excessAcc": "491982",
+        "commitment": "238a9914ca50678f143f000855c61b597783127ae5c2afd3d43aa2654e6e90e8"
+      }
+    },
+    {
+      "type": "Observed",
+      "signature": "GBE8mW2ZbyoFbw3dXijvyByuEujx1LYuPtstQh4Uv1K91JndFRXmRjsBTVcRYwBskFrWV3TqpeFmtKNc1jryfAJ",
+      "slot": 514794028,
+      "blockTime": 1792889275,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "index": 18,
+        "periodId": 202207,
+        "value": "85248",
+        "peak": "90597",
+        "maxDecline": "5349",
+        "excessAcc": "449356",
+        "commitment": "7bee3390cff7167bc0c5b0d0a108e0ce202cb8c1dc254a6065181717a63ac07b"
+      }
+    },
+    {
+      "type": "Observed",
+      "signature": "pHwnheUDPGuaaqcqv4uM1wxRqKA4hKFKWQcYxFGKmA3aR55nr7povCy9uAa4bsaYNdZgxJKXs4w8Wym4WjnsHKS",
+      "slot": 514794020,
+      "blockTime": 1792889273,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "index": 17,
+        "periodId": 202206,
+        "value": "90597",
+        "peak": "90597",
+        "maxDecline": "2838",
+        "excessAcc": "404108",
+        "commitment": "a575ae4bf3333a6110c3018cb73f1500383c4c7907d0752b504ec1ddf3f40e9a"
+      }
+    },
+    {
+      "type": "Observed",
+      "signature": "3B9oh4mvcCQ4TfMu7it4pujPRp8iqhKU3nfPjdXm4NwmKAHYqkJv28BZbUaB4wahNErfj3Tjv76VUzRQuNw1i83h",
+      "slot": 514794003,
+      "blockTime": 1792889269,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "index": 16,
+        "periodId": 202205,
+        "value": "85815",
+        "peak": "85815",
+        "maxDecline": "2838",
+        "excessAcc": "353511",
+        "commitment": "2fc7638cbd1b526904b7da2ff27c9baa9ab3a4c17dfd78f0b5acdfcd2c70557e"
+      }
+    },
+    {
+      "type": "Observed",
+      "signature": "3djuFBicnsgJdacrG9GN79e6pHsEVwmyUypLrZuETxhabfanqNB189JRb7PMbAzLmhPZxpDK1A5JFBhkx3Nyy8as",
+      "slot": 514793986,
+      "blockTime": 1792889265,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "index": 15,
+        "periodId": 202204,
+        "value": "82586",
+        "peak": "85424",
+        "maxDecline": "2838",
+        "excessAcc": "307696",
+        "commitment": "3dce68a6eb63aad2eeca436d2ea209e46346ee8106a3a3f98e2a66a1c145201c"
+      }
+    },
+    {
+      "type": "Observed",
+      "signature": "2W8wYoayx9gyXwWwfdgDB9EPu9ykk95KchnYYqhV8ZhEWaiDgmYtfkkaPQLQfSWvfQgimGr2DuNvf3zUs5JKUCGP",
+      "slot": 514793978,
+      "blockTime": 1792889263,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "index": 14,
+        "periodId": 202203,
+        "value": "85424",
+        "peak": "85424",
+        "maxDecline": "1402",
+        "excessAcc": "265110",
+        "commitment": "87e10f4f11f03776dae6714ce162c90bcd8637798e3a8e571d5519b0771e4c30"
+      }
+    },
+    {
+      "type": "Observed",
+      "signature": "23mJzoN7rje3J9PNeeCNJh8DGjnbnEDF3DKq1CrMCvqEsU9tjoyqTbj6StU8H7fnfUbcPKFci2T8H5Fn1CDhrWVo",
+      "slot": 514793969,
+      "blockTime": 1792889261,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "index": 13,
+        "periodId": 202202,
+        "value": "78710",
+        "peak": "78710",
+        "maxDecline": "1402",
+        "excessAcc": "219686",
+        "commitment": "e022349d10404364adba6611db614a8642d4da02196d65a1a59583e0d39a5c33"
+      }
+    },
+    {
+      "type": "Observed",
+      "signature": "3quUxMNwFH1oTebvXi2FshZn52z2uKnatfd6nkXekRc1QvSVBafu8vCS4B4E7DeCg2mtokWngyrq5CuN2VMpg9XQ",
+      "slot": 514793961,
+      "blockTime": 1792889259,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "index": 12,
+        "periodId": 202201,
+        "value": "74798",
+        "peak": "74798",
+        "maxDecline": "1402",
+        "excessAcc": "180976",
+        "commitment": "cd5dac8bb9bce9fa440f5e1fbb4b7f96b7b4e233c321ec38a34bbfb7a6fe7f7f"
+      }
+    },
+    {
+      "type": "Observed",
+      "signature": "59v9zyc7pk8zaN3xcqvY5Q97ukFhAD6SZv7W52beZETL217vPp7GQUDCMiLErdW6rKYFNwEZqAU1mA6t5u2rz7Gy",
+      "slot": 514793952,
+      "blockTime": 1792889257,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "index": 11,
+        "periodId": 202112,
+        "value": "70364",
+        "peak": "70364",
+        "maxDecline": "1402",
+        "excessAcc": "146178",
+        "commitment": "f7a2f55637bdd162c39af2e0cd1bc5bb2e000e9bd25c2ba7f1a2878eac608fb9"
+      }
+    },
+    {
+      "type": "Observed",
+      "signature": "5hj6EABP7jNx3SktuvicmYToHv6T1kxe9W53M4hSYFmgvja4GTQUFvwNBXwqycXsUJCZMLuuZp8rELyrK5PW1NCE",
+      "slot": 514793944,
+      "blockTime": 1792889255,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "index": 10,
+        "periodId": 202111,
+        "value": "68090",
+        "peak": "68090",
+        "maxDecline": "1402",
+        "excessAcc": "115814",
+        "commitment": "68c202a48b6a83fc67983ded97d0d4f9854eac2071456e3a3a72b67b8abc1336"
+      }
+    },
+    {
+      "type": "Observed",
+      "signature": "4GMRVUpiq8UgEg3JhXVJghLLsqKSLPT9hpxsUQgKEpvN35mwLeHiW498qjw4jpmfM5TFr7JSmfmRRGgwiwBLwYSh",
+      "slot": 514793936,
+      "blockTime": 1792889253,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "index": 9,
+        "periodId": 202110,
+        "value": "62218",
+        "peak": "62218",
+        "maxDecline": "1402",
+        "excessAcc": "87724",
+        "commitment": "9c59cfeba42d57ab3b9c45c721656eb94488af9d49ab207dd8f4d1bb34345324"
+      }
+    },
+    {
+      "type": "Observed",
+      "signature": "3HJUgC2xtv54fLixZo5UVvTvsDZYpKYbMEgXsNvptj4AB7JjMcE7DoFNdc8cgeufqhE7AJzb4SXboUFWt2ndwREc",
+      "slot": 514793901,
+      "blockTime": 1792889245,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "index": 8,
+        "periodId": 202109,
+        "value": "53903",
+        "peak": "53914",
+        "maxDecline": "1402",
+        "excessAcc": "65506",
+        "commitment": "098b3ae8876972911910c48c389dbffcf7d8ae312a91a40eb52b2be4de066055"
+      }
+    },
+    {
+      "type": "Observed",
+      "signature": "5qDuL12yNq3xzfMeDxwpdJCj4KaiwceosQ88ZZayKrTd43KfNwzRtdrXup1GoQG9Qzq19PfPKE7qtJvyFhFzSwrd",
+      "slot": 514793883,
+      "blockTime": 1792889241,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "index": 7,
+        "periodId": 202108,
+        "value": "52512",
+        "peak": "53914",
+        "maxDecline": "1402",
+        "excessAcc": "51603",
+        "commitment": "b597b5007afe5333af36cbf6388b00296813b655b9c472b9faa453ae3ca25028"
+      }
+    },
+    {
+      "type": "Observed",
+      "signature": "jaAr9ayVPLBJoUYkw8zvrgC3sCREj1Sqg7BKY1eJyjpKxD8VvrjdAUPgbSpSNngmd6W5gtdPSAbhBvzXeERfBX5",
+      "slot": 514793867,
+      "blockTime": 1792889237,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "index": 6,
+        "periodId": 202107,
+        "value": "53654",
+        "peak": "53914",
+        "maxDecline": "260",
+        "excessAcc": "39091",
+        "commitment": "dd0448f84697143d66b8265e3eed7593dc751d6ae2d104adec5670fee0940a8f"
+      }
+    },
+    {
+      "type": "Observed",
+      "signature": "3KDny6B7D7dDWDAJzBrRWXmMnBwKgaoMoiXpgzd9YRTMeiDSbL8d53RJcqRjs4rC85JjVPjPMybtw8o3zN6QhGiC",
+      "slot": 514793851,
+      "blockTime": 1792889233,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "index": 5,
+        "periodId": 202106,
+        "value": "53914",
+        "peak": "53914",
+        "maxDecline": "0",
+        "excessAcc": "25437",
+        "commitment": "25cc9946afa7b455593a4521c0d9dbf60ddd5264c7e54c2a1caadcd92934a3fb"
+      }
+    },
+    {
+      "type": "Observed",
+      "signature": "2iygJkstzeWqLsTPu69d9kCY9TfmYRFpHxi5M62q2exEh8ifk9xTiJ6U9hiQCFMHu51qx4RXaD7vLakcia5X3ZEb",
+      "slot": 514793831,
+      "blockTime": 1792889228,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "index": 4,
+        "periodId": 202105,
+        "value": "49927",
+        "peak": "49927",
+        "maxDecline": "0",
+        "excessAcc": "11523",
+        "commitment": "b7bb9ba78bb12119ffe6e40caa262e25a89736f486c601747bcbd0048e70dd4a"
+      }
+    },
+    {
+      "type": "Observed",
+      "signature": "49ZGSwg1faim2vkpHzddpUJoPsAca5fS5jYrbEiL5Y5yt3uEfd6BJEpUvKDMmnGDQRrhxFgZzj52jC1BBDpG5Hfx",
+      "slot": 514793823,
+      "blockTime": 1792889226,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "index": 3,
+        "periodId": 202104,
+        "value": "41596",
+        "peak": "41596",
+        "maxDecline": "0",
+        "excessAcc": "1596",
+        "commitment": "c57659de7aeec58d348ae3017d4f6b554caff67b86ae0d9fd4e37eb8e90ed8cb"
+      }
+    },
+    {
+      "type": "Observed",
+      "signature": "2igpwYHPcnFGU4aXuWSMwDF4sQvkikfMFpoJ7MhcEcHzrxAftf2N4FWgjyqjNVtxvFBCQRC34AiMhygAbMzGr7P2",
+      "slot": 514793815,
+      "blockTime": 1792889224,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "index": 2,
+        "periodId": 202103,
+        "value": "26197",
+        "peak": "26197",
+        "maxDecline": "0",
+        "excessAcc": "0",
+        "commitment": "d41fbdda5c21311aee9c917c2788a3a0d5063162eefc559a4a083be888d1e969"
+      }
+    },
+    {
+      "type": "Observed",
+      "signature": "5VPtpxk4H1hLdrXdCUApSfHXdycEDkGQdLTzKjJDgzMNcnSpWpJtzN3M5fHibSBLhkn7PRWbcUbZoziqdwheZMnz",
+      "slot": 514793807,
+      "blockTime": 1792889222,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "index": 1,
+        "periodId": 202102,
+        "value": "16762",
+        "peak": "16762",
+        "maxDecline": "0",
+        "excessAcc": "0",
+        "commitment": "da440dbea465f05c9a41cd294d7cb23ea23de2fb509f1a338b643992f9d291a5"
+      }
+    },
+    {
+      "type": "Observed",
+      "signature": "4rrUGVz4eVjHNi23Bh2R5uCeGNpQj88L57k4uu8zVsR9NuSEhSXACgeR77h8pjB3WcTAP2HqjeBSqBAnBsSddpeA",
+      "slot": 514793800,
+      "blockTime": 1792889220,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "index": 0,
+        "periodId": 202101,
+        "value": "13997",
+        "peak": "13997",
+        "maxDecline": "0",
+        "excessAcc": "0",
+        "commitment": "daa75721ceadeabf90b575a996281894b9883a9d521b564b5e532824f8afee28"
+      }
+    }
+  ],
+  "nextBefore": null,
+  "pending": [],
+  "retryCursor": null
+}
