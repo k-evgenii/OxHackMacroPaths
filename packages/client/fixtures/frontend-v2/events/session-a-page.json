@@ -1,0 +1,191 @@
+{
+  "events": [
+    {
+      "type": "Settled",
+      "signature": "3hq1yZunZwcaK6vsZgJ1ggVsQ6PS1eT57FuhBkpgXipvGgoyAaNG1JAkNua6a1j1izUWQjf5Kg58ySoxNZy7E2Xv",
+      "slot": 514794522,
+      "blockTime": 1792889392,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "scores": [
+          "827387",
+          "863980"
+        ],
+        "matched": [
+          "90000000",
+          "90000000"
+        ],
+        "pBudget": [
+          "148929660",
+          "31070340",
+          "155516400",
+          "24483600"
+        ],
+        "rBudget": [
+          "0",
+          "10000000",
+          "0",
+          "10000000"
+        ]
+      }
+    },
+    {
+      "type": "Observed",
+      "signature": "4vWs7z2LnXRVEppvYz2pec6jaDmGEzQxsfRvdxZdoJyCcUx46zHKMGKGEPbKzdK4g7ofcebGoHvCEGt2HjZqEZXv",
+      "slot": 514794498,
+      "blockTime": 1792889386,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "index": 47,
+        "periodId": 202412,
+        "value": "28880",
+        "peak": "90597",
+        "maxDecline": "66191",
+        "excessAcc": "691184",
+        "commitment": "b5a06c8e2aa10b7fe1339666afb92af7a30cf98e318efde9acdc4a6c5733abef"
+      }
+    },
+    {
+      "type": "Observed",
+      "signature": "3DHKQGQjZHJCHQpj1dnZiH4frh3c2kwP3dkS8TqRys7mPcHYoTZe2jBHeDQrxRqx28o31YSb8vUWHgC7digxk5y4",
+      "slot": 514794482,
+      "blockTime": 1792889382,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "index": 46,
+        "periodId": 202411,
+        "value": "27493",
+        "peak": "90597",
+        "maxDecline": "66191",
+        "excessAcc": "691184",
+        "commitment": "d38a6b4e0d12f1563e5227ab6e9d88dc20b39f6502c4b2f53730e1b941f80e4e"
+      }
+    },
+    {
+      "type": "Observed",
+      "signature": "5Nv2DKD4wv6nV6LLyCFYPjgPttcxGhwEAWCnPwuuLy7gxuSv6FmnGcu19GjTE7QFRQ8GEg3qiBGyW8gSShsefPL",
+      "slot": 514794466,
+      "blockTime": 1792889378,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "index": 45,
+        "periodId": 202410,
+        "value": "25979",
+        "peak": "90597",
+        "maxDecline": "66191",
+        "excessAcc": "691184",
+        "commitment": "d73dea6e12b7f246a2e3b2604c9606587e33a5d1dc6655d8f8cec90e473c0e13"
+      }
+    },
+    {
+      "type": "Observed",
+      "signature": "5KTghkPKtv4d3YZ4iACHiUbecgqu8TpAvjvKom8EtVTZjdc5Zug3GLnEEv2KDbXGrHTWnAa2vRBSZwUWA26CbB8b",
+      "slot": 514794449,
+      "blockTime": 1792889375,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "index": 44,
+        "periodId": 202409,
+        "value": "24406",
+        "peak": "90597",
+        "maxDecline": "66191",
+        "excessAcc": "691184",
+        "commitment": "827d48a7b6f0f7b373846763698fb6519f3cf55ab0971f0837ad2c635956b621"
+      }
+    },
+    {
+      "type": "Observed",
+      "signature": "4KwUz8kAcRyjUt5GeW6b5aXDVQEYZerV9oSCp7pyz6ZEgHJD8QPaGZeWqyF5raAc3vxTjHPNrhbSU6jWaFQycNpP",
+      "slot": 514794430,
+      "blockTime": 1792889370,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "index": 43,
+        "periodId": 202408,
+        "value": "25307",
+        "peak": "90597",
+        "maxDecline": "65290",
+        "excessAcc": "691184",
+        "commitment": "cdcac6ba71ba8dc5699cf4ab8829692ce1813851fa8718dd1db753310ab5815c"
+      }
+    },
+    {
+      "type": "Observed",
+      "signature": "3KGN3aNdj1H6btBBToFRau5W4r9h5YZEfJRtPz1S1QH6JZy3L84yd1b7HBfqvJYs28Uhv2dmdTToCAtFQCcHdKjv",
+      "slot": 514794414,
+      "blockTime": 1792889366,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "index": 42,
+        "periodId": 202407,
+        "value": "28947",
+        "peak": "90597",
+        "maxDecline": "61650",
+        "excessAcc": "691184",
+        "commitment": "146a1ae2174c28996b578f4224b20724f2b3ac3acf3bf961434c48acdb6a13cf"
+      }
+    },
+    {
+      "type": "Observed",
+      "signature": "4yxh5uiQFycaUvss6XTs4hNR3fEKZjrQuS65ukYebvRhCGdjnnaKsCfeZSFHtGQnRBM1ju4c85FXnM6LD98XBNdX",
+      "slot": 514794398,
+      "blockTime": 1792889363,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "index": 41,
+        "periodId": 202406,
+        "value": "29713",
+        "peak": "90597",
+        "maxDecline": "60906",
+        "excessAcc": "691184",
+        "commitment": "2bf2c46ae7c556086b7170510ea4fc85cce31ed5aee8242aa5dd3e0ff3e93c05"
+      }
+    },
+    {
+      "type": "Observed",
+      "signature": "36BGE7Bs4Go8o2RTUt1aGA7T5J6DWmQdThRGaUyM6tGcwnrRxvLUgpXPXrCSoSg2kD6LPpivaLrvyYBeeHpxMxpr",
+      "slot": 514794382,
+      "blockTime": 1792889359,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "index": 40,
+        "periodId": 202405,
+        "value": "32690",
+        "peak": "90597",
+        "maxDecline": "60906",
+        "excessAcc": "691184",
+        "commitment": "ea4cd88243e0d3c1af100643ed3ee35a32f399c03d9af3a5cfb18733bc9d9af4"
+      }
+    },
+    {
+      "type": "Observed",
+      "signature": "3YzLsfEPaE4mYTDYAFHrgJ1Gg6gktNjDAPsNjxeaDPMF7CbrovsR2oB6b1uNjxnEEHbqdiNvFgQMoNwb7aTH7Tc3",
+      "slot": 514794366,
+      "blockTime": 1792889355,
+      "session": "B89zLLRMtmwAKP5idiUt6ffzfetNo6xRZBbXpDVaBVju",
+      "eventIndex": 0,
+      "data": {
+        "index": 39,
+        "periodId": 202404,
+        "value": "33573",
+        "peak": "90597",
+        "maxDecline": "60906",
+        "excessAcc": "691184",
+        "commitment": "6801fa3f3cc6f5f4edfcec60cc9119baabae34d93a7559e43b4bd27ffffc660b"
+      }
+    }
+  ],
+  "nextBefore": "3YzLsfEPaE4mYTDYAFHrgJ1Gg6gktNjDAPsNjxeaDPMF7CbrovsR2oB6b1uNjxnEEHbqdiNvFgQMoNwb7aTH7Tc3",
+  "pending": [],
+  "retryCursor": null,
+  "_note": "First 10 real session A events; nextBefore derived for paging tests."
+}
