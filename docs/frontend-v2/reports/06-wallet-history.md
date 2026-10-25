@@ -74,3 +74,14 @@ Attribution invariants:
 - I have not tested against real devnet transaction fixtures; all tests use synthetic normalized transactions.
 - A claim whose session is not yet terminal, with no Claimed event, produces no row. In practice this cannot happen, because claims require a terminal state.
 - A zero-transfer claim reports `"0"`. If a sibling's transfer is misplaced into another subtree, the misplacing action becomes null, but the empty action still shows 0.
+
+## Checkpoint 1 (85a62e8)
+
+- I merged `frontend-v2/integration`, ran `npm ci` in `web` and `packages/client`, and checked the result with vitest and `tsc`.
+- `ports.ts` now re-exports the shared types from `@/server/contracts` and the `WalletActivity*` types from `@macropaths/client`; the local copies are gone. The route uses the shared `WalletActivityResponse` schema.
+- New `web/test/wallet-history/route.test.ts` covers the route. It replaces the service with a test double. The `test/support/frontend-v2` harness serves client fixtures, so it does not apply to server route tests.
+- Amounts still become `null` whenever an instruction's parent cannot be resolved.
+- `npx vitest run test/wallet-history test/support`: 4 files, 41 tests passed. That is 36 wallet-history tests and 5 harness tests.
+- `npx tsc --noEmit`: two errors remain in my files, both because workers 03 and 04 are not merged yet:
+  - `src/server/wallet/activity.ts(69,14)`: TS2307 cannot find `@/server/history`
+  - `src/server/wallet/activity.ts(70,14)`: TS2307 cannot find `@/server/sessions`
