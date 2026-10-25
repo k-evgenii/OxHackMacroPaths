@@ -41,7 +41,7 @@ The rolling-origin backtest (PR #32, `forecast/backtest.md`) asked what a seller
 - **Limits that apply to any historical result here:**
   - **Small sample:** the 673 monthly origins overlap heavily. They hold about 14 independent 48-month blocks.
   - **No carry:** a position locks capital for four years. At a 4% annual rate, that forgoes 1.04⁴ − 1 ≈ 17% of the stake (undiscounted, simple compounding), and none of the results above charge for it.
-  - **No tail model:** a Gaussian AR(1) on overlapping year-on-year rows has thin tails. Market-implied inflation densities are fatter.
+  - **No tail model:** a Gaussian AR(1) on overlapping year-on-year rows has thin tails. Option-implied inflation densities can be fatter-tailed than a Gaussian; we have not measured that here, so treat it as a caution, not a finding.
 - **Next model:** simulate monthly price changes and rebuild year-on-year inflation by summation. That respects the lag-12 overlap.
 
 ## Rounding (declared bounds, verified)
