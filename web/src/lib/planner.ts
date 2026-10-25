@@ -93,6 +93,17 @@ export function recommend(
   return { best: ranked[0], ranked };
 }
 
+/**
+ * Input guard for the presentation layer. The ranking itself is unchanged; this only decides
+ * whether a result may be shown. Gallons finite and >= 0, budget finite and > 0.
+ */
+export function checkInputs(q: number, B: number): string | null {
+  if (!Number.isFinite(q) || !Number.isFinite(B)) return "Enter numbers for gallons per month and budget.";
+  if (q < 0) return "Gallons per month cannot be negative.";
+  if (!(B > 0)) return "The illustrative budget must be greater than zero.";
+  return null;
+}
+
 /** One scenario (e.g. 2021-24) under a frozen policy, with the cash baseline beside it. */
 export function showcase(policy: Policy, s: Scenario, q: number, B: number, prices: Prices): ShowcaseResult {
   const L = q * s.fuel_overrun_per_gallon;
