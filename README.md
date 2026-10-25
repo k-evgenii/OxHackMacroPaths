@@ -74,8 +74,7 @@ id and do not use the keypair file.
 
 ### Run the web app
 
-The frontend lives on the `evgenii/frontend` branch, not on this one. From a
-checkout of that branch:
+The frontend is in `web/` (see [web/README.md](web/README.md)):
 
 ```bash
 pixi install --locked
@@ -89,8 +88,7 @@ The app opens on reference session A (`NEXT_PUBLIC_DEFAULT_SESSION` in
 `web/.env.example`). Set `RPC_URL` in `web/.env.local` to a keyed devnet endpoint
 (Helius, QuickNode or similar): the public endpoint rate-limits `getTransaction`.
 `NEXT_PUBLIC_USE_FIXTURES=1` serves the committed fixtures for session A without
-any RPC. Running `npm ci` at the repo root currently fails on lockfile drift; see #30.
-It is not needed for either the vectors or the web app.
+any RPC.
 
 ### Verify the chain yourself
 
@@ -104,9 +102,12 @@ two scores by hand from `D` and `A`, and reproducing the worked payout of
 
 - `programs/macropaths/`: the Anchor program (`math.rs`, `chain.rs`, `state.rs`, `instructions/`) and its LiteSVM tests.
 - `keeper/`: the off-chain keeper that fetches CPI, builds the chain (`src/prepare.ts`), creates sessions and replays the 48 rows. See [keeper/README.md](keeper/README.md).
-- `web/` and `packages/client/`: Next.js frontend and the typed client, on branch `evgenii/frontend`.
+- `web/`, `packages/client/` and `packages/ui/`: the Next.js frontend, the typed read client (its `idl.json` is also what the keeper loads) and shared UI components.
+- `data/`: `fetch.py` and `series.toml`, the declared series and their gap rules. Snapshots are fetched, not committed.
+- `forecast/`: the advisory forecast (`ar1.py` writes `table.json`), the caps manifest (`manifest.py`), the rolling-origin backtest and the 11-origin walk-forward. Advisory only; settlement uses the realised path.
+- `research/`: the research notebook, the candidate products and the planner (`export_artifact.py` writes `forecast/planner.json`).
 - `tests/`: `make_vectors.py` and the committed `vectors.json` that every implementation is pinned to; `pixi run test` for toolchain checks.
-- `docs/`: [program-spec.md](docs/program-spec.md), [commitment-chain.md](docs/commitment-chain.md), [deployments.md](docs/deployments.md), [verify.md](docs/verify.md), [security-review.md](docs/security-review.md), [live-mode.md](docs/live-mode.md), [pricing.md](docs/pricing.md), [products.md](docs/products.md), [pitch-claims.md](docs/pitch-claims.md).
+- `docs/`: [program-spec.md](docs/program-spec.md), [commitment-chain.md](docs/commitment-chain.md), [deployments.md](docs/deployments.md), [verify.md](docs/verify.md), [security-review.md](docs/security-review.md), [live-mode.md](docs/live-mode.md), [pricing.md](docs/pricing.md), [products.md](docs/products.md), [pitch-claims.md](docs/pitch-claims.md), [twin-windows.md](docs/twin-windows.md), [demo-manifest.md](docs/demo-manifest.md).
 
 ## Development environment
 
@@ -146,12 +147,16 @@ pixi install --locked --environment notebook
 pixi run --environment notebook jupyter
 ```
 
-Shared data tasks are available as the corresponding source files are added:
+Shared data tasks, in order (the snapshots are fetched from FRED, not committed):
 
 ```bash
-pixi run prepare
-pixi run vectors
-pixi run forecast
+pixi run fetch --series CPIAUCNS --series GASREGW --series GASDESW --series DFF
+pixi run vectors            # tests/vectors.json, the reference every implementation is pinned to
+pixi run manifest           # forecast/manifest.json: caps by the declared rule, data rules, proposals
+pixi run forecast           # forecast/table.json: AR(1) and random-walk forecasts, seller quotes
+pixi run planner-artifact   # forecast/planner.json
+pixi run walkforward        # forecast/walkforward.json and .md
+pixi run test-planner
 ```
 
 ### Solana and Anchor (WSL2)

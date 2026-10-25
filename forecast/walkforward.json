@@ -112,10 +112,10 @@
    "forecast/walkforward.py": "f942ec53c4591a2e3c9c8d337fc7d2e533274bd097428abf6e60e1ea24d5b289",
    "forecast/backtest.py": "70e24114f81c4b91147f1b5a9862cd7b370ea3b6388d7423a80232c4c130fc67",
    "research/macrolib.py": "4df837603f1b48b21c7f0504cdfbcadc04c6429bf099a969086f27aee1a65715",
-   "tests/make_vectors.py": "38f196d34c3dc36be5fd6083a1a2a92650e83c09afe98751fd9c642c0b1d6020"
+   "tests/make_vectors.py": "7d746ea50f8784c96db6531a230cef40f3540c8227c53974992490ff0de47879"
   },
   "environment": {
-   "git_commit_of_forecast_backtest_py": "82bc397698833bbec1ef4261eb5557570414b7da",
+   "git_commit_of_forecast_backtest_py": "e9f201dabdb9660026a4f9a396852b857f14f9a6",
    "python": "3.12.15",
    "numpy": "2.5.4",
    "pandas": "3.1.0",

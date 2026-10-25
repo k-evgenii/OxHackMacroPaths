@@ -8,7 +8,6 @@ version = "0.1.0"
 [tasks]
 versions = "node --version && npm --version && rustc --version && cargo --version && python --version"
 fetch = "python data/fetch.py"
-prepare = "python data/prepare.py"
 vectors = "python tests/make_vectors.py"
 manifest = "python forecast/manifest.py"
 forecast = "python forecast/ar1.py"

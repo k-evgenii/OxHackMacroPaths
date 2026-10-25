@@ -12,9 +12,9 @@ Which case applies depends on the model and caps, so we don't claim one. At the 
 
 | AR(1) specification | Cooling V0 | Excess V0 | Source |
 |---|---|---|---|
-| fit from 1914, caps 8 / 80 | 0.663 | 0.249 | PR #32 `backtest.md` |
-| fit 1997–2020, caps 8 / 80 | 0.319 | 0.008 | PR #32 `backtest.md` |
-| fit 1960–2020, pre-2021 p90 caps 76973 / 1883141 | 0.318 | 0.024 | `web/public/data/forecast.json` |
+| fit from 1914, caps 8 / 80 | 0.663 | 0.249 | `forecast/backtest.md` |
+| fit 1997–2020, caps 8 / 80 | 0.319 | 0.008 | `forecast/backtest.md` |
+| fit 1960–2020, pre-2021 p90 caps 76973 / 1883141 | 0.318 | 0.024 | `forecast/table.json` |
 
 The matched pool is therefore a **two-view instrument**: two people who disagree about the path take opposite sides at 0.5. It is not a protection price. **Protection is bought at the seller's quote**, which is how the demo buys cover.
 
@@ -27,14 +27,14 @@ The matched pool is therefore a **two-view instrument**: two people who disagree
   - at settlement the buyer receives `floor(s·U/ONE)` and the seller keeps the rest.
 - **The demo's policy:** `p = clamp(floor((V0 + κ·σ0)·10^6), 50000, 950000)` with `κ = 0.5`.
   - `V0` and `σ0` are the AR(1) forecast's mean and standard deviation of the score at the origin.
-  - The policy is the one recorded in `web/public/data/manifest.json` (`price_convention`) and `forecast.json` (`quotes.formula`) on `evgenii/frontend`.
+  - The policy is the one recorded in `forecast/manifest.json` (`price_convention`) and `forecast/table.json` (`quotes.formula`); the web app serves a published, hash-pinned copy of an earlier cut in `web/public/data/` (same quotes).
   - Those files give quotes of `p = [384852, 57153]` (Cooling, Excess) with pre-2021 p90 caps.
   - The script that writes those numbers is `forecast/ar1.py`: `pixi run forecast` regenerates `forecast/table.json` byte-identical, including the fuel research quote 108466 (0.108466).
 - **What the quote is and isn't:** it is a policy the seller declares. It is not a forecast, and it is not a validated price. The forecast is advisory; settlement uses only the realised path.
 
 ## What the history does and does not show
 
-The rolling-origin backtest (PR #32, `forecast/backtest.md`) asked what a seller following this policy would have earned, using pre-origin caps and κ = 0.5.
+The rolling-origin backtest (`forecast/backtest.md`) asked what a seller following this policy would have earned, using pre-origin caps and κ = 0.5.
 
 - **The result:** a mean result per unit of +0.301 (Cooling) and +0.205 (Excess).
 - **Why that is not evidence the policy works:** the result mostly reflects quotes set from a forecast that runs high. The primary AR(1) is poorly calibrated: 57% of Cooling PITs fall in the lowest decile, against 10% if it were calibrated.

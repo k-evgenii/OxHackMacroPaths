@@ -6,7 +6,7 @@
 - Deployed commit: `dab88ff43ed988a112b192702b474db8f2cbcdc7`
 - sha256: `d198a8c3fc792519ab0db4829007e2451c51d6783fb6c7225b353dd639f658e2`
 - Upgrade authority: `DwZ3j9GQZZTegHocho27JQfY7HZfCt8HNRceqe2hrJLV`
-- Deploy signature: pending from Phill
+- Deploy signature: [`5GnspUo1…`](https://explorer.solana.com/tx/5GnspUo1u3LDNqmyAhvzxPbjW9Q9rF5v1DfuxVJH4tTSWE9yrcAvgjRjDQrKgPq6P5CGeLdC6XikSYmPRquTZF6?cluster=devnet), slot 514779572 (the programdata account's last deploy slot)
 
 ## Reference session A
 

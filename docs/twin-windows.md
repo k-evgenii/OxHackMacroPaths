@@ -51,7 +51,7 @@ Use: **"similar endpoints: the start is within 0.08 pp and the end within 0.16 p
 
 ## Caveat: the caps are retrospective
 
-The caps (8 pp for Cooling, 80 pp-months for Excess) were chosen after the 2021-24 outcome was known (recorded as `FIXED_CAPS`, "chosen after 2021-24", in `forecast/backtest.py` on PR #32; the declared pre-2021 p90 rule gives 7.697 pp and 188.18 pp-months instead). The scores for 2021-24 therefore say how the products read that path once the caps were set, not how a forecast made before 2021 would have fared. The 2013-17 and 1962-66 scores are computed with the same caps and K = 4 %, with no refit.
+The caps (8 pp for Cooling, 80 pp-months for Excess) were chosen after the 2021-24 outcome was known (recorded as `FIXED_CAPS`, "chosen after 2021-24", in `forecast/backtest.py`; the declared pre-2021 p90 rule in `forecast/manifest.py` gives 7.697 pp and 188.31 pp-months instead). The scores for 2021-24 therefore say how the products read that path once the caps were set, not how a forecast made before 2021 would have fared. The 2013-17 and 1962-66 scores are computed with the same caps and K = 4 %, with no refit.
 
 ## Reproduce
 

@@ -17,15 +17,14 @@ The specification is `docs/program-spec.md`. Agent rules are in `AGENTS.md`, plu
 
 ## Branches
 
-- **`cursor_main` is the integration branch.** Work branches from it (`agent/NN-name`, `phill/<task>`, …), and PRs target it.
-- **`main` only moves forward to `cursor_main`** at team gates. Never push to `main`.
-- **Research lives on `evgenii/macro-research`**: `research/`, `forecast/`, notebooks. Keep it off `cursor_main`; research PRs target that branch. (PR #32's backtest commits also reached `main`.)
-- **The frontend lives on `evgenii/frontend`**: `web/` (Next.js) and the UI parts of `packages/client/`. Frontend PRs target that branch; `cursor_main` has no `web/`.
+- **`main` is the submission branch.** The backend branches (`cursor_main`, `evgenii/integration`, `evgenii/macro-research`, and the `agent/*`, `dev/*` and `phill/*` work branches) were merged into it through `backend-final` on 2026-10-25, with `cursor_main` as the base. Work branches from `main`, PRs target it, and nobody pushes to `main` directly.
+- **`web/`, `packages/client/` and `packages/ui/` are `cursor_main`'s consumer interface** (`FRONTEND_INTEGRATION.md`). It took only selected read-only APIs from `evgenii/frontend-final`; that branch and `evgenii/frontend`, `fe/*` hold the teammate frontend and are not merged.
+- **The web app serves a published research bundle**, not live copies of `forecast/`. `cd web && node scripts/artifacts/publish.mjs --from ../forecast` validates `forecast/{manifest,table,planner}.json` and rewrites `web/public/data/` and `bundle-identity.json`; `web/config/sessions.json` and `web/test/sessions/sessions.test.ts` pin the bundle id, so update them in the same change.
 - **Shared program files** (`lib.rs`, `instructions.rs`, `error.rs`, `events.rs`) are add-only: never remove or reorder someone else's lines. `state.rs` and `constants.rs` have owners, so ask before changing them.
 
 ## Toolchain (non-obvious)
 
-- **`pixi run prepare` and `pixi run forecast`** point at `data/prepare.py` and `forecast/ar1.py`, which are on no branch yet; both tasks fail.
+- **Research artefacts regenerate from the FRED snapshots**, which are gitignored: run `pixi run fetch --series CPIAUCNS --series GASREGW --series GASDESW --series DFF` first, then `pixi run manifest`, `forecast`, `planner-artifact` and `walkforward`. There is no `prepare` task; the replay rows come from `pixi run vectors` and `keeper/src/prepare.ts`.
 - **Pixi for everything:** `pixi install --locked`, then `pixi run <cmd>` or `pixi shell`. Node 20 and the Python 3.12 stack only exist inside pixi; outside it you get system Node 18. Don't edit `pixi.toml` or `pixi.lock` casually. There is no CI.
 - **Rust comes from rustup, not pixi.** `rust-toolchain.toml` pins 1.89.0. Rust inside pixi shadows rustup's `cargo`, and `anchor build` then fails with `no such command: +1.89.0-sbpf-solana-…`.
 - **Anchor CLI must be 1.0.2.** The Solana installer gives 1.1.2, so run `avm install 1.0.2 && avm use 1.0.2`. The crates are pinned `=1.0.2`; a bare `"1.0.2"` resolves to 1.2.x.
@@ -51,7 +50,7 @@ pixi run npx --prefix keeper tsx --test keeper/src/*.test.ts           # all kee
 pixi run npx --prefix keeper tsx --test keeper/src/session.test.ts      # one keeper test file
 pixi run npx --prefix keeper tsx keeper/src/prepare.ts --check tests/vectors.json
 
-# web (on evgenii/frontend); packages/client must be installed first (web depends on file:../packages/client)
+# web; packages/client must be installed first (web depends on file:../packages/client)
 (cd packages/client && pixi run npm ci) && cd web && pixi run npm ci
 cp .env.example .env.local      # RPC_URL: a keyed devnet endpoint; the public one rate-limits getTransaction
 pixi run npm run dev            # NEXT_PUBLIC_USE_FIXTURES=1 serves packages/client/fixtures with no RPC
@@ -112,8 +111,8 @@ Data flows from FRED into a hash chain, and three implementations must agree on 
 - **`replay.ts` saves each signature to `data/replay-pending.json` before broadcasting.** That file is shared, so replay one session at a time.
 - **Local runs use Surfpool.** `npm run program:load` writes a `.so` into Surfpool at the program address via the `surfnet_writeProgram` cheatcode, so no program keypair is needed. The smoke scripts refuse any RPC host that isn't localhost.
 
-### Research (on `evgenii/macro-research`)
+### Research and forecast (off chain, advisory)
 - `research/macrolib.py` holds loaders, AR(1)/OU fitting and simulation. **`fit_ou(until=…)` includes `until`**, so pass `t0 − 1` for a forecast made at `t0`.
 - `research/build_notebook.py` generates the notebook; edit it, not the `.ipynb`.
-- `forecast/backtest.py` (tests in `tests/research/`; added by PR #32) is the rolling-origin backtest. Its JSON and Markdown report are generated, so rerun the script rather than editing them.
+- `forecast/backtest.py` (tests in `tests/research/`) is the rolling-origin backtest, and `forecast/walkforward.py` the 11-origin walk-forward with the Atkeson–Ohanian benchmark. Their JSON and Markdown reports are generated, so rerun the scripts (`--check` diffs) rather than editing them.
 - Floats are fine in research code, but realised outcomes use the exact integer maths in `make_vectors.py`. The model's expected score is a forecast, not a price; the seller's quote is a separate declared policy.

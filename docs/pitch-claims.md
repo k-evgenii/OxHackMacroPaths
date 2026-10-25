@@ -19,11 +19,11 @@ Every sentence on stage, on Devpost or on a slide must be one of the five below,
 4. **"Similar start, similar end, different payout."**
    - 2021–24 and 2013–17 both start near 1.4% and end near 2.8% inflation. The endpoints are within 0.08 pp and 0.16 pp.
    - Cooling pays 0.827 against 0.291, and Excess 0.864 against 0.
-   - A contract on the end value cannot tell them apart (`docs/twin-windows.md`, PR #33). Add "on caps chosen after 2021–24" if asked about the caps.
+   - A contract on the end value cannot tell them apart (`docs/twin-windows.md`). Add "on caps chosen after 2021–24" if asked about the caps.
 5. **"We tested our own forecast out of sample, and it changed what we offer."**
    - **Excess:** AR(1) beat history in the main test and in 3 of 4 variants.
    - **Cooling:** history won the main test, AR(1) was poorly calibrated, and the result did not hold across variants. So Cooling is offered as a view, not priced as protection.
-   - About 14 independent four-year periods underlie this (PR #32 `forecast/backtest.md`).
+   - About 14 independent four-year periods underlie this (`forecast/backtest.md`).
 
 Optional access line, if time allows: **"Access at small size for anyone with a wallet, accepting a fixed four-year term and US-average basis risk."**
 
@@ -34,7 +34,7 @@ Optional access line, if time allows: **"Access at small size for anyone with a 
    - A live contract trusts a named attester (`docs/live-mode.md`).
 2. **"Same endpoints", "within 0.15 pp", or "the closest match in history", about 2013–17.**
    - The end gap is 0.1501 pp.
-   - 2013–17 ranks 9th by endpoint distance, and 2nd among separate episodes. 1962–66 is closer (PR #33).
+   - 2013–17 ranks 9th by endpoint distance, and 2nd among separate episodes. 1962–66 is closer (`tests/twin-windows.json`).
 3. **"Our model predicts inflation", "the quote is fair", or "the seller makes money".**
    - The forecast is advisory and settlement uses only the realised path.
    - The quote is a declared policy, `p = clamp(V0 + 0.5·σ0, 0.05, 0.95)`.

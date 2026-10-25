@@ -56,7 +56,6 @@ Add tasks to `pixi.toml` so the keeper owner and the data owner share commands:
 
 ```toml
 [tasks]
-prepare  = "python data/prepare.py"
 vectors  = "python tests/make_vectors.py"
 forecast = "python forecast/ar1.py"
 ```
