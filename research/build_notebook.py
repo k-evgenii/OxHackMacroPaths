@@ -39,7 +39,7 @@ P = panel(PANEL_SPEC)
 W = 48
 REPLAY_START = pd.Period("2021-01", "M")
 HIST_END = pd.Period("2020-12", "M")
-CAP_WINDOW_START = pd.Period("1960-01", "M")   # declared: caps and quantiles use post-1960 windows
+CAP_WINDOW_START = pd.Period("1960-01", "M")   # declared: caps and quantiles use windows from 1960 or the series start
 print("panel", P.shape, "months", P.index.min(), "..", P.index.max())
 """)
 
@@ -101,7 +101,7 @@ ax.grid(axis="x", alpha=.3); plt.tight_layout(); plt.show()
 md(r"""
 ## 4. How unusual was 2021–2024? Path statistics over every historical 48-month window
 
-For each product: compute its statistic over every 48-month window ending by December 2020 (post-1960 only, so wartime inflation does not set the scale), then the realised 2021–2024 value and its percentile rank. The 90th percentile of history is the **cap candidate**: a declared, pre-2021 quantile, which the maths note names as the defensible way to choose it.
+For each product: compute its statistic over every 48-month window ending by December 2020 (from 1960, or from the series start if later, so wartime inflation does not set the scale), then the realised 2021–2024 value and its percentile rank. The 90th percentile of history is the **cap candidate**: a declared, pre-2021 quantile, which the maths note names as the defensible way to choose it.
 """)
 code(r"""
 rows_out, hist_stats = [], {}
@@ -124,7 +124,7 @@ fig, ax = plt.subplots(figsize=(9, 5))
 pc = T["percentile"].sort_values()
 ax.barh(pc.index, pc.values, color=["C3" if v > 0.9 else "C0" for v in pc.values])
 ax.axvline(0.9, color="k", ls="--", lw=.8)
-ax.set_xlabel("percentile of the 2021–24 statistic among post-1960 48-month windows")
+ax.set_xlabel("percentile of the 2021–24 statistic among 48-month windows from 1960 or series start")
 ax.set_title("Which paths were historically extreme in 2021–24 (red: above the 90th percentile)")
 ax.grid(axis="x", alpha=.3); plt.tight_layout(); plt.show()
 """)
@@ -166,9 +166,9 @@ md(r"""
 What the heatmap and the crude clustering agree on, and what they don't:
 
 1. **The labour-break cluster is robust**: Sahm trigger, hiring freeze and the stagflation composite (which is driven by its unemployment leg) move together and are nearly uncorrelated with every inflation or rates product. That is the one unambiguous second risk factor in the data, and the strongest case for a separate sub-pool.
-2. **The inflation and rates products are one family seen through different balance sheets**, but the family splits by what drives the window: price-level products (excess inflation, real-wage squeeze, sticky core) correlate with each other at 0.6–0.9; policy-rate products (hiking cost, mortgage lock-in) pair off; the curve and real-rate products sit between. Offer one or two of these per session, not six, or the sub-pools are the same bet.
-3. **Short histories mislead**: real-rate shock (2003+), dollar (2007+) and hiring freeze (2001+) have under 200 windows, so their 0.9 correlations with cooling rest on two cycles. Treat them as unproven.
-4. **Fuel, housing and volatility are weakly related to everything else** (the clustering pairs fuel with housing only because they are each far from the rest). Any of the three adds a genuinely different sub-pool.
+2. **The inflation and rates products are one family seen through different balance sheets**, but the family splits by what drives the window: price-level products (excess inflation, real-wage squeeze, sticky core) correlate with each other at 0.6–0.9; policy-rate products (hiking cost, mortgage lock-in) pair off; the curve and real-rate products sit between. Offer one or two of these per session, not six, or the sub-pools are the same position.
+3. **Short histories mislead**: real-rate shock (2003+), dollar (2007+) and hiring freeze (2001+) have under 200 windows, so their correlations with cooling (dollar 0.96, real rate 0.70, hiring freeze 0.53 in the heatmap) rest on two cycles. Treat them as unproven.
+4. **Fuel and housing are the most separate rows**: their largest absolute correlation with any other product is about 0.54 and 0.57. Volatility is not separate: it correlates about 0.84 with the short-history dollar row. The crude clustering's grouping of these rows is unstable (it moved when the real-rate row became DFII10), so read the heatmap, not the clusters.
 
 ## 6. The sub-pool menu
 
@@ -179,8 +179,9 @@ menu = pd.DataFrame([{
     "product": p.name, "row x_t": p.row, "statistic": p.stat, "K": p.k,
     "event (pays the MORE side)": p.event,
     "MORE side (hedger)": p.more_side, "LESS side (natural counterparty)": p.less_side,
-    "cap rule": p.cap_rule,
-    "realised score @p90 cap": T.loc[p.name, "score at p90 cap"],
+    "declared cap rule": p.cap_rule,
+    "computed p90 cap": T.loc[p.name, "p90 (cap candidate)"],
+    "realised score at computed p90 cap": T.loc[p.name, "score at p90 cap"],
 } for p in PRODUCTS]).set_index("product")
 with pd.option_context("display.max_colwidth", 60):
     display(menu)
@@ -233,7 +234,7 @@ Fs = F.sort_values("realised - V0")
 ax.scatter(Fs["V0 = E[score]"], Fs.index, label="AR(1) forecast V0", zorder=3)
 ax.scatter(Fs["realised score"], Fs.index, marker="x", color="C3", label="realised 2021-24", zorder=3)
 for name, r in Fs.iterrows(): ax.plot([r["V0 = E[score]"], r["realised score"]], [name, name], color="0.6", lw=1)
-ax.set_xlim(-0.02, 1.02); ax.set_xlabel("score (cap = post-1960 p90)"); ax.legend(); ax.grid(alpha=.3)
+ax.set_xlim(-0.02, 1.02); ax.set_xlabel("score (cap = p90 of windows from 1960 or series start)"); ax.legend(); ax.grid(alpha=.3)
 ax.set_title("What a baseline seller would have expected vs what the path paid")
 plt.tight_layout(); plt.show()
 """)

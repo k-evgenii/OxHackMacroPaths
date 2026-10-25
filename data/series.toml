@@ -7,12 +7,18 @@ source = "fred"
 frequency = "monthly"
 units = "Index 1982-1984=100, not seasonally adjusted"
 window = ["2020-01", "2024-12"]
+known_missing = [
+  { month = "2025-10", reason = "empty in FRED: BLS published no October 2025 CPI (2025 federal shutdown); no fallback is applied" },
+]
 
 [[series]]
 id = "UNRATE"
 source = "fred"
 frequency = "monthly"
 units = "Percent, seasonally adjusted"
+known_missing = [
+  { month = "2025-10", reason = "empty in FRED: no October 2025 household survey (2025 federal shutdown)" },
+]
 
 [[series]]
 id = "FEDFUNDS"
@@ -59,16 +65,19 @@ units = "Number, seasonally adjusted"
 # ---- candidates added 2026-10-24 for the multi-index research (see research/) ----
 
 [[series]]
-id = "CPILFESL"
+id = "CPILFENS"
 source = "fred"
 frequency = "monthly"
-units = "Core CPI (ex food and energy), index, SA"
+units = "Core CPI (ex food and energy), index, NSA (not revised, unlike the SA CPILFESL)"
+known_missing = [
+  { month = "2025-10", reason = "empty in FRED: BLS published no October 2025 CPI (2025 federal shutdown)" },
+]
 
 [[series]]
 id = "PCEPILFE"
 source = "fred"
 frequency = "monthly"
-units = "Core PCE price index, the Fed's target measure, SA"
+units = "Core PCE price index, SA (the Fed's 2% target is headline PCE)"
 
 [[series]]
 id = "PPIACO"
@@ -171,3 +180,24 @@ id = "USREC"
 source = "fred"
 frequency = "monthly"
 units = "NBER recession indicator, 0/1"
+
+[[series]]
+id = "DFII10"
+source = "fred"
+frequency = "daily"
+units = "10-year TIPS real yield (constant maturity), percent, NSA"
+
+[[series]]
+id = "UNEMPLOY"
+source = "fred"
+frequency = "monthly"
+units = "Unemployment level, thousands of persons, SA"
+known_missing = [
+  { month = "2025-10", reason = "empty in FRED: no October 2025 household survey (2025 federal shutdown)" },
+]
+
+[[series]]
+id = "GASDESW"
+source = "fred"
+frequency = "weekly"
+units = "US No 2 diesel retail price, dollars per gallon (research proposal row; no product defined)"

@@ -42,7 +42,9 @@ class Product:
 
 
 def _real_10y(P):
-    return P["DGS10"] - P["T5YIE"]
+    # The 10-year TIPS yield itself (DFII10, from 2003). The earlier proxy, a 10-year
+    # nominal yield minus a 5-year breakeven, mismatched maturities and spiked in 2008.
+    return P["DFII10"]
 
 
 def _stagflation(P):
@@ -77,18 +79,18 @@ PRODUCTS: list[Product] = [
             "accumulated_excess", 2.0, "90th pct of pre-2021 48-month windows",
             lambda P: P["FEDFUNDS"], accumulated_excess, {"k": 2.0}),
     Product("sahm", "Sahm Trigger", "Sahm gap on U3, pp",
-            "labour-market break: the Fed's own real-time recession rule",
+            "labour-market break: rise in the Sahm-rule gap (3-month mean of U3 minus its low over the previous 12 months; trigger 0.50 pp) from its running low; computed on current-vintage UNRATE, not real-time data",
             "consumer lenders, staffing firms, cyclical employers",
             "counter-cyclical businesses, recession-hedged funds",
-            "max_rise", None, "1.0 pp (double the 0.5 trigger)",
-            lambda P: pd.Series(sahm_gap(P["UNRATE"].to_numpy()), index=P.index), np.nanmax),
+            "max_rise", None, "90th pct of pre-2021 windows",
+            lambda P: pd.Series(sahm_gap(P["UNRATE"].to_numpy()), index=P.index), max_rise),
     Product("inversion", "Curve Inversion", "10y-2y spread, pp",
             "yield-curve inversion: months the 10y-2y is below zero",
             "banks and lenders whose margin is the slope",
             "long-duration bondholders, pension funds",
             "time_below", 0.0, "48 months",
             lambda P: P["T10Y2Y"], time_below, {"k": 0.0}),
-    Product("real_rate", "Real-Rate Shock", "10y Treasury minus 5y breakeven, pp",
+    Product("real_rate", "Real-Rate Shock", "10y TIPS real yield (DFII10), pp",
             "rise in real yields from the running low",
             "mortgage REITs, long-duration equity, homebuilders",
             "insurers and pensions that need higher real yields",
@@ -126,7 +128,7 @@ PRODUCTS: list[Product] = [
             lambda P: yoy(P["HOUST"]), max_decline),
     Product("vol", "Volatility Regime", "VIX monthly mean",
             "months of VIX above 25",
-            "equity-heavy portfolios, option sellers",
+            "equity-heavy portfolios, volatility sellers",
             "vol funds, long-vol strategies",
             "time_above", 25.0, "48 months",
             lambda P: P["VIXCLS"], time_above, {"k": 25.0}),
@@ -135,7 +137,7 @@ PRODUCTS: list[Product] = [
             "staffing firms, HR software, wage-indexed contracts",
             "employers facing wage pressure",
             "max_decline", None, "90th pct of windows since 2001",
-            lambda P: P["JTSJOL"] / (P["UNRATE"] / 100.0 * P["PAYEMS"] / (1 - P["UNRATE"] / 100.0)),
+            lambda P: P["JTSJOL"] / P["UNEMPLOY"],
             max_decline),
     Product("stagflation", "Stagflation Composite", "mean of z(CPI YoY), z(U3), -z(10y-2y)",
             "months the composite stress is above +1 sd",
@@ -149,8 +151,8 @@ BY_KEY = {p.key: p for p in PRODUCTS}
 
 PANEL_SPEC = {
     "CPIAUCNS": "mean", "PCEPILFE": "mean", "UNRATE": "mean", "FEDFUNDS": "mean",
-    "DGS10": "mean", "T5YIE": "mean", "T10Y2Y": "mean", "MORTGAGE30US": "mean",
+    "DFII10": "mean", "T10Y2Y": "mean", "MORTGAGE30US": "mean",
     "GASREGW": "mean", "AHETPI": "mean", "DTWEXBGS": "mean", "HOUST": "mean",
-    "VIXCLS": "mean", "JTSJOL": "mean", "PAYEMS": "mean", "CPILFESL": "mean",
+    "VIXCLS": "mean", "JTSJOL": "mean", "UNEMPLOY": "mean", "CPILFENS": "mean",
     "ICSA": "mean", "USREC": "mean", "DCOILWTICO": "mean", "EXPINF1YR": "mean",
 }

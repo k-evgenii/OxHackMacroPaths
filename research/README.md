@@ -19,11 +19,11 @@ pixi run --environment notebook research    # rebuilds and executes macro_paths.
 
 Run through `pixi run`, not by calling `python.exe` directly: numpy's BLAS needs the environment's `Library/bin` on `PATH` on Windows, otherwise any matrix product aborts with `0xc06d007f`.
 
-## Headline results (2021–2024 against post-1960 48-month windows)
+## Headline results (2021–2024 against 48-month windows from 1960 or the series start)
 
 Top-decile events: real-rate shock, fuel pass-through, hiring freeze, curve inversion, mortgage lock-in. Headline excess inflation was the 80th percentile because the 1970s are in the comparison set. The stagflation composite never fired at +1 sd: unemployment stayed low, so 2022 was an inflation-and-rates shock, not a stagflation.
 
-Two robust risk factors in the data: the inflation/rates family and the labour-break family (Sahm trigger, hiring freeze). Fuel, housing and volatility are weakly related to both.
+Two robust risk factors in the data: the inflation/rates family and the labour-break family (Sahm trigger, hiring freeze). Fuel and housing are the most separate rows (largest absolute correlation with any other product about 0.54 and 0.57); volatility correlates about 0.84 with the short-history dollar row.
 
 ## Data limitations
 
