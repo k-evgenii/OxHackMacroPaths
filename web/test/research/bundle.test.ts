@@ -11,6 +11,7 @@ import {
   bundleIdOf,
   exactIntString,
   sha256,
+  contentHash,
 } from "@/server/research/core.mjs";
 import { publish, validatePublished } from "../../scripts/artifacts/fsbundle.mjs";
 import { getResearchBundle, PUBLISHED_IDENTITY } from "@/server/research";
@@ -64,7 +65,8 @@ describe("committed default bundle", () => {
     expect((b.manifest as J).showcase.fuel.stat).toBe(72833); // the selected revision, not newer prose
   });
   it("hashes exact bytes with SHA-256 and matches the published identity", () => {
-    expect(b.metadata.hashes.planner).toBe(sha256(read("planner")));
+    expect(b.metadata.hashes.planner).toBe(contentHash(read("planner")));
+    expect(b.metadata.hashes.planner).toBe(sha256(read("planner").split("\r\n").join("\n"))); // LF-normalized bytes
     expect(b.id).toBe(bundleIdOf(b.metadata.hashes));
     expect(b.id).toMatch(/^rb1-[0-9a-f]{16}$/);
     expect(PUBLISHED_IDENTITY.id).toBe(b.id);
@@ -74,6 +76,10 @@ describe("committed default bundle", () => {
 });
 
 describe("identity", () => {
+  it("a CRLF checkout yields the same identity as the committed LF bytes", () => {
+    const crlf = Object.fromEntries(Object.entries(texts()).map(([k, v]) => [k, v.split("\r\n").join("\n").split("\n").join("\r\n")]));
+    expect(buildBundle(crlf).id).toBe(buildBundle(texts()).id);
+  });
   it("is deterministic and changes with contents", () => {
     expect(buildBundle(texts()).id).toBe(buildBundle(texts()).id);
     const changed = { ...texts(), forecast: read("forecast") + "\n" };

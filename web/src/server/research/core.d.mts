@@ -60,6 +60,7 @@ export type SessionTermsForAssociation = {
 };
 
 export declare function sha256(text: string): string;
+export declare function contentHash(text: string): string;
 export declare function bundleIdOf(hashes: BundleHashes): string;
 export declare function exactIntString(value: unknown, what: string): string;
 export declare function buildBundle(
