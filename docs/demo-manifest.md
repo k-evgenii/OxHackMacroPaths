@@ -46,25 +46,3 @@ pixi run -- npx tsx keeper/src/prepare.ts --manifest forecast/manifest.json --ou
 
 `pixi run vectors` with no flags is unchanged and must still print `D=66191 A=691184 827387 863980`.
 
-
-## Walk-forward (descriptive)
-
-Generated from `forecast/walkforward.json` (Excess, K = 40000, cap 1883141, 10000 paths). With n = 11 origins this cannot validate a 10 % tail: a count of 4 or more exceedances is needed to question the 90th percentile at all. The table is descriptive, not a backtest of a trading strategy.
-
-Cap look-ahead: the declared cap is the p90 over windows ending 2020-12, so it uses information after every origin. The file's `cap_rederived_variant` re-derives it from windows ending before each origin. Fuel is excluded because its series starts in August 1990.
-
-Mean error 0.086, RMSE 0.184, share inside the band 0.73; random-walk benchmark mean error 0.041, RMSE 0.167.
-
-| Origin | V0 | Quote | Realised | Seller result |
-| --- | --- | --- | --- | --- |
-| 1975-01 | 1.000 | 0.950 | 0.832 | +0.118 |
-| 1979-01 | 0.975 | 0.950 | 1.000 | -0.050 |
-| 1983-01 | 0.210 | 0.320 | 0.020 | +0.301 |
-| 1987-01 | 0.024 | 0.057 | 0.160 | -0.103 |
-| 1991-01 | 0.565 | 0.701 | 0.036 | +0.665 |
-| 1995-01 | 0.075 | 0.138 | 0.000 | +0.138 |
-| 1999-01 | 0.026 | 0.059 | 0.000 | +0.059 |
-| 2003-01 | 0.048 | 0.096 | 0.009 | +0.087 |
-| 2007-01 | 0.059 | 0.113 | 0.031 | +0.082 |
-| 2011-01 | 0.032 | 0.071 | 0.000 | +0.071 |
-| 2015-01 | 0.017 | 0.050 | 0.000 | +0.050 |
