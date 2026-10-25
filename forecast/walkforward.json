@@ -1,0 +1,368 @@
+{
+ "product": "excess",
+ "series": "CPIAUCNS",
+ "seed": 2026,
+ "n_paths": 10000,
+ "cap": 1883141,
+ "k": 40000,
+ "origins": [
+  "1975-01",
+  "1979-01",
+  "1983-01",
+  "1987-01",
+  "1991-01",
+  "1995-01",
+  "1999-01",
+  "2003-01",
+  "2007-01",
+  "2011-01",
+  "2015-01"
+ ],
+ "rows": [
+  {
+   "origin": "1975-01",
+   "fit_window": [
+    "1960-01",
+    "1974-12"
+   ],
+   "V0": 1.0,
+   "sigma0": 0.0,
+   "quote": 950000,
+   "realised_score": 832341,
+   "error": 0.167659,
+   "inside_band": false,
+   "seller_pnl": 117659,
+   "rw_V0": 1000000,
+   "rw_quote": 950000,
+   "rw_seller_pnl": 117659
+  },
+  {
+   "origin": "1979-01",
+   "fit_window": [
+    "1960-01",
+    "1978-12"
+   ],
+   "V0": 0.9747402307,
+   "sigma0": 0.08284337403390496,
+   "quote": 950000,
+   "realised_score": 1000000,
+   "error": -0.025259769299999957,
+   "inside_band": true,
+   "seller_pnl": -50000,
+   "rw_V0": 1000000,
+   "rw_quote": 950000,
+   "rw_seller_pnl": -50000
+  },
+  {
+   "origin": "1983-01",
+   "fit_window": [
+    "1960-01",
+    "1982-12"
+   ],
+   "V0": 0.21043523279999998,
+   "sigma0": 0.2196300381381026,
+   "quote": 320250,
+   "realised_score": 19555,
+   "error": 0.1908802328,
+   "inside_band": true,
+   "seller_pnl": 300695,
+   "rw_V0": 0,
+   "rw_quote": 50000,
+   "rw_seller_pnl": 30445
+  },
+  {
+   "origin": "1987-01",
+   "fit_window": [
+    "1960-01",
+    "1986-12"
+   ],
+   "V0": 0.0238090223,
+   "sigma0": 0.06675041295831062,
+   "quote": 57184,
+   "realised_score": 159777,
+   "error": -0.1359679777,
+   "inside_band": false,
+   "seller_pnl": -102593,
+   "rw_V0": 0,
+   "rw_quote": 50000,
+   "rw_seller_pnl": -109777
+  },
+  {
+   "origin": "1991-01",
+   "fit_window": [
+    "1960-01",
+    "1990-12"
+   ],
+   "V0": 0.5647558920000001,
+   "sigma0": 0.2733944457594432,
+   "quote": 701453,
+   "realised_score": 36341,
+   "error": 0.5284148920000001,
+   "inside_band": false,
+   "seller_pnl": 665112,
+   "rw_V0": 536856,
+   "rw_quote": 536856,
+   "rw_seller_pnl": 500515
+  },
+  {
+   "origin": "1995-01",
+   "fit_window": [
+    "1960-01",
+    "1994-12"
+   ],
+   "V0": 0.07525714900000001,
+   "sigma0": 0.1251306903703428,
+   "quote": 137822,
+   "realised_score": 0,
+   "error": 0.07525714900000001,
+   "inside_band": true,
+   "seller_pnl": 137822,
+   "rw_V0": 0,
+   "rw_quote": 50000,
+   "rw_seller_pnl": 50000
+  },
+  {
+   "origin": "1999-01",
+   "fit_window": [
+    "1960-01",
+    "1998-12"
+   ],
+   "V0": 0.025704288600000007,
+   "sigma0": 0.06666087870285922,
+   "quote": 59034,
+   "realised_score": 0,
+   "error": 0.025704288600000007,
+   "inside_band": true,
+   "seller_pnl": 59034,
+   "rw_V0": 0,
+   "rw_quote": 50000,
+   "rw_seller_pnl": 50000
+  },
+  {
+   "origin": "2003-01",
+   "fit_window": [
+    "1960-01",
+    "2002-12"
+   ],
+   "V0": 0.048057171700000005,
+   "sigma0": 0.09543235416631207,
+   "quote": 95773,
+   "realised_score": 8841,
+   "error": 0.0392161717,
+   "inside_band": true,
+   "seller_pnl": 86932,
+   "rw_V0": 0,
+   "rw_quote": 50000,
+   "rw_seller_pnl": 41159
+  },
+  {
+   "origin": "2007-01",
+   "fit_window": [
+    "1960-01",
+    "2006-12"
+   ],
+   "V0": 0.059060481000000005,
+   "sigma0": 0.10829652884325536,
+   "quote": 113208,
+   "realised_score": 30800,
+   "error": 0.028260481000000004,
+   "inside_band": true,
+   "seller_pnl": 82408,
+   "rw_V0": 0,
+   "rw_quote": 50000,
+   "rw_seller_pnl": 19200
+  },
+  {
+   "origin": "2011-01",
+   "fit_window": [
+    "1960-01",
+    "2010-12"
+   ],
+   "V0": 0.0321777366,
+   "sigma0": 0.07816561124596558,
+   "quote": 71260,
+   "realised_score": 0,
+   "error": 0.0321777366,
+   "inside_band": true,
+   "seller_pnl": 71260,
+   "rw_V0": 0,
+   "rw_quote": 50000,
+   "rw_seller_pnl": 50000
+  },
+  {
+   "origin": "2015-01",
+   "fit_window": [
+    "1960-01",
+    "2014-12"
+   ],
+   "V0": 0.0165275418,
+   "sigma0": 0.05223040404157001,
+   "quote": 50000,
+   "realised_score": 0,
+   "error": 0.0165275418,
+   "inside_band": true,
+   "seller_pnl": 50000,
+   "rw_V0": 0,
+   "rw_quote": 50000,
+   "rw_seller_pnl": 50000
+  }
+ ],
+ "summary": {
+  "n": 11,
+  "mean_error": 0.08571543150000002,
+  "rmse": 0.1841101268151795,
+  "share_inside_band": 0.7272727272727273,
+  "mean_seller_pnl": 128939.0,
+  "sum_seller_pnl": 1418329,
+  "min_seller_pnl": -102593,
+  "rw_mean_error": 0.040836454545454544,
+  "rw_rmse": 0.1666686141967729,
+  "rw_mean_seller_pnl": 68109.18181818182,
+  "rw_sum_seller_pnl": 749201,
+  "rw_min_seller_pnl": -109777,
+  "label": "n = 11, cannot validate a 10 % tail; descriptive, not a backtest of a trading strategy"
+ },
+ "cap_rederived_variant": {
+  "rows": [
+   {
+    "origin": "1975-01",
+    "cap": 512582,
+    "n_windows": 133,
+    "V0": 1.0,
+    "sigma0": 0.0,
+    "quote": 950000,
+    "realised_score": 1000000,
+    "seller_pnl": -50000
+   },
+   {
+    "origin": "1979-01",
+    "cap": 1894675,
+    "n_windows": 181,
+    "V0": 0.9740121822000001,
+    "sigma0": 0.08393857533895843,
+    "quote": 950000,
+    "realised_score": 1000000,
+    "seller_pnl": -50000
+   },
+   {
+    "origin": "1983-01",
+    "cap": 2870662,
+    "n_windows": 229,
+    "V0": 0.138383798,
+    "sigma0": 0.14543849230883685,
+    "quote": 211103,
+    "realised_score": 12828,
+    "seller_pnl": 198275
+   },
+   {
+    "origin": "1987-01",
+    "cap": 2802192,
+    "n_windows": 277,
+    "V0": 0.016000185,
+    "sigma0": 0.04485785264285145,
+    "quote": 50000,
+    "realised_score": 107374,
+    "seller_pnl": -57374
+   },
+   {
+    "origin": "1991-01",
+    "cap": 2595468,
+    "n_windows": 325,
+    "V0": 0.4197404565999999,
+    "sigma0": 0.21740132511639232,
+    "quote": 528441,
+    "realised_score": 26367,
+    "seller_pnl": 502074
+   },
+   {
+    "origin": "1995-01",
+    "cap": 2432152,
+    "n_windows": 373,
+    "V0": 0.0582752831,
+    "sigma0": 0.09693142253397685,
+    "quote": 106740,
+    "realised_score": 0,
+    "seller_pnl": 106740
+   },
+   {
+    "origin": "1999-01",
+    "cap": 2217792,
+    "n_windows": 421,
+    "V0": 0.0218256467,
+    "sigma0": 0.05660214796431915,
+    "quote": 50126,
+    "realised_score": 0,
+    "seller_pnl": 50126
+   },
+   {
+    "origin": "2003-01",
+    "cap": 2048950,
+    "n_windows": 469,
+    "V0": 0.0441681798,
+    "sigma0": 0.08770958870544242,
+    "quote": 88022,
+    "realised_score": 8126,
+    "seller_pnl": 79896
+   },
+   {
+    "origin": "2007-01",
+    "cap": 2022424,
+    "n_windows": 517,
+    "V0": 0.05499342529999999,
+    "sigma0": 0.10084189894447555,
+    "quote": 105414,
+    "realised_score": 28678,
+    "seller_pnl": 76736
+   },
+   {
+    "origin": "2011-01",
+    "cap": 1979358,
+    "n_windows": 565,
+    "V0": 0.030613559099999996,
+    "sigma0": 0.07436595866183873,
+    "quote": 67796,
+    "realised_score": 0,
+    "seller_pnl": 67796
+   },
+   {
+    "origin": "2015-01",
+    "cap": 1951901,
+    "n_windows": 613,
+    "V0": 0.0159453238,
+    "sigma0": 0.05039047676749996,
+    "quote": 50000,
+    "realised_score": 0,
+    "seller_pnl": 50000
+   }
+  ],
+  "summary": {
+   "mean_seller_pnl": 88569.90909090909,
+   "sum_seller_pnl": 974269,
+   "min_seller_pnl": -57374
+  },
+  "rule": "nearest-rank p90 of Excess over 48-month windows ending before the origin; null if fewer than 12 windows"
+ },
+ "cross_check": {
+  "origin": "2021-01",
+  "fit_window": [
+   "1960-01",
+   "2020-12"
+  ],
+  "table_quotes": [
+   384852,
+   57153
+  ],
+  "reproduced": [
+   384852,
+   57153
+  ],
+  "excess_fresh_stream_quote": 56035,
+  "note": "table shares one shock stream across products: 384852 is the cooling quote, 57153 the excess quote"
+ },
+ "notes": [
+  "n = 11 cannot validate a 10 % tail; descriptive, not a backtest of a trading strategy. Windows are non-overlapping but the AR(1) fits share most of their data.",
+  "Cap look-ahead: the declared cap 1883141 is the p90 over windows ending 2020-12, so it uses information after every origin. The cap_rederived_variant re-derives it from windows ending before each origin.",
+  "Fuel is excluded: its series starts 1990-08, which leaves too few non-overlapping origins with an in-sample fit.",
+  "Advisory; settlement uses the realised path only. Fit and score use the raw snapshot row, so the 2025-10 presentation fill never enters."
+ ]
+}
