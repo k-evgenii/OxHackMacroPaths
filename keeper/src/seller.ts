@@ -30,6 +30,8 @@ const SEED_SELLER = Buffer.from("seller");
 const SEED_SELLER_TA = Buffer.from("seller_ta");
 const SEED_QUOTE = Buffer.from("quote");
 const SEED_COVER = Buffer.from("cover");
+/** Cover account size: 8-byte discriminator + Cover::INIT_SPACE (2 pubkeys, 2×[u64; 2], bool, bump). */
+const COVER_SPACE = 8 + 32 + 32 + 16 + 16 + 1 + 1;
 
 function pda(programId: PublicKey, seeds: Buffer[]): PublicKey {
   return PublicKey.findProgramAddressSync(seeds, programId)[0];
@@ -225,7 +227,8 @@ export async function quoteSeller(ctx: Ctx, p0: bigint, p1: bigint): Promise<str
 /**
  * buy_cover up to `units` for `product` in `buyer`'s cover. Sends nothing when the cover already holds that
  * many (the program adds units on every call, so a rerun would otherwise buy twice). Mints the buyer only the
- * premium shortfall, `ceil(p·delta / ONE)`, and creates the buyer's PLAY account when it is missing.
+ * premium shortfall, `ceil(p·delta / ONE)`, creates the buyer's PLAY account when it is missing, and on the
+ * first buy sends the buyer the Cover account's rent (the program makes the buyer pay it).
  */
 export async function buyCover(ctx: Ctx, product: 0 | 1, units: bigint, buyer: Keypair): Promise<string | null> {
   if (units <= 0n) throw new Error("units must be positive");
@@ -251,6 +254,14 @@ export async function buyCover(ctx: Ctx, product: 0 | 1, units: bigint, buyer: K
   const cash = big(s.free_cash);
   if (sellerPays > cash) throw new Error(`cannot buy: seller needs ${play(sellerPays)} PLAY free_cash, has ${play(cash)}`);
   const { ata, ixs } = await playFor(ctx, buyer.publicKey, premium);
+  if (!existing) {
+    // buy_cover creates the Cover PDA with `payer = buyer`; top up the buyer's rent from the keeper.
+    const rent = BigInt(await ctx.connection.getMinimumBalanceForRentExemption(COVER_SPACE));
+    const have = BigInt(await ctx.connection.getBalance(buyer.publicKey));
+    if (have < rent) {
+      ixs.unshift(SystemProgram.transfer({ fromPubkey: ctx.keeper.publicKey, toPubkey: buyer.publicKey, lamports: rent - have }));
+    }
+  }
   ixs.push(
     instruction(ctx.idl, "buy_cover", { product, units: bn(delta) }, {
       buyer: buyer.publicKey,

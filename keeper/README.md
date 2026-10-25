@@ -146,7 +146,7 @@ The field count in `read-back: all 20 fields match` is what `session:create` pri
 
 ## Seller run
 
-On a session that is still open, before `lock`. The keeper is the seller. Quote prices are millionths (`500000` = 0.50). `--from-forecast forecast/table.json` uses row 0 when that file exists: `p = clamp(V + floor(σ / 2), 0.05, 0.95)` in millionths, for both products. `V` and `sigma` are probabilities.
+On a session that is still open, before `lock`. The keeper is the seller. Quote prices are millionths (`500000` = 0.50). `--from-forecast forecast/table.json` uses that table's declared `quotes.p` (`[384852, 57153]` for cooling and excess); a table without them is priced from row 0 as `clamp(floor((V + σ/2)·10^6), 50000, 950000)` per product. `seller buy --units n` is the target total for that product: a rerun buys only the difference, or nothing.
 
 ```bash
 DOTENV_PATH=/tmp/keeper-local/local.env pixi run npm --prefix keeper run admin -- seller fund 20
