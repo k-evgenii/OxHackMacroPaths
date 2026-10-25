@@ -29,6 +29,13 @@ Branch: `frontend-v2/13-activity-page`.
   compile or run until the checkpoint merge. Imports are coded to interfaces.md names exactly.
 - Market-mode "zero history requests" and 375px overflow are by construction, not verified in a browser.
 
+## Checkpoint 1 (85a62e8) merged
+
+- `npm ci` (client, web), `vitest run src/features/activity`: 10/10 pass.
+- `tsc --noEmit`: 4 errors total, all in ActivityPage.tsx imports of not-yet-merged worker 10 modules:
+  `useWalletActivity`, `useSessionOverview` (`@/lib/hooks`), `@/features/wallet-connect`, `@/features/shell`. No stubs added.
+- Curator copy applied: "No older activity."; expired cursor => "This list is out of date. Reload to see the latest." with Reload action.
+
 ## Integration requests (to orchestrator / Agent 10)
 
 1. `useWalletActivity(owner)` is assumed to return a TanStack `useInfiniteQuery` result with `data.pages:
